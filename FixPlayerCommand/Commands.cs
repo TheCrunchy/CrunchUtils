@@ -49,10 +49,12 @@ namespace FixPlayerPlugin
                 player.SpawnAt(playerPos, new Vector3(0, 0, 0), entity, false);
                 IMyCharacter oldCharacter = player.Character;
                 IMyCharacter newCharacter = player.Character;
+                player.SpawnIntoCharacter(newCharacter);
                 oldCharacter.GetInventory().Clear();
                 oldCharacter.Kill();
-               // oldCharacter.Delete();
-                player.SpawnIntoCharacter(newCharacter);
+                // oldCharacter.Delete();
+               
+                
                 int i;
                 for (i = 0; i < playerInv.ItemCount; i++)
                 {
