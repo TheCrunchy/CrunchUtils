@@ -51,8 +51,7 @@ namespace FixPlayerPlugin
                 IMyCharacter newCharacter = player.Character;
                 oldCharacter.GetInventory().Clear();
                 oldCharacter.Kill();
-                oldCharacter.Delete();
-                MyEntities.Remove(MyEntities.GetEntityById(oldCharacter.EntityId));
+               // oldCharacter.Delete();
                 player.SpawnIntoCharacter(newCharacter);
                 int i;
                 for (i = 0; i < playerInv.ItemCount; i++)
