@@ -11,6 +11,6 @@ namespace CrunchUtilities
     {
         public bool PlayerMakeShip = false;
         public bool PlayerFixMe = false;
-
+        public bool DeleteStone = false;
     }
 }

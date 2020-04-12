@@ -17,6 +17,8 @@ using Sandbox.Game.Entities;
 using VRage.Game.Entity;
 using VRage.Groups;
 using System.Collections.Concurrent;
+using VRage.Game;
+using Sandbox.ModAPI;
 
 namespace CrunchUtilities
 {
@@ -53,6 +55,50 @@ namespace CrunchUtilities
 
         }
 
+
+        [Command("stone", "Delete all stone in a grid")]
+        [Permission(MyPromoteLevel.None)]
+        public void DeleteStone()
+        {
+            if (CrunchUtilitiesPlugin.file.DeleteStone)
+            {
+                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+                foreach (var item in gridWithSubGrids)
+                {
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                    {
+                        //     MyObjectBuilder_PhysicalObject stone = new MyObjectBuilder_PhysicalObject("MyObjectBuilder_Ore/Stone");
+                        MyCubeGrid grid = groupNodes.NodeData;
+                        var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+                        var blockList = new List<Sandbox.ModAPI.IMyTerminalBlock>();
+                        gts.GetBlocksOfType<Sandbox.ModAPI.IMyTerminalBlock>(blockList);
+
+                        foreach (var block in blockList)
+                        {
+                            //MyVisualScriptLogicProvider.SendChatMessage("blocks blocklist");
+                            if (block != null && block.HasInventory)
+                            {
+                                var items = block.GetInventory().GetItems();
+                                for (int i = 0; i < items.Count; i++)
+                                {
+                                    if (items[i].Content.SubtypeId.ToString().Contains("Stone"))
+                                    {
+                                        block.GetInventory().RemoveItems(items[i].ItemId);
+                                    }
+                                }
+                            }
+                        }
+                        Context.Respond("Deleted the stone?");
+                    }
+                }
+            }
+            else
+            {
+                Context.Respond("stone not enabled");
+            }
+
+        }
+
         [Command("makeship", "Admin command, Turn a station and connected grids into a ship")]
         [Permission(MyPromoteLevel.None)]
         public void MakeShipPlayer()
@@ -84,7 +130,6 @@ namespace CrunchUtilities
             Context.Respond("PlayerMakeShip not enabled");
         }
     }
-
 
         [Command("fixme", "Murder a player then respawn them at their current location")]
         [Permission(MyPromoteLevel.None)]
