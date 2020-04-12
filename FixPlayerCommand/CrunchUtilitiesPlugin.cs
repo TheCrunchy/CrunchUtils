@@ -22,18 +22,28 @@ using System.Collections.Concurrent;
 using Sandbox.Game.Entities.Cube;
 using System.Collections.Generic;
 
-namespace FixPlayerPlugin
+namespace CrunchUtilities
 {
-    public class FixPlayerPlugin : TorchPluginBase
+    public class CrunchUtilitiesPlugin : TorchPluginBase
     {
 
         public static Logger Log = LogManager.GetCurrentClassLogger();
+        public static ConfigFile file;
+        private static string path;
+
+        public static ConfigFile LoadConfig()
+        {
+            FileUtils utils = new FileUtils();
+            file = utils.ReadFromXmlFile<ConfigFile>(path + "\\CrunchUtils.xml");
+            return file;
+        }
+        
         public override void Init(ITorchBase torch)
         {
             base.Init(torch);
-            Log.Info("Dirk hasnt gibben me the moneys :(");
+            Log.Info("Loading Crunch Utils");
             var sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
-
+            SetupConfig();
             if (sessionManager != null)
             {
                 sessionManager.SessionStateChanged += SessionChanged;
@@ -44,13 +54,28 @@ namespace FixPlayerPlugin
             }
 
         }
+        private void SetupConfig()
+        {
+            FileUtils utils = new FileUtils();
+            path = StoragePath;
+            if (File.Exists(StoragePath + "\\CrunchUtils.xml"))
+            {
+                file = utils.ReadFromXmlFile<ConfigFile>(StoragePath + "\\CrunchUtils.xml");
+            }
+            else { 
+                file = new ConfigFile();
+                utils.WriteToXmlFile<ConfigFile>(StoragePath + "\\CrunchUtils.xml", file, false);
+            }
+
+        }
+
         private void SessionChanged(ITorchSession session, TorchSessionState newState)
         {
             //Do something here in the future
             Log.Info("Session-State is now " + newState);
             if (newState == TorchSessionState.Loaded)
             {
-        
+                
             }
 
         }

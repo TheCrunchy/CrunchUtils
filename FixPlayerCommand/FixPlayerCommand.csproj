@@ -7,8 +7,8 @@
     <ProjectGuid>{B2D870D5-0AE8-4285-99F9-C6729C4E4BBD}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>FixPlayerCommand</RootNamespace>
-    <AssemblyName>FixPlayerCommand</AssemblyName>
+    <RootNamespace>CrunchUtilities</RootNamespace>
+    <AssemblyName>CrunchUtilities</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="NLog">
       <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\NLog.dll</HintPath>
     </Reference>
@@ -69,6 +72,9 @@
     </Reference>
     <Reference Include="Torch.Server">
       <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\Torch.Server.exe</HintPath>
+    </Reference>
+    <Reference Include="VRage">
+      <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\VRage.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Ansel">
       <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\VRage.Ansel.dll</HintPath>
@@ -118,8 +124,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands.cs" />
-    <Compile Include="FixPlayerPlugin.cs" />
+    <Compile Include="ConfigFile.cs" />
+    <Compile Include="FacUtils.cs" />
+    <Compile Include="CrunchUtilitiesPlugin.cs" />
+    <Compile Include="FileUtils.cs" />
+    <Compile Include="GridFinder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

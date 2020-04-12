@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <PluginManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <Name>CrunchFixPlayer</Name>
+  <Name>CrunchUtils</Name>
   <Guid>6c520fdb-3bed-4eb5-9a0a-c1c6f35d6325</Guid>
   <Repository>None</Repository>
   <Version>v1.0.0</Version>
