@@ -120,6 +120,7 @@ namespace CrunchUtilities
                 else
                 {
                     currentCooldown = CreateNewCooldown(currentCooldownMap, Context.Player.IdentityId, plugin.Cooldown);
+                    currentCooldown.StartCooldown(null);
                 }
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
                 foreach (var item in gridWithSubGrids)
