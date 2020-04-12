@@ -72,18 +72,25 @@ namespace CrunchUtilities
                         var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
                         var blockList = new List<Sandbox.ModAPI.IMyTerminalBlock>();
                         gts.GetBlocksOfType<Sandbox.ModAPI.IMyTerminalBlock>(blockList);
-
-                        foreach (var block in blockList)
+                        if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
                         {
-                            //MyVisualScriptLogicProvider.SendChatMessage("blocks blocklist");
-                            if (block != null && block.HasInventory)
+                            Context.Respond("You dont own this");
+                            continue;
+                        }
+                        else
+                        {
+                            foreach (var block in blockList)
                             {
-                                var items = block.GetInventory().GetItems();
-                                for (int i = 0; i < items.Count; i++)
+                                //MyVisualScriptLogicProvider.SendChatMessage("blocks blocklist");
+                                if (block != null && block.HasInventory)
                                 {
-                                    if (items[i].Content.SubtypeId.ToString().Contains("Stone"))
+                                    var items = block.GetInventory().GetItems();
+                                    for (int i = 0; i < items.Count; i++)
                                     {
-                                        block.GetInventory().RemoveItems(items[i].ItemId);
+                                        if (items[i].Content.SubtypeId.ToString().Contains("Stone"))
+                                        {
+                                            block.GetInventory().RemoveItems(items[i].ItemId);
+                                        }
                                     }
                                 }
                             }
