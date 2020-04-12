@@ -12,5 +12,7 @@ namespace CrunchUtilities
         public bool PlayerMakeShip = false;
         public bool PlayerFixMe = false;
         public bool DeleteStone = false;
+        private int _cooldownInSeconds = 10 * 60;
+        public int CooldownInSeconds { get => _cooldownInSeconds; set => SetValue(ref _cooldownInSeconds, value); }
     }
 }

@@ -30,7 +30,8 @@ namespace CrunchUtilities
         public static Logger Log = LogManager.GetCurrentClassLogger();
         public static ConfigFile file;
         private static string path;
-
+        public Dictionary<long, CurrentCooldown> CurrentCooldownMap { get; } = new Dictionary<long, CurrentCooldown>();
+         public long Cooldown { get { return file.CooldownInSeconds * 1000; } }
         public static ConfigFile LoadConfig()
         {
             FileUtils utils = new FileUtils();

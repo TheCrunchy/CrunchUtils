@@ -19,6 +19,7 @@ using VRage.Groups;
 using System.Collections.Concurrent;
 using VRage.Game;
 using Sandbox.ModAPI;
+using Sandbox.Game.GameSystems;
 
 namespace CrunchUtilities
 {
@@ -46,15 +47,49 @@ namespace CrunchUtilities
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                     {
                         MyCubeGrid grid = groupNodes.NodeData;
+               
+                    if (grid.IsStatic)
+                    {
                         Action m_convertToShipResult = null;
                         grid.RequestConversionToShip(m_convertToShipResult);
-                        Context.Respond("Fixing grid / subgrid");
+                        Context.Respond("Converting to ship " + grid.DisplayName);
                     }
+                }
                 }
             
 
         }
 
+        [Command("admin makestation", "Admin command, Turn a station and connected grids into a ship")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void MakeStation()
+        {
+
+            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+            foreach (var item in gridWithSubGrids)
+            {
+                foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                {
+                    MyCubeGrid grid = groupNodes.NodeData;
+
+                    if (!grid.IsStatic)
+                        grid.OnConvertedToStationRequest();
+                        Context.Respond("Converting to station " + grid.DisplayName);
+                }
+            }
+        }
+        private static CurrentCooldown CreateNewCooldown(Dictionary<long, CurrentCooldown> cooldownMap, long playerId, long cooldown)
+        {
+
+            var currentCooldown = new CurrentCooldown(cooldown);
+
+            if (cooldownMap.ContainsKey(playerId))
+                cooldownMap[playerId] = currentCooldown;
+            else
+                cooldownMap.Add(playerId, currentCooldown);
+
+            return currentCooldown;
+        }
 
         [Command("stone", "Delete all stone in a grid")]
         [Permission(MyPromoteLevel.None)]
@@ -62,6 +97,30 @@ namespace CrunchUtilities
         {
             if (CrunchUtilitiesPlugin.file.DeleteStone)
             {
+                CrunchUtilitiesPlugin plugin = (CrunchUtilitiesPlugin) Context.Plugin;
+                CrunchUtilitiesPlugin.Log.Info("Cooldown");
+               var currentCooldownMap = plugin.CurrentCooldownMap;
+                CrunchUtilitiesPlugin.Log.Info("Cooldown 1");
+                if (currentCooldownMap.TryGetValue(Context.Player.IdentityId, out CurrentCooldown currentCooldown))
+                {
+                    CrunchUtilitiesPlugin.Log.Info("Cooldown 2");
+                    long remainingSeconds = currentCooldown.GetRemainingSeconds(null);
+                    CrunchUtilitiesPlugin.Log.Info("Cooldown 3");
+                    if (remainingSeconds > 0)
+                    {
+                        CrunchUtilitiesPlugin.Log.Info("Cooldown 4");
+                        CrunchUtilitiesPlugin.Log.Info("Cooldown for Player " + Context.Player.DisplayName + " still running! " + remainingSeconds + " seconds remaining!");
+                        Context.Respond("Command is still on cooldown for " + remainingSeconds + " seconds.");
+                        return;
+                    }
+                    CrunchUtilitiesPlugin.Log.Info("Cooldown 5");
+                    currentCooldown = CreateNewCooldown(currentCooldownMap, Context.Player.IdentityId, plugin.Cooldown);
+                    currentCooldown.StartCooldown(null);
+                }
+                else
+                {
+                    currentCooldown = CreateNewCooldown(currentCooldownMap, Context.Player.IdentityId, plugin.Cooldown);
+                }
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
                 foreach (var item in gridWithSubGrids)
                 {
@@ -105,39 +164,65 @@ namespace CrunchUtilities
             }
 
         }
-
-        [Command("makeship", "Admin command, Turn a station and connected grids into a ship")]
+        [Command("convert", "Player command, Turn a ship and connected grids into a station")]
         [Permission(MyPromoteLevel.None)]
-        public void MakeShipPlayer()
+        public void MakeStationPlayer()
         {
-        if (CrunchUtilitiesPlugin.file.PlayerMakeShip)
-        {
-            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
-            foreach (var item in gridWithSubGrids)
+            if (CrunchUtilitiesPlugin.file.PlayerMakeShip)
             {
-                foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+
+                if (MyGravityProviderSystem.IsPositionInNaturalGravity(Context.Player.GetPosition()))
                 {
-                    MyCubeGrid grid = groupNodes.NodeData;
-                        if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
+                    
+                    Context.Respond("You cannot use this command in natural gravity!");
+                    return;
+                }
+
+                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+                if (gridWithSubGrids.Count > 0)
+                {
+                    foreach (var item in gridWithSubGrids)
+                    {
+                        foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                         {
-                            Context.Respond("You dont own this");
-                            continue;
+
+                            MyCubeGrid grid = groupNodes.NodeData;
+
+                            if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
+                            {
+
+                                continue;
+                            }
+                            else
+                            {
+                                if (grid.IsStatic)
+                                {
+                                    Action m_convertToShipResult = null;
+                                    grid.RequestConversionToShip(m_convertToShipResult);
+                                    Context.Respond("Converting to ship " + grid.DisplayName);
+                                }
+                                else
+                                {
+                                    grid.OnConvertedToStationRequest();
+                                    Context.Respond("Converting to station " + grid.DisplayName);
+
+                                }
+
+                            }
                         }
-                        else
-                        {
-                            Action m_convertToShipResult = null;
-                            grid.RequestConversionToShip(m_convertToShipResult);
-                            Context.Respond("Fixing grid / subgrid");
-                        }
+                    }
+                }
+                else
+                {
+                    Context.Respond("Cant find a grid");
                 }
             }
+            else
+            {
+                Context.Respond("PlayerMakeShip not enabled");
+            }
         }
-        else
-        {
-            Context.Respond("PlayerMakeShip not enabled");
-        }
-    }
-
+       
         [Command("fixme", "Murder a player then respawn them at their current location")]
         [Permission(MyPromoteLevel.None)]
         public void FixPlayer()
