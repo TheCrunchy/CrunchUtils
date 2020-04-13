@@ -98,22 +98,19 @@ namespace CrunchUtilities
             if (CrunchUtilitiesPlugin.file.DeleteStone)
             {
                 CrunchUtilitiesPlugin plugin = (CrunchUtilitiesPlugin) Context.Plugin;
-                CrunchUtilitiesPlugin.Log.Info("Cooldown");
                var currentCooldownMap = plugin.CurrentCooldownMap;
-                CrunchUtilitiesPlugin.Log.Info("Cooldown 1");
                 if (currentCooldownMap.TryGetValue(Context.Player.IdentityId, out CurrentCooldown currentCooldown))
                 {
-                    CrunchUtilitiesPlugin.Log.Info("Cooldown 2");
+                  
                     long remainingSeconds = currentCooldown.GetRemainingSeconds(null);
-                    CrunchUtilitiesPlugin.Log.Info("Cooldown 3");
+                    
                     if (remainingSeconds > 0)
                     {
-                        CrunchUtilitiesPlugin.Log.Info("Cooldown 4");
+                      
                         CrunchUtilitiesPlugin.Log.Info("Cooldown for Player " + Context.Player.DisplayName + " still running! " + remainingSeconds + " seconds remaining!");
                         Context.Respond("Command is still on cooldown for " + remainingSeconds + " seconds.");
                         return;
                     }
-                    CrunchUtilitiesPlugin.Log.Info("Cooldown 5");
                     currentCooldown = CreateNewCooldown(currentCooldownMap, Context.Player.IdentityId, plugin.Cooldown);
                     currentCooldown.StartCooldown(null);
                 }
