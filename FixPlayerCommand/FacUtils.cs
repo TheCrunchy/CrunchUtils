@@ -31,6 +31,21 @@ namespace CrunchUtilities
 
             return faction.Tag;
         }
+        public static long GetOwner(MyCubeGrid grid)
+        {
+
+            var gridOwnerList = grid.BigOwners;
+            var ownerCnt = gridOwnerList.Count;
+            var gridOwner = 0L;
+
+            if (ownerCnt > 0 && gridOwnerList[0] != 0)
+                return gridOwnerList[0];
+            else if (ownerCnt > 1)
+                return gridOwnerList[1];
+
+            return gridOwner;
+        }
+
         public static bool IsOwnerOrFactionOwned(MyCubeGrid grid, long playerId, bool doFactionCheck)
         {
             if (grid.BigOwners.Contains(playerId))
@@ -43,15 +58,9 @@ namespace CrunchUtilities
                 {
                     return false;
                 }
+                long ownerId = GetOwner(grid);
                 //check if the owner is a faction member, i honestly dont know the difference between grid.BigOwners and grid.SmallOwners
-                if (grid.BigOwners.Count > 1)
-                {
-                    return FacUtils.InSameFaction(playerId, grid.BigOwners[1]);
-                }
-                else
-                {
-                    return FacUtils.InSameFaction(playerId, grid.BigOwners[0]);
-                }
+                    return FacUtils.InSameFaction(playerId, ownerId);
             }
         }
 

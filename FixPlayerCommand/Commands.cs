@@ -20,6 +20,8 @@ using System.Collections.Concurrent;
 using VRage.Game;
 using Sandbox.ModAPI;
 using Sandbox.Game.GameSystems;
+using Sandbox.Engine.Multiplayer;
+using Sandbox.Game.Screens.Helpers;
 
 namespace CrunchUtilities
 {
@@ -55,9 +57,7 @@ namespace CrunchUtilities
                         Context.Respond("Converting to ship " + grid.DisplayName);
                     }
                 }
-                }
-            
-
+             }
         }
 
         [Command("admin makestation", "Admin command, Turn a station and connected grids into a ship")]
@@ -179,8 +179,10 @@ namespace CrunchUtilities
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
                 if (gridWithSubGrids.Count > 0)
                 {
+                   
                     foreach (var item in gridWithSubGrids)
                     {
+                        bool isStatic = false;
                         foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                         {
 
@@ -193,19 +195,24 @@ namespace CrunchUtilities
                             }
                             else
                             {
-                                if (grid.IsStatic)
-                                {
-                                    Action m_convertToShipResult = null;
-                                    grid.RequestConversionToShip(m_convertToShipResult);
-                                    Context.Respond("Converting to ship " + grid.DisplayName);
+                                //fix this lmao, one grid static, others dynamic it turns the dynamics to static and static to dynamic
+        
+                                    if (grid.IsStatic)
+                                    {
+                                        Action m_convertToShipResult = null;
+                                        grid.RequestConversionToShip(m_convertToShipResult);
+                                        Context.Respond("Converting to ship " + grid.DisplayName);
+                                        isStatic = true;
                                 }
                                 else
                                 {
+                                    if (isStatic)
+                                    {
+                                        return;
+                                    }
                                     grid.OnConvertedToStationRequest();
                                     Context.Respond("Converting to station " + grid.DisplayName);
-
                                 }
-
                             }
                         }
                     }
@@ -220,7 +227,6 @@ namespace CrunchUtilities
                 Context.Respond("PlayerMakeShip not enabled");
             }
         }
-       
         [Command("fixme", "Murder a player then respawn them at their current location")]
         [Permission(MyPromoteLevel.None)]
         public void FixPlayer()
@@ -240,32 +246,17 @@ namespace CrunchUtilities
                 }
                 try
                 {
-                    MatrixD playerPos = player.Character.WorldMatrix;
-                    VRage.ModAPI.IMyEntity entity = MyEntities.GetEntityById(player.Character.EntityId) as VRage.ModAPI.IMyEntity;
-                    VRage.Game.ModAPI.IMyInventory playerInv = player.Character.GetInventory();
-                    Dictionary<String, int> amounts = new Dictionary<string, int>();
-                    //  MyItemType itemType = new MyInventoryItemFilter("MyObjectBuilder_Component/" + pair.Key).ItemType;
-
-                    player.SpawnAt(playerPos, new Vector3(0, 0, 0), entity, false);
-                    IMyCharacter oldCharacter = player.Character;
-                    IMyCharacter newCharacter = player.Character;
-                    player.SpawnIntoCharacter(newCharacter);
-                    oldCharacter.GetInventory().Clear();
-                    oldCharacter.Kill();
-                    // oldCharacter.Delete();
-
-
-                    int i;
-                    for (i = 0; i < playerInv.ItemCount; i++)
-                    {
-                        playerInv.TransferItemTo(player.Character.GetInventory(), playerInv.GetItemAt(i).Value);
-                    }
-
-                    Context.Respond("You should be fixed");
+                    Context.Respond("You should be fixed after respawning");
+                    player.Character.Kill();
+                    player.Character.Delete();
+                    MyMultiplayer.Static.DisconnectClient(player.SteamUserId);
                 }
                 catch (Exception)
                 {
-                    Context.Respond("Relog and try again");
+                    Context.Respond("You are really broken, this might help");
+                    player.Character.Kill();
+                    player.Character.Delete();
+                    MyMultiplayer.Static.DisconnectClient(player.SteamUserId);
                     return;
                 }
             }
