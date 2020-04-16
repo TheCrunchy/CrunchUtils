@@ -13,6 +13,7 @@ namespace CrunchUtilities
         public bool PlayerFixMe = false;
         public bool DeleteStone = false;
         private int _cooldownInSeconds = 10 * 60;
+        public bool IdentityUpdate = false;
         public int CooldownInSeconds { get => _cooldownInSeconds; set => SetValue(ref _cooldownInSeconds, value); }
     }
 }

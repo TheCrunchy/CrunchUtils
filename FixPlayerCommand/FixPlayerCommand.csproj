@@ -126,6 +126,7 @@
     <Compile Include="Commands.cs" />
     <Compile Include="ConfigFile.cs" />
     <Compile Include="CurrentCooldown.cs" />
+    <Compile Include="EconUtils.cs" />
     <Compile Include="FacUtils.cs" />
     <Compile Include="CrunchUtilitiesPlugin.cs" />
     <Compile Include="FileUtils.cs" />

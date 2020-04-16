@@ -22,6 +22,7 @@ using Sandbox.ModAPI;
 using Sandbox.Game.GameSystems;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
+using Sandbox.Game.GameSystems.BankingAndCurrency;
 
 namespace CrunchUtilities
 {
@@ -264,6 +265,195 @@ namespace CrunchUtilities
             {
                 Context.Respond("PlayerFixMe not enabled");
             }
+        }
+        [Command("updatename", "updates identity names")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void UpdateIdentities(String playerNameOrId, String newName)
+        {
+
+
+            MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
+
+            if (identity == null)
+            {
+                Context.Respond("Error cant find that guy");
+                return;
+            }
+            else
+            {
+                identity.SetDisplayName(newName);
+                Context.Respond("New Identity Name : " + identity.DisplayName);
+            }
+
+        }
+
+
+
+        [Command("eco", "list commands")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void EcoHelp()
+        {
+            Context.Respond("\n"
+            + "Players \n"
+            + "!eco balanceplayer player \n"
+            + "!eco giveplayer player amount \n"
+            + "!eco takeplayer player amount \n"
+
+            + "Factions \n"
+            + "!eco balancefaction tag \n"
+            + "!eco givefac tag amount \n"
+            + "!eco takefac tag amount \n");
+        }
+
+        [Command("eco balanceplayer", "See a players balance")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void CheckMoneysPlayer(string playerNameOrId)
+        {
+            //Context.Respond("Error Player not online");
+            IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
+            if (id == null)
+            {
+                Context.Respond("Error cant find that guy");
+                return;
+            }
+            else
+            {
+                Context.Respond(id.DisplayName + " Balance : " + EconUtils.getBalance(id.IdentityId));
+                return;
+            }
+        }
+
+        [Command("eco balancefaction", "See a factions balance")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void CheckMoneysFaction(string playerNameOrId)
+        {
+            IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(playerNameOrId);
+            if (fac != null)
+            {
+                Context.Respond(fac.Name + "FACTION Balance : " + fac.GetBalanceShortString());
+                return;
+            }
+            else
+            {
+                Context.Respond("Error, no faction");
+            }
+        }
+
+        [Command("eco giveplayer", "gibs money to a player")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void AddMoneysPlayer(string playerNameOrId, Int64 amount)
+        {
+            //Context.Respond("Error Player not online");
+            IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
+            if (id == null)
+            {
+                Context.Respond("Error cant find that guy");
+                return;
+            }
+            Context.Respond(id.DisplayName + " Balance Before Change : " + EconUtils.getBalance(id.IdentityId));
+
+            //could use EconUtils.addMoney here
+            MyBankingSystem.ChangeBalance(id.IdentityId, amount);
+
+            Context.Respond(id.DisplayName + " Balance After Change : " + EconUtils.getBalance(id.IdentityId));
+            return;
+        }
+
+
+
+        [Command("eco takeplayer", "removes money from a player")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void RemoveMoneysPlayer(string playerNameOrId, Int64 amount)
+        {
+            IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
+            if (id == null)
+            {
+                Context.Respond("Error cant find that guy");
+                return;
+            }
+            long Balance = EconUtils.getBalance(id.IdentityId);
+            if (Balance >= amount)
+            {
+                amount = amount * -1;
+                Context.Respond(id.DisplayName + " Balance Before Change : " + EconUtils.getBalance(id.IdentityId));
+                //could use EconUtils.takeMoney here
+                MyBankingSystem.ChangeBalance(id.IdentityId, amount);
+                Context.Respond(id.DisplayName + " Balance After Change : " + EconUtils.getBalance(id.IdentityId));
+                return;
+            }
+
+            return;
+
+        }
+
+        [Command("eco givefac", "gibs money to a faction")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void AddMoneysFaction(string tag, Int64 amount)
+        {
+            IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
+            if (fac != null)
+            {
+                if (amount > 0)
+                {
+                    Context.Respond(fac.Name + " FACTION Balance Before Change : " + fac.GetBalanceShortString());
+                    fac.RequestChangeBalance(amount);
+                    Context.Respond(fac.Name + " FACTION Balance After Change : " + fac.GetBalanceShortString());
+                    return;
+                }
+                else
+                {
+                    Context.Respond("Error must be a positive number");
+                }
+            }
+            else
+            {
+                Context.Respond("Error faction not found");
+            }
+            return;
+
+        }
+
+        [Command("eco takefac", "remove money from a faction")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void removeMoneysFaction(string tag, Int64 amount)
+        {
+            IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
+            if (fac != null)
+            {
+                if (amount > 0)
+                {
+                    string temp = fac.GetBalanceShortString();
+                    temp = temp.Replace("SC", "");
+                    temp = temp.Replace(",", "");
+                    temp = temp.Replace(" ", "");
+                    
+                    //could maybe use econUtils.getBalance but i havent tested with a faction
+                    long Balance = long.Parse(temp);
+                    if (Balance >= amount)
+                    {
+                        amount = amount * -1;
+                        Context.Respond(fac.Name + " FACTION Balance Before Change : " + fac.GetBalanceShortString());
+
+                        fac.RequestChangeBalance(amount);
+                        Context.Respond(fac.Name + " FACTION Balance After Change : " + fac.GetBalanceShortString());
+                        return;
+                    }
+                    else
+                    {
+                        Context.Respond("Error deducting too much, Faction Balance :  " + fac.GetBalanceShortString());
+                    }
+                }
+                else
+                {
+                    Context.Respond("Error must be a positive number");
+                }
+            }
+            else
+            {
+                Context.Respond("Error faction not found");
+            }
+            return;
+
         }
     }
 }
