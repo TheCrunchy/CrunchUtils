@@ -23,7 +23,9 @@ using Sandbox.Game.GameSystems;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
 using Sandbox.Game.GameSystems.BankingAndCurrency;
-
+using Torch.Managers;
+using Torch.API.Plugins;
+using Torch.API.Managers;
 namespace CrunchUtilities
 {
     public class Commands : CommandModule
@@ -211,8 +213,16 @@ namespace CrunchUtilities
                                     {
                                         return;
                                     }
-                                    grid.OnConvertedToStationRequest();
-                                    Context.Respond("Converting to station " + grid.DisplayName);
+                                    try
+                                    {
+                                        grid.OnConvertedToStationRequest();
+                                        Context.Respond("Converting to station IF grid is not moving." + grid.DisplayName);
+                                    }
+                                    catch (Exception)
+                                    {
+                                        Context.Respond("Grid cannot be moving!");
+                                        
+                                    }
                                 }
                             }
                         }
@@ -289,6 +299,9 @@ namespace CrunchUtilities
 
 
 
+
+
+
         [Command("eco", "list commands")]
         [Permission(MyPromoteLevel.Admin)]
         public void EcoHelp()
@@ -323,11 +336,23 @@ namespace CrunchUtilities
             }
         }
 
+        [Command("eco withdraw", "Withdraw moneys")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void PlayerWithdraw(Int64 amount)
+        {
+            IMyPlayer player = Context.Player;
+            if (player == null)
+            {
+                Context.Respond("Console cant withdraw money.....");
+            }
+
+        }
+
         [Command("eco balancefaction", "See a factions balance")]
         [Permission(MyPromoteLevel.Admin)]
-        public void CheckMoneysFaction(string playerNameOrId)
+        public void CheckMoneysFaction(string tag)
         {
-            IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(playerNameOrId);
+            IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
             if (fac != null)
             {
                 Context.Respond(fac.Name + "FACTION Balance : " + fac.GetBalanceShortString());
@@ -413,6 +438,65 @@ namespace CrunchUtilities
 
         }
 
+        [Command("faction rep change", "Change repuation between factions")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void ChangeFactionRep(string tag, string tag2, Int64 amount)
+        {
+            IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
+            IMyFaction fac2 = MySession.Static.Factions.TryGetFactionByTag(tag2);
+            if (fac != null && fac2 != null)
+            {
+                    Context.Respond(fac.Name + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
+                    MySession.Static.Factions.SetReputationBetweenFactions(fac.FactionId, fac2.FactionId, int.Parse(amount.ToString()));
+                    Context.Respond(fac.Name + " FACTION Reputation After Change : "+ MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));  
+            }
+            else
+            {
+                Context.Respond("Error faction not found");
+            }
+            return;
+
+        }
+
+        [Command("player rep change", "Change repuation between factions")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void ChangePlayerRep(string playerNameOrId, string tag, Int64 amount)
+        {
+            MyIdentity player = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
+            IMyFaction fac2 = MySession.Static.Factions.TryGetFactionByTag(tag);
+            if (player != null && fac2 != null)
+            {
+                Context.Respond(player.DisplayName + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(Context.Player.IdentityId, fac2.FactionId));
+                MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(player.IdentityId, fac2.FactionId, int.Parse(amount.ToString()));
+                Context.Respond(player.DisplayName + " FACTION Reputation After Change : " + MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(Context.Player.IdentityId, fac2.FactionId));
+            }
+            else
+            {
+                Context.Respond("Error faction not found");
+            }
+            return;
+
+        }
+
+        [Command("faction rep change", "gibs money to a faction")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void AddMoneysFaction(string tag, string tag2, Int64 amount)
+        {
+            IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
+            IMyFaction fac2 = MySession.Static.Factions.TryGetFactionByTag(tag2);
+            if (fac != null && fac2 != null)
+            {
+                Context.Respond(fac.Name + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
+                MySession.Static.Factions.SetReputationBetweenFactions(fac.FactionId, fac2.FactionId, int.Parse(amount.ToString()));
+                Context.Respond(fac.Name + " FACTION Reputation After Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
+            }
+            else
+            {
+                Context.Respond("Error faction not found");
+            }
+            return;
+
+        }
         [Command("eco takefac", "remove money from a faction")]
         [Permission(MyPromoteLevel.Admin)]
         public void removeMoneysFaction(string tag, Int64 amount)
