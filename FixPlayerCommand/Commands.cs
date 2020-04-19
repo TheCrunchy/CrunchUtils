@@ -26,6 +26,8 @@ using Sandbox.Game.GameSystems.BankingAndCurrency;
 using Torch.Managers;
 using Torch.API.Plugins;
 using Torch.API.Managers;
+using Sandbox.ModAPI.Ingame;
+
 namespace CrunchUtilities
 {
     public class Commands : CommandModule
@@ -348,6 +350,39 @@ namespace CrunchUtilities
 
         }
 
+
+        [Command("giveitem", "Give target player an item")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void PlayerWithdraw(string PlayerName, string type, string subtypeName, Int64 amount)
+        {
+            IMyPlayer player = MySession.Static.Players.GetPlayerByName(PlayerName);
+            if (player == null)
+            {
+                Context.Respond("Cant find that player");
+            }
+            VRage.Game.ModAPI.IMyInventory invent = player.Character.GetInventory();
+            switch (type)
+            {
+                //Eventually add some checks to see if the item exists before adding it
+                case "Ore":
+                    MyObjectBuilder_PhysicalObject item = new MyObjectBuilder_Ore() { SubtypeName = subtypeName };
+                        invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item);
+                        Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item.SubtypeName);
+                    break;
+                case "Ingot":
+                        MyObjectBuilder_PhysicalObject item2 = new MyObjectBuilder_Ingot() { SubtypeName = subtypeName };
+                        invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item2);
+                        Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item2.SubtypeName);
+                    break;
+                case "Component":
+                    MyObjectBuilder_PhysicalObject item3 = new MyObjectBuilder_Component() { SubtypeName = subtypeName };
+                        invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item3);
+                        Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item3.SubtypeName);
+                    break;
+            }
+          
+        }
+
         [Command("eco balancefaction", "See a factions balance")]
         [Permission(MyPromoteLevel.Admin)]
         public void CheckMoneysFaction(string tag)
@@ -458,7 +493,7 @@ namespace CrunchUtilities
 
         }
 
-        [Command("player rep change", "Change repuation between factions")]
+        [Command("player rep change", "Change repuation between faction and player")]
         [Permission(MyPromoteLevel.Admin)]
         public void ChangePlayerRep(string playerNameOrId, string tag, Int64 amount)
         {
