@@ -733,20 +733,20 @@ namespace CrunchUtilities
                 Context.Respond("Cant find that player");
             }
             VRage.Game.ModAPI.IMyInventory invent = player.Character.GetInventory();
-            switch (type)
+            switch (type.ToLower())
             {
                 //Eventually add some checks to see if the item exists before adding it
-                case "Ore":
+                case "ore":
                     MyObjectBuilder_PhysicalObject item = new MyObjectBuilder_Ore() { SubtypeName = subtypeName };
                     invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item);
                     Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item.SubtypeName);
                     break;
-                case "Ingot":
+                case "ingot":
                     MyObjectBuilder_PhysicalObject item2 = new MyObjectBuilder_Ingot() { SubtypeName = subtypeName };
                     invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item2);
                     Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item2.SubtypeName);
                     break;
-                case "Component":
+                case "component":
                     MyObjectBuilder_PhysicalObject item3 = new MyObjectBuilder_Component() { SubtypeName = subtypeName };
                     invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item3);
                     Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item3.SubtypeName);
