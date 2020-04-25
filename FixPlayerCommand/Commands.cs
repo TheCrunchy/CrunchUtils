@@ -30,6 +30,7 @@ using Sandbox.ModAPI.Ingame;
 using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Entities.Cube;
 using Sandbox.Definitions;
+using System.Collections;
 
 namespace CrunchUtilities
 {
@@ -754,7 +755,48 @@ namespace CrunchUtilities
 
         }
 
-        [Command("eco balancefaction", "See a factions balance")]
+
+    [Command("fac promote", "Promote a player to founder if the founder uses this command")]
+    [Permission(MyPromoteLevel.None)]
+    public void FactionPromoteFounder(string playerName)
+    {
+        IMyFaction fac = MySession.Static.Factions.TryGetPlayerFaction(Context.Player.IdentityId);
+        if (fac != null)
+        {
+                VRage.Collections.DictionaryReader<long, MyFactionMember> members = fac.Members;
+                MyFactionMember player;
+                bool foundPlayer = false;
+                if (fac.IsFounder(Context.Player.IdentityId))
+                {
+                    foreach (MyFactionMember member in members.Values)
+                    {
+                        if (CrunchUtilitiesPlugin.GetIdentityByNameOrId(member.PlayerId.ToString()).DisplayName.Equals(playerName)) {
+                            foundPlayer = true;
+                        player = member;
+                        }
+                    }
+
+                    if (foundPlayer)
+                    {
+                        player.IsFounder = true;
+                    }
+                    else
+                    {
+                        Context.Respond("Couldnt find that player");
+                    }
+                }
+                else
+                {
+                    Context.Respond("You need to be the founder to use this command.");
+                }
+            }
+        else
+        {
+            Context.Respond("Error, no faction");
+        }
+    }
+
+    [Command("eco balancefaction", "See a factions balance")]
         [Permission(MyPromoteLevel.Admin)]
         public void CheckMoneysFaction(string tag)
         {
@@ -762,6 +804,7 @@ namespace CrunchUtilities
             if (fac != null)
             {
                 Context.Respond(fac.Name + "FACTION Balance : " + fac.GetBalanceShortString());
+   
                 return;
             }
             else
