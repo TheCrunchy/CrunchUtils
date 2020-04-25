@@ -192,6 +192,7 @@ namespace CrunchUtilities
                     foreach (var item in gridWithSubGrids)
                     {
                         bool isStatic = false;
+                        bool isDynamic = false;
                         foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                         {
 
@@ -208,6 +209,10 @@ namespace CrunchUtilities
 
                                 if (grid.IsStatic)
                                 {
+                                    if (isDynamic)
+                                    {
+                                        break;
+                                    }
                                     Action m_convertToShipResult = null;
                                     grid.RequestConversionToShip(m_convertToShipResult);
                                     Context.Respond("Converting to ship " + grid.DisplayName);
@@ -221,6 +226,7 @@ namespace CrunchUtilities
                                     }
                                     try
                                     {
+                                        isDynamic = true;
                                         grid.OnConvertedToStationRequest();
                                         Context.Respond("Converting to station IF grid is not moving." + grid.DisplayName);
                                     }
@@ -244,6 +250,40 @@ namespace CrunchUtilities
                 Context.Respond("PlayerMakeShip not enabled");
             }
         }
+
+        [Command("rename", "Player command, Rename a ship")]
+        [Permission(MyPromoteLevel.None)]
+        public void RenameGrid(string gridname, string newname)
+        {
+
+            bool changed = false;
+            if (CrunchUtilitiesPlugin.file.PlayerMakeShip)
+            {
+                if (Context.Player == null)
+                {
+                    Context.Respond("Currently only a player can use this command :(");
+                    return;
+                }
+                MyEntities.TryGetEntityByName(gridname, out MyEntity entity);
+                MyCubeGrid grid = entity as MyCubeGrid;
+                if (FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true) && grid.Name.Equals(gridname))
+                {
+                    grid.ChangeDisplayNameRequest(newname);
+                    Context.Respond("Grid should be renamed, relog to take effect");
+                    changed = true;
+                }
+
+                if (!changed)
+                {
+                    Context.Respond("Couldnt find that grid, are you sure its owned by you or faction?");
+                }
+            }
+            else
+            {
+                Context.Respond("PlayerMakeShip not enabled");
+            }
+        }
+
         [Command("fixme", "Murder a player then respawn them at their current location")]
         [Permission(MyPromoteLevel.None)]
         public void FixPlayer()
@@ -404,7 +444,8 @@ namespace CrunchUtilities
                                     Context.Respond("Withdrew : " + String.Format("{0:n0}", withdrew));
                                     return;
                                 }
-                                else {
+                                else
+                                {
                                     if (balance >= difference)
                                     {
                                         if (block.FatBlock.GetInventory().CanItemsBeAdded(difference, itemType))
@@ -526,7 +567,7 @@ namespace CrunchUtilities
                 Context.Respond("Deposited : " + String.Format("{0:n0}", deposited));
             }
         }
-    
+
 
         [Command("eco withdraw", "Withdraw moneys")]
         [Permission(MyPromoteLevel.None)]
@@ -653,21 +694,21 @@ namespace CrunchUtilities
                 //Eventually add some checks to see if the item exists before adding it
                 case "Ore":
                     MyObjectBuilder_PhysicalObject item = new MyObjectBuilder_Ore() { SubtypeName = subtypeName };
-                        invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item);
-                        Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item.SubtypeName);
+                    invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item);
+                    Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item.SubtypeName);
                     break;
                 case "Ingot":
-                        MyObjectBuilder_PhysicalObject item2 = new MyObjectBuilder_Ingot() { SubtypeName = subtypeName };
-                        invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item2);
-                        Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item2.SubtypeName);
+                    MyObjectBuilder_PhysicalObject item2 = new MyObjectBuilder_Ingot() { SubtypeName = subtypeName };
+                    invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item2);
+                    Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item2.SubtypeName);
                     break;
                 case "Component":
                     MyObjectBuilder_PhysicalObject item3 = new MyObjectBuilder_Component() { SubtypeName = subtypeName };
-                        invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item3);
-                        Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item3.SubtypeName);
+                    invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item3);
+                    Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item3.SubtypeName);
                     break;
             }
-          
+
         }
 
         [Command("eco balancefaction", "See a factions balance")]
@@ -719,7 +760,7 @@ namespace CrunchUtilities
             }
             Context.Respond(id.DisplayName + " Balance Before Change : " + EconUtils.getBalance(id.IdentityId));
 
-           EconUtils.takeMoney(id.IdentityId, EconUtils.getBalance(id.IdentityId));
+            EconUtils.takeMoney(id.IdentityId, EconUtils.getBalance(id.IdentityId));
 
             Context.Respond(id.DisplayName + " Balance After Change : " + EconUtils.getBalance(id.IdentityId));
             return;
@@ -732,10 +773,10 @@ namespace CrunchUtilities
             IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
             if (fac != null)
             {
-                    Context.Respond(fac.Name + " FACTION Balance Before Change : " + fac.GetBalanceShortString());
+                Context.Respond(fac.Name + " FACTION Balance Before Change : " + fac.GetBalanceShortString());
                 EconUtils.takeMoney(fac.FactionId, EconUtils.getBalance(fac.FactionId));
-                    Context.Respond(fac.Name + " FACTION Balance After Change : " + fac.GetBalanceShortString());
-                    return;
+                Context.Respond(fac.Name + " FACTION Balance After Change : " + fac.GetBalanceShortString());
+                return;
             }
             else
             {
@@ -810,9 +851,9 @@ namespace CrunchUtilities
             IMyFaction fac2 = MySession.Static.Factions.TryGetFactionByTag(tag2);
             if (fac != null && fac2 != null)
             {
-                    Context.Respond(fac.Name + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
-                    MySession.Static.Factions.SetReputationBetweenFactions(fac.FactionId, fac2.FactionId, int.Parse(amount.ToString()));
-                    Context.Respond(fac.Name + " FACTION Reputation After Change : "+ MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));  
+                Context.Respond(fac.Name + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
+                MySession.Static.Factions.SetReputationBetweenFactions(fac.FactionId, fac2.FactionId, int.Parse(amount.ToString()));
+                Context.Respond(fac.Name + " FACTION Reputation After Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
             }
             else
             {
@@ -874,7 +915,7 @@ namespace CrunchUtilities
                     temp = temp.Replace("SC", "");
                     temp = temp.Replace(",", "");
                     temp = temp.Replace(" ", "");
-                    
+
                     //could maybe use econUtils.getBalance but i havent tested with a faction
                     long Balance = long.Parse(temp);
                     if (Balance >= amount)
