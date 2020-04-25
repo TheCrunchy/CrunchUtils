@@ -27,6 +27,9 @@ using Torch.Managers;
 using Torch.API.Plugins;
 using Torch.API.Managers;
 using Sandbox.ModAPI.Ingame;
+using Sandbox.Game.Entities.Character;
+using Sandbox.Game.Entities.Cube;
+using Sandbox.Definitions;
 
 namespace CrunchUtilities
 {
@@ -48,13 +51,13 @@ namespace CrunchUtilities
         public void MakeShip()
         {
 
-                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
-                foreach (var item in gridWithSubGrids)
+            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+            foreach (var item in gridWithSubGrids)
+            {
+                foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                 {
-                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
-                    {
-                        MyCubeGrid grid = groupNodes.NodeData;
-               
+                    MyCubeGrid grid = groupNodes.NodeData;
+
                     if (grid.IsStatic)
                     {
                         Action m_convertToShipResult = null;
@@ -62,7 +65,7 @@ namespace CrunchUtilities
                         Context.Respond("Converting to ship " + grid.DisplayName);
                     }
                 }
-             }
+            }
         }
 
         [Command("admin makestation", "Admin command, Turn a station and connected grids into a ship")]
@@ -79,7 +82,7 @@ namespace CrunchUtilities
 
                     if (!grid.IsStatic)
                         grid.OnConvertedToStationRequest();
-                        Context.Respond("Converting to station " + grid.DisplayName);
+                    Context.Respond("Converting to station " + grid.DisplayName);
                 }
             }
         }
@@ -102,16 +105,16 @@ namespace CrunchUtilities
         {
             if (CrunchUtilitiesPlugin.file.DeleteStone)
             {
-                CrunchUtilitiesPlugin plugin = (CrunchUtilitiesPlugin) Context.Plugin;
-               var currentCooldownMap = plugin.CurrentCooldownMap;
+                CrunchUtilitiesPlugin plugin = (CrunchUtilitiesPlugin)Context.Plugin;
+                var currentCooldownMap = plugin.CurrentCooldownMap;
                 if (currentCooldownMap.TryGetValue(Context.Player.IdentityId, out CurrentCooldown currentCooldown))
                 {
-                  
+
                     long remainingSeconds = currentCooldown.GetRemainingSeconds(null);
-                    
+
                     if (remainingSeconds > 0)
                     {
-                      
+
                         CrunchUtilitiesPlugin.Log.Info("Cooldown for Player " + Context.Player.DisplayName + " still running! " + remainingSeconds + " seconds remaining!");
                         Context.Respond("Command is still on cooldown for " + remainingSeconds + " seconds.");
                         return;
@@ -149,7 +152,8 @@ namespace CrunchUtilities
                                     var items = block.GetInventory().GetItems();
                                     for (int i = 0; i < items.Count; i++)
                                     {
-                                        if (items[i].Content.SubtypeId.ToString().Contains("Stone"))
+
+                                        if (items[i].Content.SubtypeId.ToString().Contains("Stone") && items[i].Content.TypeId.ToString().Contains("Ore"))
                                         {
                                             block.GetInventory().RemoveItems(items[i].ItemId);
                                         }
@@ -176,7 +180,7 @@ namespace CrunchUtilities
 
                 if (MyGravityProviderSystem.IsPositionInNaturalGravity(Context.Player.GetPosition()))
                 {
-                    
+
                     Context.Respond("You cannot use this command in natural gravity!");
                     return;
                 }
@@ -184,7 +188,7 @@ namespace CrunchUtilities
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
                 if (gridWithSubGrids.Count > 0)
                 {
-                   
+
                     foreach (var item in gridWithSubGrids)
                     {
                         bool isStatic = false;
@@ -201,19 +205,19 @@ namespace CrunchUtilities
                             else
                             {
                                 //fix this lmao, one grid static, others dynamic it turns the dynamics to static and static to dynamic
-        
-                                    if (grid.IsStatic)
-                                    {
-                                        Action m_convertToShipResult = null;
-                                        grid.RequestConversionToShip(m_convertToShipResult);
-                                        Context.Respond("Converting to ship " + grid.DisplayName);
-                                        isStatic = true;
+
+                                if (grid.IsStatic)
+                                {
+                                    Action m_convertToShipResult = null;
+                                    grid.RequestConversionToShip(m_convertToShipResult);
+                                    Context.Respond("Converting to ship " + grid.DisplayName);
+                                    isStatic = true;
                                 }
                                 else
                                 {
                                     if (isStatic)
                                     {
-                                        return;
+                                        break;
                                     }
                                     try
                                     {
@@ -223,7 +227,7 @@ namespace CrunchUtilities
                                     catch (Exception)
                                     {
                                         Context.Respond("Grid cannot be moving!");
-                                        
+
                                     }
                                 }
                             }
@@ -337,18 +341,301 @@ namespace CrunchUtilities
                 return;
             }
         }
-
-        [Command("eco withdraw", "Withdraw moneys")]
+        [Command("eco withdrawall", "Withdraw all moneys, buggy as fuck, try not to use this")]
         [Permission(MyPromoteLevel.Admin)]
-        public void PlayerWithdraw(Int64 amount)
+        public void PlayerWithdrawAll()
         {
+            VRage.MyFixedPoint balance;
+            Int64 withdrew = 0;
             IMyPlayer player = Context.Player;
+            balance = VRage.MyFixedPoint.DeserializeStringSafe(EconUtils.getBalance(player.IdentityId).ToString());
+
             if (player == null)
             {
                 Context.Respond("Console cant withdraw money.....");
             }
+            MyCubeBlock container = null;
+            VRage.Game.ModAPI.IMyInventory invent = null;
+            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(player.Character);
+            if (gridWithSubGrids.Count < 1)
+            {
+                Context.Respond("Couldnt find a grid");
+                return;
+            }
+            MyItemType itemType = new MyInventoryItemFilter("MyObjectBuilder_PhysicalObject/SpaceCredits").ItemType;
+            foreach (var item in gridWithSubGrids)
+            {
+                foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                {
+                    MyCubeGrid grid = groupNodes.NodeData;
+                    if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
+                        continue;
+                    else
+                    {
+                        foreach (VRage.Game.ModAPI.IMySlimBlock block in grid.GetBlocks())
+                        {
+                            if (block != null && block.BlockDefinition.Id.SubtypeName.Contains("Container"))
+                            {
+                                VRage.MyFixedPoint min = block.FatBlock.GetInventory().CurrentVolume;
+                                VRage.MyFixedPoint max = block.FatBlock.GetInventory().MaxVolume;
+                                VRage.MyFixedPoint difference = (max - min) * 1000;
 
+                                if (block.FatBlock.GetInventory().CanItemsBeAdded(balance, itemType))
+                                {
+                                    switch (block.FatBlock.GetUserRelationToOwner(this.Context.Player.IdentityId))
+                                    {
+                                        case MyRelationsBetweenPlayerAndBlock.NoOwnership:
+                                            return;
+                                        case MyRelationsBetweenPlayerAndBlock.Enemies:
+                                            return;
+                                    }
+
+                                    container = block.FatBlock as MyCubeBlock;
+                                    invent = container.GetInventory();
+
+                                    invent.AddItems(balance, new MyObjectBuilder_PhysicalObject() { SubtypeName = "SpaceCredit" });
+                                    EconUtils.takeMoney(player.IdentityId, balance.ToIntSafe());
+
+                                    withdrew += balance.ToIntSafe();
+                                    balance = 0;
+                                    Context.Respond("Added the credits to " + container.DisplayNameText);
+
+                                    Context.Respond("ONE CONTAINER");
+                                    Context.Respond("Withdrew : " + String.Format("{0:n0}", withdrew));
+                                    return;
+                                }
+                                else {
+                                    if (balance >= difference)
+                                    {
+                                        if (block.FatBlock.GetInventory().CanItemsBeAdded(difference, itemType))
+                                        {
+                                            switch (block.FatBlock.GetUserRelationToOwner(this.Context.Player.IdentityId))
+                                            {
+                                                case MyRelationsBetweenPlayerAndBlock.NoOwnership:
+                                                    return;
+                                                case MyRelationsBetweenPlayerAndBlock.Enemies:
+                                                    return;
+                                            }
+                                            invent.AddItems(difference, new MyObjectBuilder_PhysicalObject() { SubtypeName = "SpaceCredit" });
+                                            EconUtils.takeMoney(player.IdentityId, difference.ToIntSafe());
+
+                                            withdrew += difference.ToIntSafe();
+                                            balance = (balance - difference);
+                                            Context.Respond("Added the credits to " + container.DisplayNameText);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+            Context.Respond("Withdrew : " + String.Format("{0:n0}", withdrew));
         }
+        [Command("eco deposit", "Deposit moneys")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void PlayerDeposit()
+        {
+            if (CrunchUtilitiesPlugin.file.Deposit)
+            {
+                IMyPlayer player = Context.Player;
+                Int64 deposited = 0;
+                if (player == null)
+                {
+                    Context.Respond("Console cant withdraw money.....");
+                }
+                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(player.Character);
+                if (gridWithSubGrids.Count < 1)
+                {
+                    Context.Respond("Couldnt find a grid");
+                    return;
+                }
+                foreach (var item in gridWithSubGrids)
+                {
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                    {
+                        MyCubeGrid grid = groupNodes.NodeData;
+                        if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
+                            continue;
+                        else
+                        {
+                            foreach (VRage.Game.ModAPI.IMySlimBlock block in grid.GetBlocks())
+                            {
+                                if (block.FatBlock != null && block.FatBlock.HasInventory)
+                                {
+                                    bool owned = false;
+                                    switch (block.FatBlock.GetUserRelationToOwner(this.Context.Player.IdentityId))
+                                    {
+                                        case MyRelationsBetweenPlayerAndBlock.Owner:
+                                            owned = true;
+                                            break;
+                                        case MyRelationsBetweenPlayerAndBlock.FactionShare:
+                                            owned = true;
+                                            break;
+                                        case MyRelationsBetweenPlayerAndBlock.Neutral:
+                                            owned = true;
+                                            break;
+                                        case MyRelationsBetweenPlayerAndBlock.NoOwnership:
+                                            owned = false;
+                                            break;
+                                        case MyRelationsBetweenPlayerAndBlock.Enemies:
+                                            owned = false;
+                                            break;
+                                    }
+                                    List<VRage.Game.ModAPI.IMyInventoryItem> itemList2 = new List<VRage.Game.ModAPI.IMyInventoryItem>();
+                                    itemList2 = block.FatBlock.GetInventory().GetItems();
+                                    int i = 0;
+                                    if (owned)
+                                    {
+
+                                        for (i = 0; i < itemList2.Count; i++)
+                                        {
+                                            string itemId = itemList2[i].Content.SubtypeId.ToString();
+                                            if (itemId.Contains("SpaceCredit"))
+                                            {
+                                                if (itemList2[i].Amount.ToIntSafe() == Int32.MaxValue)
+                                                {
+                                                    deposited += Int32.MaxValue;
+                                                    EconUtils.addMoney(player.IdentityId, Int32.MaxValue);
+                                                    block.FatBlock.GetInventory().RemoveItemAmount(itemList2[i], Int32.MaxValue);
+                                                    Context.Respond("Stack exceeds 2.147 billion, split the stack!");
+                                                }
+                                                else
+                                                {
+                                                    deposited += itemList2[i].Amount.ToIntSafe();
+                                                    EconUtils.addMoney(player.IdentityId, itemList2[i].Amount.ToIntSafe());
+                                                    block.FatBlock.GetInventory().RemoveItemAmount(itemList2[i], itemList2[i].Amount);
+                                                }
+
+                                            }
+
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Context.Respond("You dont own this container.");
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+
+                }
+                Context.Respond("Deposited : " + String.Format("{0:n0}", deposited));
+            }
+        }
+    
+
+        [Command("eco withdraw", "Withdraw moneys")]
+        [Permission(MyPromoteLevel.None)]
+        public void PlayerWithdraw(Int64 amount)
+        {
+            if (CrunchUtilitiesPlugin.file.Withdraw)
+            {
+                Int64 balance;
+                if (amount >= Int32.MaxValue)
+                {
+                    Context.Respond("Keen code doesnt allow stacks over 2.147 billion, try again with a smaller number");
+                    return;
+                }
+                IMyPlayer player = Context.Player;
+                balance = EconUtils.getBalance(player.IdentityId);
+                if (balance < amount)
+                {
+                    Context.Respond("You dont have that much money.");
+                    return;
+                }
+                if (amount < 0 || amount == 0)
+                {
+                    Context.Respond("No.");
+                    return;
+                }
+                if (player == null)
+                {
+                    Context.Respond("Console cant withdraw money.....");
+                }
+                MyCubeBlock container = null;
+                VRage.Game.ModAPI.IMyInventory invent = null;
+                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(player.Character);
+                if (gridWithSubGrids.Count < 1)
+                {
+                    Context.Respond("Couldnt find a grid");
+                    return;
+                }
+                MyItemType itemType = new MyInventoryItemFilter("MyObjectBuilder_PhysicalObject/SpaceCredits").ItemType;
+                foreach (var item in gridWithSubGrids)
+                {
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                    {
+                        MyCubeGrid grid = groupNodes.NodeData;
+                        if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
+                            continue;
+                        else
+                        {
+                            foreach (VRage.Game.ModAPI.IMySlimBlock block in grid.GetBlocks())
+                            {
+                                if (block != null && block.BlockDefinition.Id.SubtypeName.Contains("Container"))
+                                {
+                                    if (block.FatBlock.GetInventory().CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), itemType))
+                                    {
+                                        switch (block.FatBlock.GetUserRelationToOwner(this.Context.Player.IdentityId))
+                                        {
+                                            case MyRelationsBetweenPlayerAndBlock.Owner:
+                                                container = block.FatBlock as MyCubeBlock;
+                                                invent = container.GetInventory();
+                                                break;
+                                            case MyRelationsBetweenPlayerAndBlock.FactionShare:
+                                                container = block.FatBlock as MyCubeBlock;
+                                                invent = container.GetInventory();
+                                                break;
+                                            case MyRelationsBetweenPlayerAndBlock.Neutral:
+                                                container = block.FatBlock as MyCubeBlock;
+                                                invent = container.GetInventory();
+                                                break;
+                                            case MyRelationsBetweenPlayerAndBlock.NoOwnership:
+                                                Context.Respond("You dont own this.");
+                                                return;
+                                            case MyRelationsBetweenPlayerAndBlock.Enemies:
+                                                Context.Respond("You dont own this.");
+                                                return;
+                                        }
+
+                                        break;
+                                    }
+                                }
+
+                            }
+                            if (container == null)
+                            {
+                                Context.Respond("No container has free space for that many credits.");
+                            }
+                        }
+                    }
+
+
+
+                    if (invent != null)
+                    {
+                        MyItemType credits = new MyInventoryItemFilter("MyObjectBuilder_PhysicalObject/" + "SpaceCredit").ItemType;
+
+                        if (invent.CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), credits))
+                        {
+                            invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), new MyObjectBuilder_PhysicalObject() { SubtypeName = "SpaceCredit" });
+                            EconUtils.takeMoney(player.IdentityId, amount);
+
+                            Context.Respond("Added the credits to " + container.DisplayNameText);
+                        }
+                        else
+                        {
+                            Context.Respond("Cant add that many");
+                        }
+                    }
+                }
+            }
+        }
+
 
 
         [Command("giveitem", "Give target player an item")]
@@ -419,6 +706,44 @@ namespace CrunchUtilities
             return;
         }
 
+        [Command("eco resetplayer", "set a players balance to 0")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void ResetMoneysPlayer(string playerNameOrId)
+        {
+            //Context.Respond("Error Player not online");
+            IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
+            if (id == null)
+            {
+                Context.Respond("Error cant find that guy");
+                return;
+            }
+            Context.Respond(id.DisplayName + " Balance Before Change : " + EconUtils.getBalance(id.IdentityId));
+
+           EconUtils.takeMoney(id.IdentityId, EconUtils.getBalance(id.IdentityId));
+
+            Context.Respond(id.DisplayName + " Balance After Change : " + EconUtils.getBalance(id.IdentityId));
+            return;
+        }
+
+        [Command("eco resetfac", "Reset a factions balance")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void AddMoneysFaction(string tag)
+        {
+            IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
+            if (fac != null)
+            {
+                    Context.Respond(fac.Name + " FACTION Balance Before Change : " + fac.GetBalanceShortString());
+                EconUtils.takeMoney(fac.FactionId, EconUtils.getBalance(fac.FactionId));
+                    Context.Respond(fac.Name + " FACTION Balance After Change : " + fac.GetBalanceShortString());
+                    return;
+            }
+            else
+            {
+                Context.Respond("Error faction not found");
+            }
+            return;
+
+        }
 
 
         [Command("eco takeplayer", "removes money from a player")]
@@ -440,6 +765,10 @@ namespace CrunchUtilities
                 MyBankingSystem.ChangeBalance(id.IdentityId, amount);
                 Context.Respond(id.DisplayName + " Balance After Change : " + EconUtils.getBalance(id.IdentityId));
                 return;
+            }
+            else
+            {
+                Context.Respond("Player doesnt have that much, player balance : " + EconUtils.getBalance(id.IdentityId));
             }
 
             return;
