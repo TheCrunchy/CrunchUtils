@@ -264,15 +264,22 @@ namespace CrunchUtilities
                     Context.Respond("Currently only a player can use this command :(");
                     return;
                 }
-                MyEntities.TryGetEntityByName(gridname, out MyEntity entity);
-                MyCubeGrid grid = entity as MyCubeGrid;
-                if (FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true) && grid.Name.Equals(gridname))
+                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindGridGroup(gridname);
+                foreach (var item in gridWithSubGrids)
                 {
-                    grid.ChangeDisplayNameRequest(newname);
-                    Context.Respond("Grid should be renamed, relog to take effect");
-                    changed = true;
-                }
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                    {
+                        MyCubeGrid grid = groupNodes.NodeData;
 
+                        if (FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true) && grid.Name.Equals(gridname))
+                        {
+                            grid.ChangeDisplayNameRequest(newname);
+                           
+                            Context.Respond("Renaming " + grid.Name + ". You may need to relog to see changes.");
+                            changed = true;
+                        }
+                    }
+                }
                 if (!changed)
                 {
                     Context.Respond("Couldnt find that grid, are you sure its owned by you or faction?");
@@ -385,10 +392,10 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.Admin)]
         public void PlayerWithdrawAll()
         {
-            VRage.MyFixedPoint balance;
+            Int64 balance;
             Int64 withdrew = 0;
             IMyPlayer player = Context.Player;
-            balance = VRage.MyFixedPoint.DeserializeStringSafe(EconUtils.getBalance(player.IdentityId).ToString());
+            balance = EconUtils.getBalance(player.IdentityId);
 
             if (player == null)
             {
@@ -402,7 +409,7 @@ namespace CrunchUtilities
                 Context.Respond("Couldnt find a grid");
                 return;
             }
-            MyItemType itemType = new MyInventoryItemFilter("MyObjectBuilder_PhysicalObject/SpaceCredits").ItemType;
+            MyItemType itemType = new MyInventoryItemFilter("MyObjectBuilder_PhysicalObject/SpaceCredit").ItemType;
             foreach (var item in gridWithSubGrids)
             {
                 foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
@@ -416,54 +423,66 @@ namespace CrunchUtilities
                         {
                             if (block != null && block.BlockDefinition.Id.SubtypeName.Contains("Container"))
                             {
-                                VRage.MyFixedPoint min = block.FatBlock.GetInventory().CurrentVolume;
-                                VRage.MyFixedPoint max = block.FatBlock.GetInventory().MaxVolume;
-                                VRage.MyFixedPoint difference = (max - min) * 1000;
-
-                                if (block.FatBlock.GetInventory().CanItemsBeAdded(balance, itemType))
+                               Int64 min = Int64.Parse(block.FatBlock.GetInventory().CurrentVolume.RawValue.ToString());
+                                Int64 max = Int64.Parse(block.FatBlock.GetInventory().MaxVolume.RawValue.ToString());
+                                Int64 difference = (max - min) * 1000;
+                                if (balance >= Int32.MaxValue)
                                 {
-                                    switch (block.FatBlock.GetUserRelationToOwner(this.Context.Player.IdentityId))
+                                    Int64 newBalance = balance; 
+                                    bool canAdd = true;
+                                   while (canAdd)
                                     {
-                                        case MyRelationsBetweenPlayerAndBlock.NoOwnership:
-                                            return;
-                                        case MyRelationsBetweenPlayerAndBlock.Enemies:
-                                            return;
+                                        if (newBalance >= Int32.MaxValue)
+                                        {
+                                            newBalance -= Int32.MaxValue;
+                                            if ((block.FatBlock.GetInventory().CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(Int32.MaxValue.ToString()), itemType))){
+                                                container = block.FatBlock as MyCubeBlock;
+                                                invent = container.GetInventory();
+                                                invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(Int32.MaxValue.ToString()), new MyObjectBuilder_PhysicalObject() { SubtypeName = "SpaceCredit" });
+                                                EconUtils.takeMoney(player.IdentityId, Int32.MaxValue);
+                                                withdrew += Int32.MaxValue;
+                                                Context.Respond("Added the credits to " + container.DisplayNameText);
+                                            }
+                                            else
+                                            {
+                                                canAdd = false;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            if ((block.FatBlock.GetInventory().CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(newBalance.ToString()), itemType)))
+                                            {
+                                                container = block.FatBlock as MyCubeBlock;
+                                                invent = container.GetInventory();
+                                                invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(newBalance.ToString()), new MyObjectBuilder_PhysicalObject() { SubtypeName = "SpaceCredit" });
+                                                EconUtils.takeMoney(player.IdentityId, newBalance);
+                                                withdrew += newBalance;
+                                                Context.Respond("Added the credits to " + container.DisplayNameText);
+                                            }
+                                            else
+                                            {
+                                                canAdd = false;
+                                            }
+                                        }
                                     }
-
-                                    container = block.FatBlock as MyCubeBlock;
-                                    invent = container.GetInventory();
-
-                                    invent.AddItems(balance, new MyObjectBuilder_PhysicalObject() { SubtypeName = "SpaceCredit" });
-                                    EconUtils.takeMoney(player.IdentityId, balance.ToIntSafe());
-
-                                    withdrew += balance.ToIntSafe();
-                                    balance = 0;
-                                    Context.Respond("Added the credits to " + container.DisplayNameText);
-
-                                    Context.Respond("ONE CONTAINER");
-                                    Context.Respond("Withdrew : " + String.Format("{0:n0}", withdrew));
-                                    return;
                                 }
                                 else
                                 {
-                                    if (balance >= difference)
+                                    if (block.FatBlock.GetInventory().CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(balance.ToString()), itemType))
                                     {
-                                        if (block.FatBlock.GetInventory().CanItemsBeAdded(difference, itemType))
-                                        {
-                                            switch (block.FatBlock.GetUserRelationToOwner(this.Context.Player.IdentityId))
-                                            {
-                                                case MyRelationsBetweenPlayerAndBlock.NoOwnership:
-                                                    return;
-                                                case MyRelationsBetweenPlayerAndBlock.Enemies:
-                                                    return;
-                                            }
-                                            invent.AddItems(difference, new MyObjectBuilder_PhysicalObject() { SubtypeName = "SpaceCredit" });
-                                            EconUtils.takeMoney(player.IdentityId, difference.ToIntSafe());
 
-                                            withdrew += difference.ToIntSafe();
-                                            balance = (balance - difference);
-                                            Context.Respond("Added the credits to " + container.DisplayNameText);
-                                        }
+                                        container = block.FatBlock as MyCubeBlock;
+                                        invent = container.GetInventory();
+
+                                        invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(balance.ToString()), new MyObjectBuilder_PhysicalObject() { SubtypeName = "SpaceCredit" });
+                                        EconUtils.takeMoney(player.IdentityId, balance);
+
+                                        withdrew += balance;
+                                        balance = 0;
+                                        Context.Respond("Added the credits to " + container.DisplayNameText);
+
+                                        Context.Respond("Withdrew : " + String.Format("{0:n0}", withdrew));
+                                        return;
                                     }
                                 }
                             }
@@ -486,12 +505,14 @@ namespace CrunchUtilities
                 {
                     Context.Respond("Console cant withdraw money.....");
                 }
+
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(player.Character);
                 if (gridWithSubGrids.Count < 1)
                 {
                     Context.Respond("Couldnt find a grid");
                     return;
                 }
+
                 foreach (var item in gridWithSubGrids)
                 {
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
@@ -535,12 +556,22 @@ namespace CrunchUtilities
                                             string itemId = itemList2[i].Content.SubtypeId.ToString();
                                             if (itemId.Contains("SpaceCredit"))
                                             {
-                                                if (itemList2[i].Amount.ToIntSafe() == Int32.MaxValue)
+                                                Int64 amount = Int64.Parse(itemList2[i].Amount.ToString());
+                                                if (amount >= Int32.MaxValue)
                                                 {
-                                                    deposited += Int32.MaxValue;
-                                                    EconUtils.addMoney(player.IdentityId, Int32.MaxValue);
-                                                    block.FatBlock.GetInventory().RemoveItemAmount(itemList2[i], Int32.MaxValue);
-                                                    Context.Respond("Stack exceeds 2.147 billion, split the stack!");
+                                                    bool hasCredits = true;
+                                                    while (hasCredits)
+                                                    {
+                                                        deposited += amount;
+                                                       
+                                                        block.FatBlock.GetInventory().RemoveItemAmount(itemList2[i], itemList2[i].Amount);
+                                                        //Context.Respond("Stack exceeds 2.147 billion, split the stack!");
+                                                        if (!block.FatBlock.GetInventory().GetItems().Contains(itemList2[i])){
+                                                            hasCredits = false;
+                                                        }
+                                                    }
+                                                    EconUtils.addMoney(player.IdentityId, amount);
+
                                                 }
                                                 else
                                                 {
@@ -565,6 +596,10 @@ namespace CrunchUtilities
 
                 }
                 Context.Respond("Deposited : " + String.Format("{0:n0}", deposited));
+            }
+            else
+            {
+                Context.Respond("Deposit not enabled.");
             }
         }
 
@@ -596,6 +631,7 @@ namespace CrunchUtilities
                 if (player == null)
                 {
                     Context.Respond("Console cant withdraw money.....");
+                    return;
                 }
                 MyCubeBlock container = null;
                 VRage.Game.ModAPI.IMyInventory invent = null;
@@ -605,7 +641,7 @@ namespace CrunchUtilities
                     Context.Respond("Couldnt find a grid");
                     return;
                 }
-                MyItemType itemType = new MyInventoryItemFilter("MyObjectBuilder_PhysicalObject/SpaceCredits").ItemType;
+                MyItemType itemType = new MyInventoryItemFilter("MyObjectBuilder_PhysicalObject/SpaceCredit").ItemType;
                 foreach (var item in gridWithSubGrids)
                 {
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
@@ -615,6 +651,7 @@ namespace CrunchUtilities
                             continue;
                         else
                         {
+                
                             foreach (VRage.Game.ModAPI.IMySlimBlock block in grid.GetBlocks())
                             {
                                 if (block != null && block.BlockDefinition.Id.SubtypeName.Contains("Container"))
@@ -626,10 +663,12 @@ namespace CrunchUtilities
                                             case MyRelationsBetweenPlayerAndBlock.Owner:
                                                 container = block.FatBlock as MyCubeBlock;
                                                 invent = container.GetInventory();
+                                               
                                                 break;
                                             case MyRelationsBetweenPlayerAndBlock.FactionShare:
                                                 container = block.FatBlock as MyCubeBlock;
                                                 invent = container.GetInventory();
+                                                
                                                 break;
                                             case MyRelationsBetweenPlayerAndBlock.Neutral:
                                                 container = block.FatBlock as MyCubeBlock;
@@ -637,10 +676,10 @@ namespace CrunchUtilities
                                                 break;
                                             case MyRelationsBetweenPlayerAndBlock.NoOwnership:
                                                 Context.Respond("You dont own this.");
-                                                return;
+                                                break;
                                             case MyRelationsBetweenPlayerAndBlock.Enemies:
                                                 Context.Respond("You dont own this.");
-                                                return;
+                                                break;
                                         }
 
                                         break;
@@ -659,9 +698,8 @@ namespace CrunchUtilities
 
                     if (invent != null)
                     {
-                        MyItemType credits = new MyInventoryItemFilter("MyObjectBuilder_PhysicalObject/" + "SpaceCredit").ItemType;
 
-                        if (invent.CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), credits))
+                        if (invent.CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), itemType))
                         {
                             invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), new MyObjectBuilder_PhysicalObject() { SubtypeName = "SpaceCredit" });
                             EconUtils.takeMoney(player.IdentityId, amount);
@@ -674,6 +712,10 @@ namespace CrunchUtilities
                         }
                     }
                 }
+            }
+            else
+            {
+                Context.Respond("Withdraw not enabled.");
             }
         }
 
