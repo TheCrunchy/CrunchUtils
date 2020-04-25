@@ -270,13 +270,14 @@ namespace CrunchUtilities
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                     {
                         MyCubeGrid grid = groupNodes.NodeData;
-
-                        if (FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true) && grid.Name.Equals(gridname))
+                        if (FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true) && grid.DisplayName.Equals(gridname))
                         {
+                            Context.Respond("Renaming " + grid.DisplayName + ". You may need to relog to see changes.");
                             grid.ChangeDisplayNameRequest(newname);
                            
-                            Context.Respond("Renaming " + grid.Name + ". You may need to relog to see changes.");
+                           
                             changed = true;
+                            return;
                         }
                     }
                 }
