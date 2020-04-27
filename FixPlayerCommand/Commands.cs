@@ -228,7 +228,9 @@ namespace CrunchUtilities
                                     try
                                     {
                                         isDynamic = true;
+                                        grid.Physics.ClearSpeed();
                                         grid.OnConvertedToStationRequest();
+
                                         Context.Respond("Converting to station IF grid is not moving." + grid.DisplayName);
                                     }
                                     catch (Exception)
@@ -756,34 +758,32 @@ namespace CrunchUtilities
         }
 
 
-    [Command("fac promote", "Promote a player to founder if the founder uses this command")]
-    [Permission(MyPromoteLevel.None)]
+        //this command is broken af, might fix it eventually
+    [Command("fac promote", "Broken command")]
+    [Permission(MyPromoteLevel.Admin)]
     public void FactionPromoteFounder(string playerName)
     {
         IMyFaction fac = MySession.Static.Factions.TryGetPlayerFaction(Context.Player.IdentityId);
         if (fac != null)
         {
                 VRage.Collections.DictionaryReader<long, MyFactionMember> members = fac.Members;
-                MyFactionMember player;
                 bool foundPlayer = false;
                 if (fac.IsFounder(Context.Player.IdentityId))
                 {
-                    foreach (MyFactionMember member in members.Values)
+                    foreach (long key in members.Keys)
                     {
-                        if (CrunchUtilitiesPlugin.GetIdentityByNameOrId(member.PlayerId.ToString()).DisplayName.Equals(playerName)) {
+                        MyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(key.ToString());
+                        if (id.DisplayName.Equals(playerName)) {
                             foundPlayer = true;
-                        player = member;
+                         members.TryGetValue(key, out MyFactionMember player);
+                            player.IsFounder = true;
                         }
                     }
 
-                    if (foundPlayer)
-                    {
-                        player.IsFounder = true;
-                    }
-                    else
+                    if (!foundPlayer)
                     {
                         Context.Respond("Couldnt find that player");
-                    }
+                    }   
                 }
                 else
                 {
