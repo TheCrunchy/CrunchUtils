@@ -827,27 +827,25 @@ namespace CrunchUtilities
                 IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
                 if (amount < 0 || amount == 0)
                 {
-                    Context.Respond("Cannot be negative value.");
+                    SendMessage("[CrunchEcon]", "Must be a positive number", Color.Red, (long)Context.Player.SteamUserId);
                     return;
                 }
                 if (id == null)
                 {
-                    Context.Respond("Error cant find that player.");
+                    SendMessage("[CrunchEcon]", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
                     return;
                 }
                 if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
                 {
                     EconUtils.takeMoney(Context.Player.IdentityId, amount);
                     EconUtils.addMoney(id.IdentityId, amount);
-                    Context.Respond("Sent " + amount + " to " + id.DisplayName);
-                    Logger _chatLog = LogManager.GetLogger("Chat");
                     MyPlayer player = MySession.Static.Players.GetPlayerByName(playerNameOrId);
-                    SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + "SC", Color.Cyan, (long)player.Id.SteamId);
-                    SendMessage("[CrunchEcon]", "You sent " + id.DisplayName + " : " + String.Format("{0:n0}", amount) + "SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                    SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                    SendMessage("[CrunchEcon]", "You sent " + id.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                 }
                 else
                 {
-                    Context.Respond("You dont have enough.");
+                    SendMessage("[CrunchEcon]", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
                 }
 
                 return;
