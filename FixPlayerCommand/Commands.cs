@@ -31,6 +31,9 @@ using Sandbox.Game.Entities.Character;
 using Sandbox.Game.Entities.Cube;
 using Sandbox.Definitions;
 using System.Collections;
+using Torch.Managers.ChatManager;
+using Torch.API.Session;
+using Sandbox.Game.Multiplayer;
 
 namespace CrunchUtilities
 {
@@ -813,6 +816,60 @@ namespace CrunchUtilities
             {
                 Context.Respond("Error, no faction");
             }
+        }
+        [Command("eco pay", "Transfer money from one player to another")]
+        [Permission(MyPromoteLevel.None)]
+        public void PayPlayer(string playerNameOrId, Int64 amount)
+        {
+            if (CrunchUtilitiesPlugin.file.PlayerEcoPay)
+            {
+                //Context.Respond("Error Player not online");
+                IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
+                if (amount < 0 || amount == 0)
+                {
+                    Context.Respond("Cannot be negative value.");
+                    return;
+                }
+                if (id == null)
+                {
+                    Context.Respond("Error cant find that player.");
+                    return;
+                }
+                if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
+                {
+                    EconUtils.takeMoney(Context.Player.IdentityId, amount);
+                    EconUtils.addMoney(id.IdentityId, amount);
+                    Context.Respond("Sent " + amount + " to " + id.DisplayName);
+                    Logger _chatLog = LogManager.GetLogger("Chat");
+                    MyPlayer player = MySession.Static.Players.GetPlayerByName(playerNameOrId);
+                    SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + "SC", Color.Cyan, (long)player.Id.SteamId);
+                    SendMessage("[CrunchEcon]", "You sent " + id.DisplayName + " : " + String.Format("{0:n0}", amount) + "SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                }
+                else
+                {
+                    Context.Respond("You dont have enough.");
+                }
+
+                return;
+            }
+            else
+            {
+                SendMessage("[CrunchEcon]", "Player pay not enabled", Color.Red, (long)Context.Player.SteamUserId);
+            }
+        }
+        public static void SendMessage(string author, string message, Color color, long steamID)
+        {
+
+           
+            Logger _chatLog = LogManager.GetLogger("Chat");
+            ScriptedChatMsg scriptedChatMsg1 = new ScriptedChatMsg();
+            scriptedChatMsg1.Author = author;
+            scriptedChatMsg1.Text = message;
+            scriptedChatMsg1.Font = "White";
+            scriptedChatMsg1.Color = color;
+            scriptedChatMsg1.Target = Sync.Players.TryGetIdentityId((ulong) steamID);
+            ScriptedChatMsg scriptedChatMsg2 = scriptedChatMsg1;
+            MyMultiplayerBase.SendScriptedChatMessage(ref scriptedChatMsg2);
         }
 
         [Command("eco giveplayer", "gibs money to a player")]

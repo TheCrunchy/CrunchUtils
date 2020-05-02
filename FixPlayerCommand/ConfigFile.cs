@@ -13,6 +13,7 @@ namespace CrunchUtilities
         public bool PlayerFixMe = false;
         public bool DeleteStone = false;
         public bool Withdraw = false;
+        public bool PlayerEcoPay = false;
         public bool Deposit = false;
         private int _cooldownInSeconds = 10 * 60;
         public bool IdentityUpdate = false;
