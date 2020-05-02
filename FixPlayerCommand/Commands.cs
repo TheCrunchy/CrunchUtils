@@ -147,13 +147,14 @@ namespace CrunchUtilities
                         {
                             foreach (var block in blockList)
                             {
+                               
                                 //MyVisualScriptLogicProvider.SendChatMessage("blocks blocklist");
                                 if (block != null && block.HasInventory)
                                 {
                                     var items = block.GetInventory().GetItems();
                                     for (int i = 0; i < items.Count; i++)
                                     {
-
+                                      
                                         if (items[i].Content.SubtypeId.ToString().Contains("Stone") && items[i].Content.TypeId.ToString().Contains("Ore"))
                                         {
                                             block.GetInventory().RemoveItems(items[i].ItemId);
@@ -498,7 +499,7 @@ namespace CrunchUtilities
             Context.Respond("Withdrew : " + String.Format("{0:n0}", withdrew));
         }
         [Command("eco deposit", "Deposit moneys")]
-        [Permission(MyPromoteLevel.Admin)]
+        [Permission(MyPromoteLevel.None)]
         public void PlayerDeposit()
         {
             if (CrunchUtilitiesPlugin.file.Deposit)
@@ -662,6 +663,7 @@ namespace CrunchUtilities
                                 {
                                     if (block.FatBlock.GetInventory().CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), itemType))
                                     {
+                                        
                                         switch (block.FatBlock.GetUserRelationToOwner(this.Context.Player.IdentityId))
                                         {
                                             case MyRelationsBetweenPlayerAndBlock.Owner:
