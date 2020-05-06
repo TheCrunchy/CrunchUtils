@@ -40,7 +40,7 @@ namespace CrunchUtilities
     public class Commands : CommandModule
     {
         private static Logger _log = LogManager.GetCurrentClassLogger();
-
+        private Vector3 defaultColour = new Vector3(50,168,168);
         [Command("crunch reload", "Reload the config")]
         [Permission(MyPromoteLevel.Admin)]
         public void ReloadConfig()
@@ -369,6 +369,11 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.None)]
         public void listNames()
         {
+            bool console = false;
+            if (Context.Player == null)
+            {
+                console = true;
+            }
             Dictionary<String, String> badNames = new Dictionary<string, string>();
             foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
             {
@@ -381,10 +386,20 @@ namespace CrunchUtilities
             }
             if (badNames.Count == 0)
             {
+                if (console)
+                {
+                    Context.Respond("No players with mismatching names :D");
+                    return;
+                }
                 SendMessage("[C]", "No players with mismatching names :D" , Color.Green, (long)Context.Player.SteamUserId);
             }
             foreach (KeyValuePair<string, string> pair in badNames)
             {
+                if (console)
+                {
+                    Context.Respond("Steam: " + pair.Key + " || Identity: " + pair.Value);
+                    return;
+                }
                 SendMessage("[C]", "Steam: " + pair.Key + " || Identity: " + pair.Value,Color.Green, (long) Context.Player.SteamUserId);
             }
         }
@@ -839,27 +854,40 @@ namespace CrunchUtilities
     [Permission(MyPromoteLevel.Admin)]
     public void FactionPromoteFounder(string playerName)
     {
+            Context.Respond("Doesnt work currently");
+            return;
+            if (Context.Player == null)
+            {
+;                Context.Respond("Player command");
+                return;
+            }
         IMyFaction fac = MySession.Static.Factions.TryGetPlayerFaction(Context.Player.IdentityId);
         if (fac != null)
-        {
+            {
+                MyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerName);
                 VRage.Collections.DictionaryReader<long, MyFactionMember> members = fac.Members;
+                if (id == null)
+                {
+                    Context.Respond("Couldnt find that player");
+                    return;
+                }
+                MyFactionMember currentFounder;
+                MyFactionMember newFounder;
                 bool foundPlayer = false;
                 if (fac.IsFounder(Context.Player.IdentityId))
                 {
-                    foreach (long key in members.Keys)
+                    foreach (VRage.Game.MyFactionMember key in members.Values)
                     {
-                        MyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(key.ToString());
-                        if (id.DisplayName.Equals(playerName)) {
+                      
+                        if (id.IdentityId.Equals(key.PlayerId)) {
                             foundPlayer = true;
-                         members.TryGetValue(key, out MyFactionMember player);
-                            player.IsFounder = true;
+                            newFounder = key;
+                        }
+                        if (id.IdentityId.Equals(Context.Player.IdentityId)){
+                            currentFounder = key;
                         }
                     }
-
-                    if (!foundPlayer)
-                    {
-                        Context.Respond("Couldnt find that player");
-                    }   
+                    
                 }
                 else
                 {
@@ -871,9 +899,37 @@ namespace CrunchUtilities
             Context.Respond("Error, no faction");
         }
     }
+       
+        [Command("broadcast", "Send a message in a noticable colour, false parameter will not show up in discord")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void SendThisMessage(string message, string author = "Broadcast", int r = 50, int g = 168, int b = 168, Boolean global = true)
+        {
+            String context;
+            if (global)
+            {
+                Vector3 test = new Vector3();
+                Color col = new Color(test);
 
+                SendMessage(author, message, col, 0L);
+                if (r == 50 && g == 168 && b == 168)
+                {
+                    Context.Respond("Sending to global");
+                }
+            }
+            else
+            {
+                    Context.Respond("Sending to players;");
 
-        [Command("eco take", "Admin command to give money")]
+                foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+                {
+                    MyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(player.Identity.IdentityId.ToString());
+                    Color col = new Color(r, g, b);
+                    SendMessage(author, message, col, (long)player.Id.SteamId);
+                }
+            }
+        }
+
+        [Command("eco take", "Admin command to take money")]
         [Permission(MyPromoteLevel.Admin)]
         public void TakeMoney(string type, string recipient, string inputAmount)
         {
@@ -1011,6 +1067,11 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.None)]
         public void PayPlayer(string type, string recipient, string inputAmount)
         {
+            if (Context.Player == null)
+            {
+                Context.Respond("Only players can use this command");
+                return;
+            }
             if (CrunchUtilitiesPlugin.file.PlayerEcoPay)
             {
                 Int64 amount;
@@ -1084,14 +1145,15 @@ namespace CrunchUtilities
                                 ulong steamid = MySession.Static.Players.TryGetSteamId(mb.PlayerId);
                                 if (temp.Contains(steamid))
                                 {
-                                   // break;
+                                   break;
                                 }
                                 if (steamid == 0)
                                 {
                                     break;
                                 }
-                                    SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent : " + String.Format("{0:n0}", amount) + " SC to the faction bank.", Color.DarkGreen, (long) steamid);
-                                temp.Add(steamid);
+                                    SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent : " + String.Format("{0:n0}", amount) + " SC to the faction bank.", Color.DarkGreen, (long)steamid);
+                                    temp.Add(steamid);
+                                
                             }
 
                                 
