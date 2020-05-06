@@ -18,6 +18,8 @@ namespace CrunchUtilities
         public static long getBalance(long walletID)
         {
             MyAccountInfo info;
+
+            
             if (MyBankingSystem.Static.TryGetAccountInfo(walletID, out info))
             {
                 return info.Balance;
@@ -30,6 +32,42 @@ namespace CrunchUtilities
 
             return;
         }
+
+        //I really should use this method more
+        public static void TransferToFactionAccount(long id, long factionID, Int64 amount)
+        {
+                MyAccountInfo account;
+        
+           // MyBankingSystem.Static.TryGetAccountInfo(factionID, out account);
+          //      List<MyAccountLogEntry> Log = account.Log.ToList();
+          //  MyAccountLogEntry entry = new MyAccountLogEntry()
+           // {
+            //    Amount = amount,
+            //    DateTime = DateTime.Now,
+            //    ChangeIdentifier = factionID
+           // };
+           // //Log.Add(entry);
+            //MyAccountInfo account2 = account;
+           // account2.Log = Log.ToArray();
+          
+        //    foreach (MyAccountLogEntry e in account.Log.ToList())
+            //    {
+               //     CrunchUtilitiesPlugin.Log.Info(e.Amount);
+              //  }
+            long factionBalance = EconUtils.getBalance(factionID) + amount;
+            long playerBalance = EconUtils.getBalance(id) - amount;
+            CrunchUtilitiesPlugin.Log.Info("Ignore this error");
+           // MyBankingSystem.RequestTransfer_BroadcastToClients(id, factionID, amount, id, factionID);
+            //EconUtils.takeMoney(factionID, EconUtils.getBalance(factionID));
+            //EconUtils.takeMoney(id, EconUtils.getBalance(id));
+            //MyBankingSystem.ChangeBalance(factionID, factionBalance);
+            //MyBankingSystem.ChangeBalance(id, playerBalance);
+    
+            MyBankingSystem.Static.SaveData();
+       
+            return;
+        }
+
         public static void takeMoney(long walletID, Int64 amount)
         {
             if (getBalance(walletID) >= amount)

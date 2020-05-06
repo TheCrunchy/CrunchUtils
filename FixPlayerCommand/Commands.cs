@@ -420,31 +420,49 @@ namespace CrunchUtilities
         {
             Context.Respond("\n"
             + "Players \n"
-            + "!eco balanceplayer player \n"
-            + "!eco giveplayer player amount \n"
-            + "!eco takeplayer player amount \n"
+            + "!eco balance"
+            + "!eco give"
+            + "!eco take"
+            + "!eco pay");
 
-            + "Factions \n"
-            + "!eco balancefaction tag \n"
-            + "!eco givefac tag amount \n"
-            + "!eco takefac tag amount \n");
         }
 
-        [Command("eco balanceplayer", "See a players balance")]
+        [Command("eco balance", "See a players balance")]
         [Permission(MyPromoteLevel.Admin)]
-        public void CheckMoneysPlayer(string playerNameOrId)
+        public void CheckMoneysPlayer(string type, string target)
         {
-            //Context.Respond("Error Player not online");
-            IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
-            if (id == null)
+            type = type.ToLower();
+            switch (type)
             {
-                Context.Respond("Error cant find that guy");
-                return;
-            }
-            else
-            {
-                Context.Respond(id.DisplayName + " Balance : " + EconUtils.getBalance(id.IdentityId));
-                return;
+                case "player":
+                    //Context.Respond("Error Player not online");
+                    IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(target);
+                    if (id == null)
+                    {
+                        Context.Respond("Cant find that player.");
+                        return;
+                    }
+                        Context.Respond(id.DisplayName + " Player Balance : " + String.Format("{0:n0}", EconUtils.getBalance(id.IdentityId)));
+                    
+                  
+                    break;
+                case "faction":
+                    IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(target);
+                    if (fac == null)
+                    {
+                        Context.Respond("Cant find that faction");
+                        return;
+                    }
+
+                        Context.Respond(fac.Name + " Faction Balance : " + String.Format("{0:n0}", EconUtils.getBalance(fac.FactionId)));
+                
+                    break;
+
+                default:
+                    Context.Respond("Incorrect usage, example - !eco balance player PlayerName or !eco balance faction tag");
+                    break;
+
+
             }
         }
         [Command("eco withdrawall", "Withdraw all moneys, buggy as fuck, try not to use this")]
@@ -854,28 +872,160 @@ namespace CrunchUtilities
         }
     }
 
-    [Command("eco balancefaction", "See a factions balance")]
+
+        [Command("eco take", "Admin command to give money")]
         [Permission(MyPromoteLevel.Admin)]
-        public void CheckMoneysFaction(string tag)
+        public void TakeMoney(string type, string recipient, string inputAmount)
         {
-            IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
-            if (fac != null)
+            Int64 amount;
+            inputAmount = inputAmount.Replace(",", "");
+            inputAmount = inputAmount.Replace(".", "");
+            inputAmount = inputAmount.Replace(" ", "");
+            try
             {
-                Context.Respond(fac.Name + "FACTION Balance : " + fac.GetBalanceShortString());
-   
+                amount = Int64.Parse(inputAmount);
+            }
+            catch (Exception)
+            {
+                Context.Respond("Error parsing into number");
                 return;
             }
-            else
+            if (amount < 0 || amount == 0)
             {
-                Context.Respond("Error, no faction");
+                Context.Respond("Amount must be positive.");
+                return;
+            }
+            type = type.ToLower();
+            switch (type)
+            {
+                case "player":
+                    //Context.Respond("Error Player not online");
+                    IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
+                    if (id == null)
+                    {
+                        Context.Respond("Cant find that player.");
+                        return;
+                    }
+                    if (EconUtils.getBalance(id.IdentityId) >= amount)
+                    {
+                        Context.Respond(id.DisplayName + " Balance Before Change : " + String.Format("{0:n0}", EconUtils.getBalance(id.IdentityId)));
+
+                        EconUtils.takeMoney(id.IdentityId, amount);
+
+                        Context.Respond(id.DisplayName + " Balance After Change : " + String.Format("{0:n0}", EconUtils.getBalance(id.IdentityId)));
+                    }
+                    else
+                    {
+                        Context.Respond("They cant afford that.");
+                        Context.Respond(id.DisplayName + " Current Balance : " + String.Format("{0:n0}", EconUtils.getBalance(id.IdentityId)));
+                    }
+                    break;
+                case "faction":
+                    IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(recipient);
+                    if (fac == null)
+                    {
+                        Context.Respond("Cant find that faction");
+                        return;
+                    }
+                    if (EconUtils.getBalance(fac.FactionId) >= amount)
+                    {
+                        Context.Respond(fac.Name + " FACTION Balance Before Change : " + String.Format("{0:n0}", EconUtils.getBalance(fac.FactionId)));
+                        EconUtils.takeMoney(fac.FactionId, amount);
+                        Context.Respond(fac.Name + " FACTION Balance After Change : " + String.Format("{0:n0}", EconUtils.getBalance(fac.FactionId)));
+                    }
+                    else
+                    {
+                        Context.Respond("They cant afford that.");
+                        Context.Respond(fac.Name + " Current Balance : " + String.Format("{0:n0}", EconUtils.getBalance(fac.FactionId)));
+                    }
+                    break;
+
+                default:
+                    Context.Respond("Incorrect usage, example - !eco take player PlayerName amount or !eco take faction tag amount");
+                    break;
+
+
             }
         }
+        [Command("eco give", "Admin command to give money")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void GiveMoney(string type, string recipient, string inputAmount)
+        {
+                Int64 amount;
+                inputAmount = inputAmount.Replace(",", "");
+                inputAmount = inputAmount.Replace(".", "");
+                inputAmount = inputAmount.Replace(" ", "");
+                try
+                {
+                    amount = Int64.Parse(inputAmount);
+                }
+                catch (Exception)
+                {
+                    Context.Respond("Error parsing into number");
+                    return;
+                }
+                if (amount < 0 || amount == 0)
+                {
+                Context.Respond("Amount must be positive.");
+                    return;
+                }
+                type = type.ToLower();
+                switch (type)
+                {
+                    case "player":
+                        //Context.Respond("Error Player not online");
+                        IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
+                        if (id == null)
+                        {
+                            Context.Respond("Cant find that player.");
+                            return;
+                        }
+                        Context.Respond(id.DisplayName + " Balance Before Change : " + String.Format("{0:n0}", EconUtils.getBalance(id.IdentityId)));
+
+                        EconUtils.addMoney(id.IdentityId, amount);
+
+                        Context.Respond(id.DisplayName + " Balance After Change : " + String.Format("{0:n0}", EconUtils.getBalance(id.IdentityId)));
+                
+                        break;
+                    case "faction":
+                        IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(recipient);
+                        if (fac == null)
+                        {
+                            Context.Respond("Cant find that faction"); 
+                            return;
+                        }
+                        Context.Respond(fac.Name + " FACTION Balance Before Change : " + String.Format("{0:n0}", EconUtils.getBalance(fac.FactionId)));
+                        EconUtils.addMoney(fac.FactionId, amount);
+                        Context.Respond(fac.Name + " FACTION Balance After Change : " + String.Format("{0:n0}", EconUtils.getBalance(fac.FactionId)));
+                        break;
+
+                    default:
+                        Context.Respond("Incorrect usage, example - !eco give player PlayerName amount or !eco give faction tag amount");
+                        break;
+
+                
+            }
+        }
+
         [Command("eco pay", "Transfer money from one player to another")]
         [Permission(MyPromoteLevel.None)]
-        public void PayPlayer(string type, string recipient, Int64 amount)
+        public void PayPlayer(string type, string recipient, string inputAmount)
         {
             if (CrunchUtilitiesPlugin.file.PlayerEcoPay)
             {
+                Int64 amount;
+                inputAmount = inputAmount.Replace("," ,"");
+                inputAmount = inputAmount.Replace(".", "");
+                inputAmount = inputAmount.Replace(" ", "");
+                try
+                {
+                   amount  = Int64.Parse(inputAmount);
+                }
+                catch (Exception)
+                {
+                    SendMessage("[CrunchEcon]", "Error parsing amount", Color.Red, (long)Context.Player.SteamUserId);
+                    return;
+                }
                 if (amount < 0 || amount == 0)
                 {
                     SendMessage("[CrunchEcon]", "Must be a positive number", Color.Red, (long)Context.Player.SteamUserId);
@@ -892,11 +1042,18 @@ namespace CrunchUtilities
                             SendMessage("[CrunchEcon]", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
                             return;
                         }
+                        MyPlayer player = MySession.Static.Players.GetPlayerByName(recipient);
+                        if (player == null)
+                        {
+                            SendMessage("[CrunchEcon]", "Cant pay offline players, pay faction instead.", Color.Red, (long)Context.Player.SteamUserId);
+                            return;
+                        }
                         if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
                         {
                             EconUtils.takeMoney(Context.Player.IdentityId, amount);
                             EconUtils.addMoney(id.IdentityId, amount);
-                            MyPlayer player = MySession.Static.Players.GetPlayerByName(recipient);
+
+                            
                             SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
                             SendMessage("[CrunchEcon]", "You sent " + id.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                         }
@@ -914,8 +1071,30 @@ namespace CrunchUtilities
                         }
                         if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
                         {
+                            //Probablty need to do some reflection/patching shit to add the transfer to the activity log
                             EconUtils.takeMoney(Context.Player.IdentityId, amount);
                             EconUtils.addMoney(fac.FactionId, amount);
+                            //I can add to the activity log with this but its not a great idea, it sets the balances to insane values
+                            // EconUtils.TransferToFactionAccount(Context.Player.IdentityId, fac.FactionId, amount);
+                            List<ulong> temp = new List<ulong>();
+                            foreach (MyFactionMember mb in fac.Members.Values)
+                            {
+                            
+                               
+                                ulong steamid = MySession.Static.Players.TryGetSteamId(mb.PlayerId);
+                                if (temp.Contains(steamid))
+                                {
+                                   // break;
+                                }
+                                if (steamid == 0)
+                                {
+                                    break;
+                                }
+                                    SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent : " + String.Format("{0:n0}", amount) + " SC to the faction bank.", Color.DarkGreen, (long) steamid);
+                                temp.Add(steamid);
+                            }
+
+                                
                             SendMessage("[CrunchEcon]", "You sent " + fac.Name + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                         }
                         else
@@ -954,6 +1133,8 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.Admin)]
         public void AddMoneysPlayer(string playerNameOrId, Int64 amount)
         {
+            Context.Respond("Legacy command. Use !eco give player PlayerName amount or !eco give faction tag amount");
+            return;
             //Context.Respond("Error Player not online");
             IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
             if (id == null)
@@ -1014,6 +1195,8 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.Admin)]
         public void RemoveMoneysPlayer(string playerNameOrId, Int64 amount)
         {
+            Context.Respond("Legacy command. Use !eco take player PlayerName amount or !eco take faction tag amount");
+            return;
             IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
             if (id == null)
             {
@@ -1043,6 +1226,8 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.Admin)]
         public void AddMoneysFaction(string tag, Int64 amount)
         {
+            Context.Respond("Legacy command. Use !eco give player PlayerName amount or !eco give faction tag amount");
+            return;
             IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
             if (fac != null)
             {
@@ -1106,29 +1291,12 @@ namespace CrunchUtilities
 
         }
 
-        [Command("faction rep change", "gibs money to a faction")]
-        [Permission(MyPromoteLevel.Admin)]
-        public void AddMoneysFaction(string tag, string tag2, Int64 amount)
-        {
-            IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
-            IMyFaction fac2 = MySession.Static.Factions.TryGetFactionByTag(tag2);
-            if (fac != null && fac2 != null)
-            {
-                Context.Respond(fac.Name + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
-                MySession.Static.Factions.SetReputationBetweenFactions(fac.FactionId, fac2.FactionId, int.Parse(amount.ToString()));
-                Context.Respond(fac.Name + " FACTION Reputation After Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
-            }
-            else
-            {
-                Context.Respond("Error faction not found");
-            }
-            return;
-
-        }
         [Command("eco takefac", "remove money from a faction")]
         [Permission(MyPromoteLevel.Admin)]
         public void removeMoneysFaction(string tag, Int64 amount)
         {
+            Context.Respond("Legacy command. Use !eco take player PlayerName amount or !eco take faction tag amount");
+            return;
             IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
             if (fac != null)
             {
