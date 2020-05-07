@@ -907,8 +907,7 @@ namespace CrunchUtilities
             String context;
             if (global)
             {
-                Vector3 test = new Vector3();
-                Color col = new Color(test);
+                Color col = new Color(r, g, b);
 
                 SendMessage(author, message, col, 0L);
                 if (r == 50 && g == 168 && b == 168)
