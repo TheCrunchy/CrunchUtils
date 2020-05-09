@@ -40,7 +40,7 @@ namespace CrunchUtilities
     public class Commands : CommandModule
     {
         private static Logger _log = LogManager.GetCurrentClassLogger();
-        private Vector3 defaultColour = new Vector3(50,168,168);
+        private Vector3 defaultColour = new Vector3(50, 168, 168);
         [Command("crunch reload", "Reload the config")]
         [Permission(MyPromoteLevel.Admin)]
         public void ReloadConfig()
@@ -75,24 +75,24 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.Admin)]
         public void DeleteBody(string name)
         {
-                List<MyEntity> temp = new List<MyEntity>();
-                foreach (MyEntity entity in MyEntities.GetEntities())
+            List<MyEntity> temp = new List<MyEntity>();
+            foreach (MyEntity entity in MyEntities.GetEntities())
+            {
+                if (entity.DisplayName != null && entity.DisplayName.Equals(name))
                 {
-                    if (entity.DisplayName != null && entity.DisplayName.Equals(name))
-                    {
-                        temp.Add(entity);
-                    }
+                    temp.Add(entity);
                 }
-                
-                foreach (MyEntity id in temp)
-                {
+            }
+
+            foreach (MyEntity id in temp)
+            {
                 if (id is IMyCharacter)
                 {
                     //MyEntities.Remove(id);
                     Context.Respond("Removing " + id.EntityId);
-                   IMyCharacter character = id as IMyCharacter;
+                    IMyCharacter character = id as IMyCharacter;
                     character.Kill();
-                   character.Delete();
+                    character.Delete();
                     id.Close();
                 }
             }
@@ -165,7 +165,7 @@ namespace CrunchUtilities
                         //     MyObjectBuilder_PhysicalObject stone = new MyObjectBuilder_PhysicalObject("MyObjectBuilder_Ore/Stone");
                         MyCubeGrid grid = groupNodes.NodeData;
                         var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-                        
+
                         var blockList = new List<Sandbox.ModAPI.IMyTerminalBlock>();
                         gts.GetBlocksOfType<Sandbox.ModAPI.IMyTerminalBlock>(blockList);
                         if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
@@ -177,14 +177,14 @@ namespace CrunchUtilities
                         {
                             foreach (var block in blockList)
                             {
-                               
+
                                 //MyVisualScriptLogicProvider.SendChatMessage("blocks blocklist");
                                 if (block != null && block.HasInventory)
                                 {
                                     var items = block.GetInventory().GetItems();
                                     for (int i = 0; i < items.Count; i++)
                                     {
-                                      
+
                                         if (items[i].Content.SubtypeId.ToString().Contains("Stone") && items[i].Content.TypeId.ToString().Contains("Ore"))
                                         {
                                             block.GetInventory().RemoveItems(items[i].ItemId);
@@ -308,8 +308,8 @@ namespace CrunchUtilities
                         {
                             Context.Respond("Renaming " + grid.DisplayName + ". You may need to relog to see changes.");
                             grid.ChangeDisplayNameRequest(newname);
-                           
-                           
+
+
                             changed = true;
                             return;
                         }
@@ -364,7 +364,81 @@ namespace CrunchUtilities
                 Context.Respond("PlayerFixMe not enabled");
             }
         }
+        [Command("getsteamid", "Get a specific identities steam name")]
+        [Permission(MyPromoteLevel.None)]
+        public void getSTEAMID(string target)
+        {
+            bool console = false;
+            if (Context.Player == null)
+            {
+                console = true;
+            }
+            Dictionary<String, String> badNames = new Dictionary<string, string>();
+            foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+            {
 
+                MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(player.Id.SteamId.ToString());
+                if (!identity.DisplayName.Equals(target))
+                {
+                    string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
+                    badNames.Add(name + " : " + identity.DisplayName, player.Id.SteamId.ToString());
+                }
+            }
+            if (badNames.Count == 0)
+            {
+                if (console)
+                {
+                    Context.Respond("No player with that name");
+                    return;
+                }
+                SendMessage("[C]", "No player with that name", Color.Green, (long)Context.Player.SteamUserId);
+            }
+            foreach (KeyValuePair<string, string> pair in badNames)
+            {
+                if (console)
+                {
+                    Context.Respond("Names: " + pair.Key + " || ID: " + pair.Value);
+                    return;
+                }
+                SendMessage("[C]", "Names: " + pair.Key + " || ID: " + pair.Value, Color.Green, (long)Context.Player.SteamUserId);
+            }
+        }
+
+        [Command("listids", "Lists players steam IDs")]
+        [Permission(MyPromoteLevel.None)]
+        public void listSteamIDs()
+        {
+            bool console = false;
+            if (Context.Player == null)
+            {
+                console = true;
+            }
+            Dictionary<String, String> badNames = new Dictionary<string, string>();
+            foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+            {
+                string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
+                MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(player.Id.SteamId.ToString());
+                badNames.Add(name + " : " + identity.DisplayName, player.Id.SteamId.ToString());
+            }
+            if (badNames.Count == 0)
+            {
+                if (console)
+                {
+                    Context.Respond("No players online");
+                    return;
+                }
+                SendMessage("[C]", "No players online", Color.Green, (long)Context.Player.SteamUserId);
+            }
+            foreach (KeyValuePair<string, string> pair in badNames)
+            {
+                if (console)
+                {
+                    Context.Respond("Names: " + pair.Key + " || ID: " + pair.Value);
+                    return;
+                }
+                SendMessage("[C]", "Names: " + pair.Key + " || ID: " + pair.Value, Color.Green, (long)Context.Player.SteamUserId);
+            }
+        }
         [Command("listnames", "Lists players names if they dont match steam names")]
         [Permission(MyPromoteLevel.None)]
         public void listNames()
@@ -379,9 +453,9 @@ namespace CrunchUtilities
             {
                 string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
                 MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(player.Id.SteamId.ToString());
-                if (!player.DisplayName.Equals(name))
+                if (!identity.DisplayName.Equals(name))
                 {
-                    badNames.Add(name, player.DisplayName);
+                    badNames.Add(name, identity.DisplayName);
                 }
             }
             if (badNames.Count == 0)
@@ -391,7 +465,7 @@ namespace CrunchUtilities
                     Context.Respond("No players with mismatching names :D");
                     return;
                 }
-                SendMessage("[C]", "No players with mismatching names :D" , Color.Green, (long)Context.Player.SteamUserId);
+                SendMessage("[C]", "No players with mismatching names :D", Color.Green, (long)Context.Player.SteamUserId);
             }
             foreach (KeyValuePair<string, string> pair in badNames)
             {
@@ -400,7 +474,7 @@ namespace CrunchUtilities
                     Context.Respond("Steam: " + pair.Key + " || Identity: " + pair.Value);
                     return;
                 }
-                SendMessage("[C]", "Steam: " + pair.Key + " || Identity: " + pair.Value,Color.Green, (long) Context.Player.SteamUserId);
+                SendMessage("[C]", "Steam: " + pair.Key + " || Identity: " + pair.Value, Color.Green, (long)Context.Player.SteamUserId);
             }
         }
         [Command("updatename", "updates identity names")]
@@ -430,15 +504,16 @@ namespace CrunchUtilities
 
 
         [Command("eco", "list commands")]
-        [Permission(MyPromoteLevel.Admin)]
+        [Permission(MyPromoteLevel.None)]
         public void EcoHelp()
         {
             Context.Respond("\n"
-            + "Players \n"
-            + "!eco balance"
-            + "!eco give"
-            + "!eco take"
-            + "!eco pay");
+            + "!eco balance <player/faction> <name/tag> - Shows a players balance \n"
+            + "!eco give <player/faction> <name/tag> amount \n"
+            + "!eco take <player/faction> <name/tag> amount \n"
+            + "!eco pay <player/faction> <name/tag> amount \n"
+            + "!eco deposit - Deposits credits in the grid you are looking at \n"
+            + "!eco withdraw <amount> - Withdraws credits into the grid you are looking at");
 
         }
 
@@ -457,9 +532,9 @@ namespace CrunchUtilities
                         Context.Respond("Cant find that player.");
                         return;
                     }
-                        Context.Respond(id.DisplayName + " Player Balance : " + String.Format("{0:n0}", EconUtils.getBalance(id.IdentityId)));
-                    
-                  
+                    Context.Respond(id.DisplayName + " Player Balance : " + String.Format("{0:n0}", EconUtils.getBalance(id.IdentityId)));
+
+
                     break;
                 case "faction":
                     IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(target);
@@ -469,8 +544,8 @@ namespace CrunchUtilities
                         return;
                     }
 
-                        Context.Respond(fac.Name + " Faction Balance : " + String.Format("{0:n0}", EconUtils.getBalance(fac.FactionId)));
-                
+                    Context.Respond(fac.Name + " Faction Balance : " + String.Format("{0:n0}", EconUtils.getBalance(fac.FactionId)));
+
                     break;
 
                 default:
@@ -501,14 +576,14 @@ namespace CrunchUtilities
                 Context.Respond("Couldnt find a grid");
                 return;
             }
-            
+
             MyItemType itemType = new MyInventoryItemFilter("MyObjectBuilder_PhysicalObject/SpaceCredit").ItemType;
             foreach (var item in gridWithSubGrids)
             {
                 foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                 {
                     MyCubeGrid grid = groupNodes.NodeData;
-                    
+
                     if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
                         continue;
                     else
@@ -517,19 +592,20 @@ namespace CrunchUtilities
                         {
                             if (block != null && block.BlockDefinition.Id.SubtypeName.Contains("Container"))
                             {
-                               Int64 min = Int64.Parse(block.FatBlock.GetInventory().CurrentVolume.RawValue.ToString());
+                                Int64 min = Int64.Parse(block.FatBlock.GetInventory().CurrentVolume.RawValue.ToString());
                                 Int64 max = Int64.Parse(block.FatBlock.GetInventory().MaxVolume.RawValue.ToString());
                                 Int64 difference = (max - min) * 1000;
                                 if (balance >= Int32.MaxValue)
                                 {
-                                    Int64 newBalance = balance; 
+                                    Int64 newBalance = balance;
                                     bool canAdd = true;
-                                   while (canAdd)
+                                    while (canAdd)
                                     {
                                         if (newBalance >= Int32.MaxValue)
                                         {
                                             newBalance -= Int32.MaxValue;
-                                            if ((block.FatBlock.GetInventory().CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(Int32.MaxValue.ToString()), itemType))){
+                                            if ((block.FatBlock.GetInventory().CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(Int32.MaxValue.ToString()), itemType)))
+                                            {
                                                 container = block.FatBlock as MyCubeBlock;
                                                 invent = container.GetInventory();
                                                 invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(Int32.MaxValue.ToString()), new MyObjectBuilder_PhysicalObject() { SubtypeName = "SpaceCredit" });
@@ -657,10 +733,11 @@ namespace CrunchUtilities
                                                     while (hasCredits)
                                                     {
                                                         deposited += amount;
-                                                       
+
                                                         block.FatBlock.GetInventory().RemoveItemAmount(itemList2[i], itemList2[i].Amount);
                                                         //Context.Respond("Stack exceeds 2.147 billion, split the stack!");
-                                                        if (!block.FatBlock.GetInventory().GetItems().Contains(itemList2[i])){
+                                                        if (!block.FatBlock.GetInventory().GetItems().Contains(itemList2[i]))
+                                                        {
                                                             hasCredits = false;
                                                         }
                                                     }
@@ -745,25 +822,25 @@ namespace CrunchUtilities
                             continue;
                         else
                         {
-                
+
                             foreach (VRage.Game.ModAPI.IMySlimBlock block in grid.GetBlocks())
                             {
                                 if (block != null && block.BlockDefinition.Id.SubtypeName.Contains("Container"))
                                 {
                                     if (block.FatBlock.GetInventory().CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), itemType))
                                     {
-                                        
+
                                         switch (block.FatBlock.GetUserRelationToOwner(this.Context.Player.IdentityId))
                                         {
                                             case MyRelationsBetweenPlayerAndBlock.Owner:
                                                 container = block.FatBlock as MyCubeBlock;
                                                 invent = container.GetInventory();
-                                               
+
                                                 break;
                                             case MyRelationsBetweenPlayerAndBlock.FactionShare:
                                                 container = block.FatBlock as MyCubeBlock;
                                                 invent = container.GetInventory();
-                                                
+
                                                 break;
                                             case MyRelationsBetweenPlayerAndBlock.Neutral:
                                                 container = block.FatBlock as MyCubeBlock;
@@ -850,19 +927,19 @@ namespace CrunchUtilities
 
 
         //this command is broken af, might fix it eventually
-    [Command("fac promote", "Broken command")]
-    [Permission(MyPromoteLevel.Admin)]
-    public void FactionPromoteFounder(string playerName)
-    {
+        [Command("fac promote", "Broken command")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void FactionPromoteFounder(string playerName)
+        {
             Context.Respond("Doesnt work currently");
             return;
             if (Context.Player == null)
             {
-;                Context.Respond("Player command");
+                ; Context.Respond("Player command");
                 return;
             }
-        IMyFaction fac = MySession.Static.Factions.TryGetPlayerFaction(Context.Player.IdentityId);
-        if (fac != null)
+            IMyFaction fac = MySession.Static.Factions.TryGetPlayerFaction(Context.Player.IdentityId);
+            if (fac != null)
             {
                 MyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerName);
                 VRage.Collections.DictionaryReader<long, MyFactionMember> members = fac.Members;
@@ -878,28 +955,30 @@ namespace CrunchUtilities
                 {
                     foreach (VRage.Game.MyFactionMember key in members.Values)
                     {
-                      
-                        if (id.IdentityId.Equals(key.PlayerId)) {
+
+                        if (id.IdentityId.Equals(key.PlayerId))
+                        {
                             foundPlayer = true;
                             newFounder = key;
                         }
-                        if (id.IdentityId.Equals(Context.Player.IdentityId)){
+                        if (id.IdentityId.Equals(Context.Player.IdentityId))
+                        {
                             currentFounder = key;
                         }
                     }
-                    
+
                 }
                 else
                 {
                     Context.Respond("You need to be the founder to use this command.");
                 }
             }
-        else
-        {
-            Context.Respond("Error, no faction");
+            else
+            {
+                Context.Respond("Error, no faction");
+            }
         }
-    }
-       
+
         [Command("broadcast", "Send a message in a noticable colour, false parameter will not show up in discord")]
         [Permission(MyPromoteLevel.Admin)]
         public void SendThisMessage(string message, string author = "Broadcast", int r = 50, int g = 168, int b = 168, Boolean global = true)
@@ -917,7 +996,7 @@ namespace CrunchUtilities
             }
             else
             {
-                    Context.Respond("Sending to players;");
+                Context.Respond("Sending to players;");
 
                 foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
                 {
@@ -1006,59 +1085,59 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.Admin)]
         public void GiveMoney(string type, string recipient, string inputAmount)
         {
-                Int64 amount;
-                inputAmount = inputAmount.Replace(",", "");
-                inputAmount = inputAmount.Replace(".", "");
-                inputAmount = inputAmount.Replace(" ", "");
-                try
-                {
-                    amount = Int64.Parse(inputAmount);
-                }
-                catch (Exception)
-                {
-                    Context.Respond("Error parsing into number");
-                    return;
-                }
-                if (amount < 0 || amount == 0)
-                {
+            Int64 amount;
+            inputAmount = inputAmount.Replace(",", "");
+            inputAmount = inputAmount.Replace(".", "");
+            inputAmount = inputAmount.Replace(" ", "");
+            try
+            {
+                amount = Int64.Parse(inputAmount);
+            }
+            catch (Exception)
+            {
+                Context.Respond("Error parsing into number");
+                return;
+            }
+            if (amount < 0 || amount == 0)
+            {
                 Context.Respond("Amount must be positive.");
-                    return;
-                }
-                type = type.ToLower();
-                switch (type)
-                {
-                    case "player":
-                        //Context.Respond("Error Player not online");
-                        IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
-                        if (id == null)
-                        {
-                            Context.Respond("Cant find that player.");
-                            return;
-                        }
-                        Context.Respond(id.DisplayName + " Balance Before Change : " + String.Format("{0:n0}", EconUtils.getBalance(id.IdentityId)));
+                return;
+            }
+            type = type.ToLower();
+            switch (type)
+            {
+                case "player":
+                    //Context.Respond("Error Player not online");
+                    IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
+                    if (id == null)
+                    {
+                        Context.Respond("Cant find that player.");
+                        return;
+                    }
+                    Context.Respond(id.DisplayName + " Balance Before Change : " + String.Format("{0:n0}", EconUtils.getBalance(id.IdentityId)));
 
-                        EconUtils.addMoney(id.IdentityId, amount);
+                    EconUtils.addMoney(id.IdentityId, amount);
 
-                        Context.Respond(id.DisplayName + " Balance After Change : " + String.Format("{0:n0}", EconUtils.getBalance(id.IdentityId)));
-                
-                        break;
-                    case "faction":
-                        IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(recipient);
-                        if (fac == null)
-                        {
-                            Context.Respond("Cant find that faction"); 
-                            return;
-                        }
-                        Context.Respond(fac.Name + " FACTION Balance Before Change : " + String.Format("{0:n0}", EconUtils.getBalance(fac.FactionId)));
-                        EconUtils.addMoney(fac.FactionId, amount);
-                        Context.Respond(fac.Name + " FACTION Balance After Change : " + String.Format("{0:n0}", EconUtils.getBalance(fac.FactionId)));
-                        break;
+                    Context.Respond(id.DisplayName + " Balance After Change : " + String.Format("{0:n0}", EconUtils.getBalance(id.IdentityId)));
 
-                    default:
-                        Context.Respond("Incorrect usage, example - !eco give player PlayerName amount or !eco give faction tag amount");
-                        break;
+                    break;
+                case "faction":
+                    IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(recipient);
+                    if (fac == null)
+                    {
+                        Context.Respond("Cant find that faction");
+                        return;
+                    }
+                    Context.Respond(fac.Name + " FACTION Balance Before Change : " + String.Format("{0:n0}", EconUtils.getBalance(fac.FactionId)));
+                    EconUtils.addMoney(fac.FactionId, amount);
+                    Context.Respond(fac.Name + " FACTION Balance After Change : " + String.Format("{0:n0}", EconUtils.getBalance(fac.FactionId)));
+                    break;
 
-                
+                default:
+                    Context.Respond("Incorrect usage, example - !eco give player PlayerName amount or !eco give faction tag amount");
+                    break;
+
+
             }
         }
 
@@ -1074,12 +1153,12 @@ namespace CrunchUtilities
             if (CrunchUtilitiesPlugin.file.PlayerEcoPay)
             {
                 Int64 amount;
-                inputAmount = inputAmount.Replace("," ,"");
+                inputAmount = inputAmount.Replace(",", "");
                 inputAmount = inputAmount.Replace(".", "");
                 inputAmount = inputAmount.Replace(" ", "");
                 try
                 {
-                   amount  = Int64.Parse(inputAmount);
+                    amount = Int64.Parse(inputAmount);
                 }
                 catch (Exception)
                 {
@@ -1097,12 +1176,48 @@ namespace CrunchUtilities
                     case "player":
                         //Context.Respond("Error Player not online");
                         IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
-                        if (id == null)
+                       // if (id == null)
+                       // {
+                        //    
+                           // return;
+                       // }
+                        MyPlayer player = null;
+                        bool found = false;
+                        foreach (MyPlayer players in MySession.Static.Players.GetOnlinePlayers())
+                        {
+                            if (found)
+                            {
+                                break;
+                            }
+           
+                            if (players.Id.SteamId.Equals(recipient))
+                            {
+                                found = true;
+                                player = players;
+                                break;
+                            }
+                            if (players.DisplayName.Equals(recipient))
+                            {
+                                player = players;
+                                found = true;
+                                break;
+                            }
+                            if (id != null)
+                            {
+                                if (players.Identity.IdentityId == id.IdentityId)
+                                {
+                                    found = true;
+                                    player = players;
+                                    break;
+                                }
+                            }
+
+                        }
+                        if (!found)
                         {
                             SendMessage("[CrunchEcon]", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
                             return;
                         }
-                        MyPlayer player = MySession.Static.Players.GetPlayerByName(recipient);
                         if (player == null)
                         {
                             SendMessage("[CrunchEcon]", "Cant pay offline players, pay faction instead.", Color.Red, (long)Context.Player.SteamUserId);
@@ -1113,7 +1228,7 @@ namespace CrunchUtilities
                             EconUtils.takeMoney(Context.Player.IdentityId, amount);
                             EconUtils.addMoney(id.IdentityId, amount);
 
-                            
+
                             SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
                             SendMessage("[CrunchEcon]", "You sent " + id.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                         }
@@ -1139,23 +1254,23 @@ namespace CrunchUtilities
                             List<ulong> temp = new List<ulong>();
                             foreach (MyFactionMember mb in fac.Members.Values)
                             {
-                            
-                               
+
+
                                 ulong steamid = MySession.Static.Players.TryGetSteamId(mb.PlayerId);
                                 if (temp.Contains(steamid))
                                 {
-                                   break;
+                                    break;
                                 }
                                 if (steamid == 0)
                                 {
                                     break;
                                 }
-                                    SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent : " + String.Format("{0:n0}", amount) + " SC to the faction bank.", Color.DarkGreen, (long)steamid);
-                                    temp.Add(steamid);
-                                
+                                SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent : " + String.Format("{0:n0}", amount) + " SC to the faction bank.", Color.DarkGreen, (long)steamid);
+                                temp.Add(steamid);
+
                             }
 
-                                
+
                             SendMessage("[CrunchEcon]", "You sent " + fac.Name + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                         }
                         else
@@ -1163,7 +1278,28 @@ namespace CrunchUtilities
                             SendMessage("[CrunchEcon]", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
                         }
                         break;
+                    case "steam":
+                        //Context.Respond("Error Player not online");
+                        IMyIdentity id2 = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
+                        if (id2 == null)
+                        {
+                            SendMessage("[CrunchEcon]", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
+                            return;
+                        }
+                        if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
+                        {
+                            EconUtils.takeMoney(Context.Player.IdentityId, amount);
+                            EconUtils.addMoney(id2.IdentityId, amount);
 
+
+                            //SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                            SendMessage("[CrunchEcon]", "You sent " + id2.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                        }
+                        else
+                        {
+                            SendMessage("[CrunchEcon]", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                        }
+                        break;
                     default:
                         SendMessage("[CrunchEcon]", "Incorrect usage, example - !eco pay player PlayerName amount or !eco pay faction tag amount", Color.Red, (long)Context.Player.SteamUserId);
                         break;
@@ -1178,14 +1314,14 @@ namespace CrunchUtilities
         public static void SendMessage(string author, string message, Color color, long steamID)
         {
 
-           
+
             Logger _chatLog = LogManager.GetLogger("Chat");
             ScriptedChatMsg scriptedChatMsg1 = new ScriptedChatMsg();
             scriptedChatMsg1.Author = author;
             scriptedChatMsg1.Text = message;
             scriptedChatMsg1.Font = "White";
             scriptedChatMsg1.Color = color;
-            scriptedChatMsg1.Target = Sync.Players.TryGetIdentityId((ulong) steamID);
+            scriptedChatMsg1.Target = Sync.Players.TryGetIdentityId((ulong)steamID);
             ScriptedChatMsg scriptedChatMsg2 = scriptedChatMsg1;
             MyMultiplayerBase.SendScriptedChatMessage(ref scriptedChatMsg2);
         }
