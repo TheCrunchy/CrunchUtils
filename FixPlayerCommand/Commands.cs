@@ -49,6 +49,39 @@ namespace CrunchUtilities
             Context.Respond("Reloaded config");
         }
 
+        [Command("crunch config", "Reload the config")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void ReloadConfig(string option, string value)
+        {
+            switch (option)
+            {
+                case "playermakeship":
+                    CrunchUtilitiesPlugin.file.PlayerMakeShip = Boolean.TryParse(value, out bool result);
+                    break;
+                case "playerfixme":
+                    CrunchUtilitiesPlugin.file.PlayerFixMe = Boolean.TryParse(value, out bool result2);
+                    break;
+                case "deletestone":
+                    CrunchUtilitiesPlugin.file.DeleteStone = Boolean.TryParse(value, out bool result3);
+                    break;
+                case "withdraw":
+                    CrunchUtilitiesPlugin.file.Withdraw = Boolean.TryParse(value, out bool result4);
+                    break;
+                case "deposit":
+                    CrunchUtilitiesPlugin.file.Deposit = Boolean.TryParse(value, out bool result5);
+                    break;
+                case "factionsharedeposit":
+                    CrunchUtilitiesPlugin.file.FactionShareDeposit = Boolean.TryParse(value, out bool result6);
+                    break;
+                case "identityupdate":
+                    CrunchUtilitiesPlugin.file.IdentityUpdate = Boolean.TryParse(value, out bool result7);
+                    break;
+                case "cooldowninseconds":
+                    CrunchUtilitiesPlugin.file.CooldownInSeconds = int.Parse(value);
+                    break;
+            }
+           
+        }
 
         [Command("admin makeship", "Admin command, Turn a station and connected grids into a ship")]
         [Permission(MyPromoteLevel.Admin)]
@@ -418,7 +451,13 @@ namespace CrunchUtilities
             {
                 string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
                 MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(player.Id.SteamId.ToString());
-                badNames.Add(name + " : " + identity.DisplayName, player.Id.SteamId.ToString());
+                if (player.DisplayName.Equals(identity.DisplayName)){
+                    badNames.Add(name, player.Id.SteamId.ToString());
+                }
+                else
+                {
+                    badNames.Add(name + " : " + identity.DisplayName, player.Id.SteamId.ToString());
+                }
             }
             if (badNames.Count == 0)
             {
@@ -434,11 +473,14 @@ namespace CrunchUtilities
                 if (console)
                 {
                     Context.Respond("Names: " + pair.Key + " || ID: " + pair.Value);
-                    return;
                 }
-                SendMessage("[C]", "Names: " + pair.Key + " || ID: " + pair.Value, Color.Green, (long)Context.Player.SteamUserId);
+                else
+                {
+                    SendMessage("[C]", "Names: " + pair.Key + " || ID: " + pair.Value, Color.Green, (long)Context.Player.SteamUserId);
+                }
             }
         }
+
         [Command("listnames", "Lists players names if they dont match steam names")]
         [Permission(MyPromoteLevel.None)]
         public void listNames()
@@ -465,16 +507,23 @@ namespace CrunchUtilities
                     Context.Respond("No players with mismatching names :D");
                     return;
                 }
-                SendMessage("[C]", "No players with mismatching names :D", Color.Green, (long)Context.Player.SteamUserId);
+                else
+                {
+                    SendMessage("[C]", "No players with mismatching names :D", Color.Green, (long)Context.Player.SteamUserId);
+                    return;
+                }
             }
             foreach (KeyValuePair<string, string> pair in badNames)
             {
+                string temp;
                 if (console)
                 {
                     Context.Respond("Steam: " + pair.Key + " || Identity: " + pair.Value);
-                    return;
                 }
-                SendMessage("[C]", "Steam: " + pair.Key + " || Identity: " + pair.Value, Color.Green, (long)Context.Player.SteamUserId);
+                else
+                {
+                    SendMessage("[C]", "Steam: " + pair.Key + " || Identity: " + pair.Value, Color.Green, (long)Context.Player.SteamUserId);
+                }
             }
         }
         [Command("updatename", "updates identity names")]
@@ -703,7 +752,10 @@ namespace CrunchUtilities
                                             owned = true;
                                             break;
                                         case MyRelationsBetweenPlayerAndBlock.FactionShare:
-                                            owned = true;
+                                            if (CrunchUtilitiesPlugin.file.FactionShareDeposit)
+                                            {
+                                                owned = true;
+                                            }
                                             break;
                                         case MyRelationsBetweenPlayerAndBlock.Neutral:
                                             owned = true;
@@ -908,18 +960,43 @@ namespace CrunchUtilities
                 //Eventually add some checks to see if the item exists before adding it
                 case "ore":
                     MyObjectBuilder_PhysicalObject item = new MyObjectBuilder_Ore() { SubtypeName = subtypeName };
-                    invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item);
-                    Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item.SubtypeName);
+                    MyItemType itemType = new MyInventoryItemFilter("MyObjectBuilder_Ore/" + subtypeName).ItemType;
+                    if (invent.CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()),itemType))
+                    {
+                        invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item);
+                        Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item.SubtypeName);
+                    }
+                    else
+                    {
+                        Context.Respond("Error : Inventory doesnt have room");
+                    }
+             
                     break;
                 case "ingot":
                     MyObjectBuilder_PhysicalObject item2 = new MyObjectBuilder_Ingot() { SubtypeName = subtypeName };
-                    invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item2);
-                    Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item2.SubtypeName);
+                    MyItemType itemType2 = new MyInventoryItemFilter("MyObjectBuilder_Ingot/" + subtypeName).ItemType;
+                    if (invent.CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), itemType2))
+                    {
+                        invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item2);
+                        Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item2.SubtypeName);
+                    }
+                    else
+                    {
+                        Context.Respond("Error : Inventory doesnt have room");
+                    }
                     break;
                 case "component":
                     MyObjectBuilder_PhysicalObject item3 = new MyObjectBuilder_Component() { SubtypeName = subtypeName };
-                    invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item3);
-                    Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item3.SubtypeName);
+                    MyItemType itemType3 = new MyInventoryItemFilter("MyObjectBuilder_Component/" + subtypeName).ItemType;
+                    if (invent.CanItemsBeAdded(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), itemType3))
+                    {
+                        invent.AddItems(VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()), item3);
+                        Context.Respond("Giving " + player.DisplayName + " " + amount + " " + item3.SubtypeName);
+                    }
+                    else
+                    {
+                        Context.Respond("Error : Inventory doesnt have room");
+                    }
                     break;
             }
 

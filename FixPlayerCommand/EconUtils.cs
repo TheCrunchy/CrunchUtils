@@ -33,7 +33,7 @@ namespace CrunchUtilities
             return;
         }
 
-        //I really should use this method more
+        //This thing is broke, dont use it
         public static void TransferToFactionAccount(long id, long factionID, Int64 amount)
         {
                 MyAccountInfo account;

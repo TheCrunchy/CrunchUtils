@@ -49,7 +49,20 @@ namespace CrunchUtilities
             }
             return file;
         }
-        
+        public static ConfigFile SaveConfig()
+        {
+            FileUtils utils = new FileUtils();
+            utils.WriteToXmlFile<ConfigFile>(path + "\\CrunchUtils.xml", file);
+            if (file.IdentityUpdate)
+            {
+                aTimer.Enabled = false;
+                aTimer.Interval = 150000;
+                aTimer.Elapsed += OnTimedEventA;
+                aTimer.AutoReset = true;
+                aTimer.Enabled = true;
+            }
+            return file;
+        }
         public override void Init(ITorchBase torch)
         {
             base.Init(torch);
