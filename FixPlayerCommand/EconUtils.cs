@@ -57,13 +57,13 @@ namespace CrunchUtilities
             long factionBalance = EconUtils.getBalance(factionID) + amount;
             long playerBalance = EconUtils.getBalance(id) - amount;
             CrunchUtilitiesPlugin.Log.Info("Ignore this error");
-           // MyBankingSystem.RequestTransfer_BroadcastToClients(id, factionID, amount, id, factionID);
-            //EconUtils.takeMoney(factionID, EconUtils.getBalance(factionID));
-            //EconUtils.takeMoney(id, EconUtils.getBalance(id));
+           MyBankingSystem.RequestTransfer_BroadcastToClients(id, factionID, amount, EconUtils.getBalance(id), EconUtils.getBalance(factionID));
+            EconUtils.addMoney(factionID, amount);
+            EconUtils.takeMoney(id, amount);
             //MyBankingSystem.ChangeBalance(factionID, factionBalance);
             //MyBankingSystem.ChangeBalance(id, playerBalance);
     
-            MyBankingSystem.Static.SaveData();
+            //MyBankingSystem.Static.SaveData();
        
             return;
         }
@@ -74,18 +74,6 @@ namespace CrunchUtilities
             {
                 amount = amount * -1;
                 MyBankingSystem.ChangeBalance(walletID, amount);
-            }
-            return;
-        }
-
-        public static void doPayment2Players(long walletIDSender, long walletIDRecipient, Int64 amount)
-        {
-            if (getBalance(walletIDSender) > amount)
-            {
-                MyBankingSystem.ChangeBalance(walletIDSender, amount);
-                // Int64 amountTaxApplied = amount * tax;
-                Int64 amountTaxApplied = amount;
-                MyBankingSystem.ChangeBalance(walletIDRecipient, amountTaxApplied);
             }
             return;
         }

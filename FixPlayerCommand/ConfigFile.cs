@@ -18,6 +18,8 @@ namespace CrunchUtilities
         public bool FactionShareDeposit = true;
         private int _cooldownInSeconds = 10 * 60;
         public bool IdentityUpdate = false;
+        public bool Claim = false;
+        public int ClaimPercent = 70;
         public int CooldownInSeconds { get => _cooldownInSeconds; set => SetValue(ref _cooldownInSeconds, value); }
     }
 }
