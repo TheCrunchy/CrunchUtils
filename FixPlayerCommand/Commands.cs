@@ -42,6 +42,7 @@ namespace CrunchUtilities
     public class Commands : CommandModule
     {
         private static Logger _log = LogManager.GetCurrentClassLogger();
+        private static Dictionary<long, int> warnedGrids = new Dictionary<long, int>();
         private Vector3 defaultColour = new Vector3(50, 168, 168);
         [Command("crunch reload", "Reload the config")]
         [Permission(MyPromoteLevel.Admin)]
@@ -337,7 +338,7 @@ namespace CrunchUtilities
             if (CrunchUtilitiesPlugin.file.PlayerMakeShip)
             {
 
-                if (MyGravityProviderSystem.IsPositionInNaturalGravity(Context.Player.GetPosition()))
+                if (MyGravityProviderSystem.IsPositionInNaturalGravity(Context.Player.GetPosition()) && !CrunchUtilitiesPlugin.file.convertInGravity)
                 {
 
                     Context.Respond("You cannot use this command in natural gravity!");
@@ -1314,7 +1315,19 @@ namespace CrunchUtilities
             type = type.ToLower();
             switch (type)
             {
+           
+                  
                 case "player":
+                    if (recipient == "*")
+                    {
+                        foreach (MyPlayer p in MySession.Static.Players.GetOnlinePlayers())
+                        {
+                            EconUtils.addMoney(p.Identity.IdentityId, amount);
+
+                        }
+                        SendMessage("CrunchEcon", "You got money : " + amount, Color.Cyan, 0);
+                        return;
+                    }
                     //Context.Respond("Error Player not online");
                     IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
                     if (id == null)
@@ -1636,6 +1649,140 @@ namespace CrunchUtilities
             return;
 
         }
+        [Command("cleargrid", "clear a grids inventory")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void cleargrid()
+        {
+            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+            int inventory = 0;
+            foreach (var item in gridWithSubGrids)
+            {
+                foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                {
+                    MyCubeGrid grid = groupNodes.NodeData;
+                    foreach (MySlimBlock b in grid.GetBlocks())
+                    {
+                        if (b.FatBlock != null && b.FatBlock.HasInventory)
+                        {
+                            b.FatBlock.GetInventory().Clear();
+                            inventory++;
+                        }
+                    }
+                }
+            }
+            Context.Respond("Cleared " + inventory + " inventories");
+        }
+
+        [Command("deletenoworkingbeacon", "delete beacons if they arent working")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void deleteTheseGrids()
+        {
+
+            foreach (var group in MyCubeGridGroups.Static.Logical.Groups)
+            {
+                bool NPC = false;
+                foreach (var item in group.Nodes)
+                {
+                    MyCubeGrid grid = item.NodeData;
+                    if (((int)grid.Flags & 4) != 0)
+                    {
+                        break;
+                    }
+                    if (item.NodeData.Projector != null)
+                    {
+                        break;
+                    }
+                        IEnumerable<MyBeacon> beacons = grid.GetFatBlocks().OfType<MyBeacon>();
+                    bool delete = true;
+                    foreach (long l in grid.BigOwners)
+                    {
+                       if (FacUtils.GetFactionTag(l) != null && FacUtils.GetFactionTag(l).Length > 3)
+                        {
+                            NPC = true;
+                        }
+                    }
+                
+                    if (NPC)
+                    {
+                        break;
+                    }
+               
+   
+                    foreach (MyBeacon b in beacons)
+                    {
+                        List<Sandbox.ModAPI.Ingame.IMyPowerProducer> PowerProducers = new List<Sandbox.ModAPI.Ingame.IMyPowerProducer>();
+                        var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+                        float power = 0f;
+                        gts.GetBlocksOfType(PowerProducers);
+                        if (PowerProducers.Count != 0)
+                        {
+                            foreach (var powerProducer in PowerProducers)
+                            {
+                                power += powerProducer.CurrentOutput;
+                                
+                            }
+                        }
+                        if (b.IsFunctional && power > 0f)
+                        {
+                            delete = false;
+                        }
+ 
+                    }
+                  
+                    if (delete)
+                    {
+                        if (warnedGrids.ContainsKey(grid.EntityId))
+                        {
+                            warnedGrids.TryGetValue(grid.EntityId, out int temp);
+                            if (temp > 4)
+                            {
+                                var b = grid.GetFatBlocks<MyCockpit>();
+                                foreach (var c in b)
+                                {
+                                    c.RemovePilot();
+                                }
+                                grid.Close();
+                                foreach (long l in grid.BigOwners)
+                                {
+                                    SendMessage("Delete Notification", "The grid " + grid.DisplayName + " Was deleted for lacking a functional beacon and power", Color.DarkRed,(long)MySession.Static.Players.TryGetSteamId(l));
+                     
+                                    CrunchUtilitiesPlugin.Log.Info("Deleting " + grid.DisplayName);
+                                }
+                            }
+                            else
+                            {
+                                warnedGrids.Remove(grid.EntityId);
+                                foreach (long l in grid.BigOwners)
+                                {
+                                    CrunchUtilitiesPlugin.Log.Info("Warning "  + temp + " " + grid.DisplayName);
+                                     SendMessage("Delete Warning", "The grid " + grid.DisplayName + " Will be deleted in " + (5 - temp) + " minutes if a beacon is not functional and powered", Color.DarkRed, (long)MySession.Static.Players.TryGetSteamId(l));
+                         
+                                }
+                           
+                                warnedGrids.Add(grid.EntityId, temp += 1);
+
+                            }
+                          
+                        }
+                        else
+                        {
+                            foreach (long l in grid.BigOwners)
+                            {
+                                CrunchUtilitiesPlugin.Log.Info("Warning " + grid.DisplayName);
+                                 SendMessage("Delete Warning", "The grid " + grid.DisplayName + " Will be deleted in 5 minutes if a beacon is not functional and powered", Color.DarkRed, (long)MySession.Static.Players.TryGetSteamId(l));
+
+                            }
+
+                            warnedGrids.Add(grid.EntityId, 1);
+                        }
+                       
+                        //check if its had 5 warnings
+                        //grid.Close();
+                        //log it
+                    }
+                }
+            }
+        }
         [Command("gridtype", "return if its a station or not")]
         [Permission(MyPromoteLevel.Admin)]
         public void GetStaticOrDynamic(string gridname = "")
@@ -1643,6 +1790,7 @@ namespace CrunchUtilities
             bool found = false;
             if (gridname.Equals(""))
             {
+                
                 if (Context.Player != null)
                 {
                     ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
@@ -1650,9 +1798,10 @@ namespace CrunchUtilities
                     {
                         foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                         {
+                            
                             found = true;
                             MyCubeGrid grid = groupNodes.NodeData;
-
+                            
                             if (grid.IsStatic)
                             {
                                 Context.Respond(grid.DisplayName + " : STATION");
@@ -1676,13 +1825,14 @@ namespace CrunchUtilities
             }
             else
             {
+               
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindGridGroup(gridname);
                 foreach (var item in gridWithSubGrids)
                 {
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                     {
                         MyCubeGrid grid = groupNodes.NodeData;
-
+                      
                         if (grid.IsStatic)
                         {
                             Context.Respond(grid.DisplayName + " : STATION");
