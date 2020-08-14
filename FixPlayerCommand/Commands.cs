@@ -1058,7 +1058,7 @@ namespace CrunchUtilities
             IMyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(PlayerName) as MyPlayer;
             if (player == null)
             {
-                SendMessage("[]", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
+                Context.Respond("Cant find that player");
                 return;
             }
             MyInventory invent = player.Character.GetInventory() as MyInventory;
@@ -1672,6 +1672,132 @@ namespace CrunchUtilities
             }
             Context.Respond("Cleared " + inventory + " inventories");
         }
+        [Command("transmit", "delete beacons if they arent working")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void transmit()
+        {
+            foreach (MyPlayer p in MySession.Static.Players.GetOnlinePlayers())
+            {
+                List<IMyGps> playergpsList = MyAPIGateway.Session?.GPS.GetGpsList(p.Identity.IdentityId);
+
+                if (playergpsList == null)
+                    break;
+
+                foreach (IMyGps gps in playergpsList)
+                {
+
+                    if (gps.Description.Contains("Cronch"))
+                    {
+                        MyAPIGateway.Session?.GPS.RemoveGps(p.Identity.IdentityId, gps);
+                    }
+
+
+                }
+            }
+            foreach (var group in MyCubeGridGroups.Static.Logical.Groups)
+            {
+                bool NPC = false;
+                foreach (var item in group.Nodes)
+                {
+                    MyCubeGrid grid = item.NodeData;
+                    if (((int)grid.Flags & 4) != 0)
+                    {
+                        //concealed
+                        break;
+                    }
+                    if (MyGravityProviderSystem.IsPositionInNaturalGravity(grid.PositionComp.GetPosition())){
+                        break;
+                    }
+                                   //this bit requires a fac utils to get the faction tag, you can remove it if you dont need it
+                    foreach (long l in grid.BigOwners)
+                    {
+                        if (FacUtils.GetFactionTag(l) != null && FacUtils.GetFactionTag(l).Length > 3)
+                        {
+                            NPC = true;
+                        
+                        }
+                    }
+
+                    if (NPC)
+                    {
+                        break;
+                    }
+                    int PCU = 0;
+                    PCU = grid.BlocksPCU;
+                    Vector3 location = grid.PositionComp.GetPosition();
+                    //get the gps
+                    float broadcastRange = 0;
+                    MyGpsCollection gpsCollection = (MyGpsCollection)MyAPIGateway.Session?.GPS;
+                    if (PCU <= 10000)
+                    {
+                        broadcastRange = 10000;
+                  
+                    }
+                    if (PCU > 10000)
+                    {
+
+                        broadcastRange = 50000;
+                  
+                    }
+                    if (PCU > 20000)
+                    {
+
+                        broadcastRange  = 150000;
+                     
+                    }
+                    if (PCU > 60000)
+                    {
+
+                        broadcastRange = 50000000;
+                  
+                    }
+           
+                    foreach (MyPlayer p in MySession.Static.Players.GetOnlinePlayers())
+                    {
+      
+
+                        List<MyGps> gpsList = new List<MyGps>();
+                        float distance = Vector3.Distance(location, p.GetPosition());
+                       if (distance <= broadcastRange)
+                        {
+                            //add a new gps point if player is in range
+                            MyGps gps = CreateGps(grid, Color.HotPink, 60, broadcastRange);
+                            gpsList.Add(gps);
+                      
+                        }
+                       foreach (MyGps gps in gpsList) {
+                   
+                            MyGps gpsRef = gps;
+                            long entityId = 0L;
+                            entityId = gps.EntityId;
+                            gpsCollection.SendAddGps(p.Identity.IdentityId, ref gpsRef, entityId, false);
+                        }
+
+                    }
+                  
+
+                }
+            }
+        }
+        private MyGps CreateGps(MyCubeGrid grid, Color gpsColor, long seconds, float distance)
+        {
+
+            MyGps gps = new MyGps
+            {
+                Coords = grid.PositionComp.GetPosition(),
+                Name = "Radar Signature - " + distance + " - " + grid.DisplayName,
+                DisplayName = "Radar Signature - " + distance + " - " + grid.DisplayName,
+                GPSColor = gpsColor,
+                IsContainerGPS = true,
+                ShowOnHud = true,
+                DiscardAt = new TimeSpan?(),
+                Description = "Cronch"
+            };
+            gps.UpdateHash();
+            gps.SetEntityId(grid.EntityId);
+
+            return gps;
+        }
 
         [Command("deletenoworkingbeacon", "delete beacons if they arent working")]
         [Permission(MyPromoteLevel.Admin)]
@@ -1686,10 +1812,12 @@ namespace CrunchUtilities
                     MyCubeGrid grid = item.NodeData;
                     if (((int)grid.Flags & 4) != 0)
                     {
+                        //concealed
                         break;
                     }
                     if (item.NodeData.Projector != null)
                     {
+                        //projection
                         break;
                     }
                         IEnumerable<MyBeacon> beacons = grid.GetFatBlocks().OfType<MyBeacon>();
