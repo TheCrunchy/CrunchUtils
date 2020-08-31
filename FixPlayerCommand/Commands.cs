@@ -201,7 +201,8 @@ namespace CrunchUtilities
                         //     MyObjectBuilder_PhysicalObject stone = new MyObjectBuilder_PhysicalObject("MyObjectBuilder_Ore/Stone");
                         MyCubeGrid grid = groupNodes.NodeData;
                         var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-
+                        
+                    
                         var blockList = new List<Sandbox.ModAPI.IMyTerminalBlock>();
                         gts.GetBlocksOfType<Sandbox.ModAPI.IMyTerminalBlock>(blockList);
                         if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
@@ -217,6 +218,7 @@ namespace CrunchUtilities
                                 //MyVisualScriptLogicProvider.SendChatMessage("blocks blocklist");
                                 if (block != null && block.HasInventory)
                                 {
+                                    
                                     var items = block.GetInventory().GetItems();
                                     for (int i = 0; i < items.Count; i++)
                                     {
@@ -549,10 +551,20 @@ namespace CrunchUtilities
                 MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(player.Id.SteamId.ToString());
                 if (player.DisplayName.Equals(identity.DisplayName))
                 {
+                    if (badNames.ContainsKey(name))
+                    {
+                        Context.Respond("Possibly bugged body " + name);
+                        break;
+                    }
                     badNames.Add(name, player.Id.SteamId.ToString());
                 }
                 else
                 {
+                    if (badNames.ContainsKey(name))
+                    {
+                        Context.Respond("Possibly bugged body " + name);
+                        break;
+                    }
                     badNames.Add(name + " : " + identity.DisplayName, player.Id.SteamId.ToString());
                 }
             }
@@ -596,6 +608,11 @@ namespace CrunchUtilities
                 MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(player.Id.SteamId.ToString());
                 if (!identity.DisplayName.Equals(name))
                 {
+                    if (badNames.ContainsKey(name))
+                    {
+                        Context.Respond("Possibly bugged body " + name);
+                        break;
+                    }
                     badNames.Add(name, identity.DisplayName);
                 }
             }
@@ -1498,7 +1515,7 @@ namespace CrunchUtilities
         }
 
 
-        [Command("w", "Message another player")]
+        [Command("whis", "Message another player")]
         [Permission(MyPromoteLevel.None)]
         public void PrivateMessageW(string name, string message)
         {
@@ -1705,6 +1722,10 @@ namespace CrunchUtilities
                         //concealed
                         break;
                     }
+                    if (grid.IsStatic)
+                    {
+                        break;
+                    }
                     if (MyGravityProviderSystem.IsPositionInNaturalGravity(grid.PositionComp.GetPosition())){
                         break;
                     }
@@ -1728,40 +1749,62 @@ namespace CrunchUtilities
                     //get the gps
                     float broadcastRange = 0;
                     MyGpsCollection gpsCollection = (MyGpsCollection)MyAPIGateway.Session?.GPS;
+             
                     if (PCU <= 10000)
                     {
-                        broadcastRange = 10000;
-                  
+                        broadcastRange = 3000;
+                 
                     }
-                    if (PCU > 10000)
+                    if (PCU < 1000)
+                    {
+                        broadcastRange = 5;
+
+                    }
+                    if (PCU >= 10000)
                     {
 
-                        broadcastRange = 50000;
+                        broadcastRange = 20000;
                   
                     }
-                    if (PCU > 20000)
+                    if (PCU >= 20000)
                     {
 
-                        broadcastRange  = 150000;
+                        broadcastRange  = 30000;
                      
                     }
-                    if (PCU > 60000)
+                    if (PCU >= 30000)
                     {
 
-                        broadcastRange = 50000000;
-                  
+                        broadcastRange = 1000000;
                     }
-           
+                    IMyFaction gridOwner = FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid));
+                    
                     foreach (MyPlayer p in MySession.Static.Players.GetOnlinePlayers())
                     {
-      
+                      
 
                         List<MyGps> gpsList = new List<MyGps>();
                         float distance = Vector3.Distance(location, p.GetPosition());
                        if (distance <= broadcastRange)
                         {
+                            MyGps gps;
                             //add a new gps point if player is in range
-                            MyGps gps = CreateGps(grid, Color.HotPink, 60, broadcastRange);
+                            if (gridOwner != null)
+                            {
+                                if (gridOwner.IsNeutral(p.Identity.IdentityId) || gridOwner.IsFriendly(p.Identity.IdentityId))
+                                {
+                                    gps = CreateGps(grid, Color.RoyalBlue, 60, broadcastRange);
+                                }
+                                else
+                                {
+                                    gps = CreateGps(grid, Color.DarkRed, 60, broadcastRange);
+                                }
+                            }
+                            else
+                            {
+                                gps = CreateGps(grid, Color.DarkRed, 60, broadcastRange);
+                            }
+                     
                             gpsList.Add(gps);
                       
                         }
@@ -1821,6 +1864,7 @@ namespace CrunchUtilities
                         break;
                     }
                         IEnumerable<MyBeacon> beacons = grid.GetFatBlocks().OfType<MyBeacon>();
+
                     bool delete = true;
                     foreach (long l in grid.BigOwners)
                     {
@@ -1838,6 +1882,7 @@ namespace CrunchUtilities
    
                     foreach (MyBeacon b in beacons)
                     {
+                        
                         List<Sandbox.ModAPI.Ingame.IMyPowerProducer> PowerProducers = new List<Sandbox.ModAPI.Ingame.IMyPowerProducer>();
                         var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
                         float power = 0f;
