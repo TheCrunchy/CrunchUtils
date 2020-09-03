@@ -245,6 +245,7 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.None)]
         public void ClaimCommand()
         {
+         
             if (CrunchUtilitiesPlugin.file.Claim)
             {
                 double blockCount = 0;
@@ -280,9 +281,10 @@ namespace CrunchUtilities
                          
                             foreach (MySlimBlock block in grid.GetBlocks())
                             {
-                                if (block.FatBlock != null)
+                                if (block.FatBlock != null && block.FatBlock.OwnerId > 0)
                                 {
                                     blockCount += 1;
+                               
                                     switch (block.FatBlock.GetUserRelationToOwner(Context.Player.IdentityId))
                                     {
                                         case MyRelationsBetweenPlayerAndBlock.Owner:
@@ -290,11 +292,10 @@ namespace CrunchUtilities
                                             factionShared += 1;
                                             break;
                                         case MyRelationsBetweenPlayerAndBlock.FactionShare:
-                                            Context.Respond("Faction shared? " + block.FatBlock.DisplayNameText);
                                             factionShared += 1;
                                             break;
                                         case MyRelationsBetweenPlayerAndBlock.NoOwnership:
-                                            sharedWithAll += 1;
+                                            //sharedWithAll += 1;
                                             break;
                                         default:
                                             break;
@@ -302,10 +303,11 @@ namespace CrunchUtilities
                                 }
                             }
                             double totalShared = factionShared + sharedWithAll;
+
                             double sharedPercent = (totalShared / blockCount) * 100;
-                    
-       
-                                if (sharedPercent >= CrunchUtilitiesPlugin.file.ClaimPercent)
+    
+                            Context.Respond(CrunchUtilitiesPlugin.file.ClaimPercent.ToString());
+                            if (sharedPercent >= CrunchUtilitiesPlugin.file.ClaimPercent)
                                 {
                                     grid.ChangeGridOwner(Context.Player.IdentityId, MyOwnershipShareModeEnum.None);
                                 Context.Respond("Giving ownership to you, Owned: " + sharedPercent.ToString());
