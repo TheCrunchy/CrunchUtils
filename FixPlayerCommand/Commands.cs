@@ -37,6 +37,7 @@ using Sandbox.Game.Multiplayer;
 using System.Reflection;
 using VRage;
 using Torch.Mod.Messages;
+using static Sandbox.Game.Multiplayer.MyFactionCollection;
 
 namespace CrunchUtilities
 {
@@ -195,6 +196,7 @@ namespace CrunchUtilities
                     currentCooldown.StartCooldown(null);
                 }
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+                int count = 0;
                 foreach (var item in gridWithSubGrids)
                 {
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
@@ -226,13 +228,15 @@ namespace CrunchUtilities
 
                                         if (items[i].Content.SubtypeId.ToString().Contains("Stone") && items[i].Content.TypeId.ToString().Contains("Ore"))
                                         {
+                                            count += items[i].Amount.ToIntSafe();
                                             block.GetInventory().RemoveItems(items[i].ItemId);
                                         }
                                     }
                                 }
                             }
                         }
-                        Context.Respond("Deleted the stone?");
+
+                        Context.Respond(count + " Stone Deleted");
                     }
                 }
             }
@@ -500,41 +504,58 @@ namespace CrunchUtilities
         }
         [Command("getsteamid", "Get a specific identities steam name")]
         [Permission(MyPromoteLevel.None)]
-        public void getSTEAMID(string target)
+        public void getSTEAMID(string target, bool online = false)
         {
             bool console = false;
             if (Context.Player == null)
             {
                 console = true;
             }
-            Dictionary<String, String> badNames = new Dictionary<string, string>();
-            foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+            if (online)
             {
+                Dictionary<String, String> badNames = new Dictionary<string, string>();
+                foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+                {
 
-                MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(player.Id.SteamId.ToString());
-                if (!identity.DisplayName.Equals(target))
+                    MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(player.Id.SteamId.ToString());
+                    if (!identity.DisplayName.Equals(target))
+                    {
+                        string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
+                        badNames.Add(name + " : " + identity.DisplayName, player.Id.SteamId.ToString());
+                    }
+                }
+                if (badNames.Count == 0)
                 {
-                    string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
-                    badNames.Add(name + " : " + identity.DisplayName, player.Id.SteamId.ToString());
+                    if (console)
+                    {
+                        Context.Respond("No player with that name");
+                        return;
+                    }
+                    SendMessage("[C]", "No player with that name", Color.Green, (long)Context.Player.SteamUserId);
+                }
+                foreach (KeyValuePair<string, string> pair in badNames)
+                {
+                    if (console)
+                    {
+                        Context.Respond("Names: " + pair.Key + " || ID: " + pair.Value);
+                        return;
+                    }
+                    SendMessage("[C]", "Names: " + pair.Key + " || ID: " + pair.Value, Color.Green, (long)Context.Player.SteamUserId);
                 }
             }
-            if (badNames.Count == 0)
+            else
             {
-                if (console)
+                IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(target);
+                if (id == null)
                 {
-                    Context.Respond("No player with that name");
+                    Context.Respond("Cant find that player.");
                     return;
                 }
-                SendMessage("[C]", "No player with that name", Color.Green, (long)Context.Player.SteamUserId);
-            }
-            foreach (KeyValuePair<string, string> pair in badNames)
-            {
-                if (console)
-                {
-                    Context.Respond("Names: " + pair.Key + " || ID: " + pair.Value);
-                    return;
-                }
-                SendMessage("[C]", "Names: " + pair.Key + " || ID: " + pair.Value, Color.Green, (long)Context.Player.SteamUserId);
+
+                string name = MyMultiplayer.Static.GetMemberName(MySession.Static.Players.TryGetSteamId(id.IdentityId));
+                Context.Respond(name + " : " + id.DisplayName + MySession.Static.Players.TryGetSteamId(id.IdentityId).ToString());
+                 
+                
             }
         }
 
@@ -759,7 +780,7 @@ namespace CrunchUtilities
                                 membersString += ("\nLeader " + test.DisplayName);
                                 break;
                             }
-                            membersString += (test.DisplayName);
+                            membersString += ("\n" + test.DisplayName);
 
 
                         }
@@ -1989,6 +2010,8 @@ namespace CrunchUtilities
 
         }
 
+        
+
         [Command("faction rep change", "Change repuation between factions")]
         [Permission(MyPromoteLevel.Admin)]
         public void ChangeFactionRep(string tag, string tag2, Int64 amount)
@@ -2000,6 +2023,10 @@ namespace CrunchUtilities
                 Context.Respond(fac.Name + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
                 MySession.Static.Factions.SetReputationBetweenFactions(fac.FactionId, fac2.FactionId, int.Parse(amount.ToString()));
                 Context.Respond(fac.Name + " FACTION Reputation After Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
+
+           
+               
+         
             }
             else
             {
