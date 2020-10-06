@@ -913,7 +913,7 @@ namespace CrunchUtilities
         }
         [Command("eco deposit", "Deposit moneys")]
         [Permission(MyPromoteLevel.None)]
-        public void PlayerDeposit()
+        public void PlayerDeposit(bool playerOwned = false)
         {
             if (CrunchUtilitiesPlugin.file.Deposit)
             {
@@ -951,18 +951,38 @@ namespace CrunchUtilities
                                             owned = true;
                                             break;
                                         case MyRelationsBetweenPlayerAndBlock.FactionShare:
+                                            if (!playerOwned)
+                                            {
+                                                owned = false;
+                                                break;
+                                            }
                                             if (CrunchUtilitiesPlugin.file.FactionShareDeposit)
                                             {
                                                 owned = true;
                                             }
                                             break;
                                         case MyRelationsBetweenPlayerAndBlock.Neutral:
+                                            if (!playerOwned)
+                                            {
+                                                owned = false;
+                                                break;
+                                            }
                                             owned = true;
                                             break;
                                         case MyRelationsBetweenPlayerAndBlock.NoOwnership:
+                                            if (!playerOwned)
+                                            {
+                                                owned = false;
+                                                break;
+                                            }
                                             owned = false;
                                             break;
                                         case MyRelationsBetweenPlayerAndBlock.Enemies:
+                                            if (!playerOwned)
+                                            {
+                                                owned = false;
+                                                break;
+                                            }
                                             owned = false;
                                             break;
                                     }
