@@ -45,6 +45,8 @@ namespace CrunchUtilities
     {
         private static Logger _log = LogManager.GetCurrentClassLogger();
         private static Dictionary<long, int> warnedGrids = new Dictionary<long, int>();
+        private List<long> confirmations = new List<long>();
+
         private Vector3 defaultColour = new Vector3(50, 168, 168);
         [Command("crunch reload", "Reload the config")]
         [Permission(MyPromoteLevel.Admin)]
@@ -481,20 +483,28 @@ namespace CrunchUtilities
                 {
                     playerId = player.IdentityId;
                 }
-                try
-                {
-                    Context.Respond("You should be fixed after respawning");
-                    player.Character.Kill();
-                    player.Character.Delete();
-                    MyMultiplayer.Static.DisconnectClient(player.SteamUserId);
+                if (confirmations.Contains(player.Identity.IdentityId)) {
+                    try
+                    {
+                        Context.Respond("You should be fixed after respawning");
+                        player.Character.Kill();
+                        player.Character.Delete();
+                        MyMultiplayer.Static.DisconnectClient(player.SteamUserId);
+                        confirmations.Remove(player.Identity.IdentityId);
+                    }
+                    catch (Exception)
+                    {
+                        Context.Respond("You are really broken, this might help");
+                        player.Character.Kill();
+                        player.Character.Delete();
+                        MyMultiplayer.Static.DisconnectClient(player.SteamUserId);
+                        return;
+                    }
                 }
-                catch (Exception)
+                else
                 {
-                    Context.Respond("You are really broken, this might help");
-                    player.Character.Kill();
-                    player.Character.Delete();
-                    MyMultiplayer.Static.DisconnectClient(player.SteamUserId);
-                    return;
+                    Context.Respond("You will be killed and disconnected - run command again to confirm.");
+                    confirmations.Add(player.Identity.IdentityId);
                 }
             }
             else
