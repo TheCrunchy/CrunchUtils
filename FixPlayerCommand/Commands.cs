@@ -38,6 +38,7 @@ using System.Reflection;
 using VRage;
 using Torch.Mod.Messages;
 using static Sandbox.Game.Multiplayer.MyFactionCollection;
+using Torch.Mod;
 
 namespace CrunchUtilities
 {
@@ -762,15 +763,48 @@ namespace CrunchUtilities
         {
             if (CrunchUtilitiesPlugin.file.facInfo)
             {
+                bool console = false;
+                members = true;
+                if (Context.Player == null)
+                {
+                    console = true;
+                }
                 IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
                 if (fac == null)
                 {
-                    Context.Respond("Cant find that faction");
-                    return;
+                   MyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(tag) as MyPlayer;
+                    if (player == null)
+                    {
+                        IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(tag);
+                        if (id == null)
+                        {
+                            Context.Respond("Cant find that faction or player.");
+                            return;
+                        }
+                        else
+                        {
+                            fac = FacUtils.GetPlayersFaction(id.IdentityId);
+                            if (fac == null)
+                            {
+                                Context.Respond("The player that was found does not have a faction.");
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        fac = FacUtils.GetPlayersFaction(player.Identity.IdentityId);
+                        if (fac == null)
+                        {
+                            Context.Respond("The player that was found does not have a faction.");
+                            return;
+                        }
+                    }
+
                 }
-             
-            
-                string membersString = "";
+
+
+                var sb = new StringBuilder();
                 if (members)
                 {
 
@@ -780,23 +814,20 @@ namespace CrunchUtilities
                         MyIdentity test = MySession.Static.Players.TryGetIdentity(m.Key);
                         if (test != null && test.DisplayName != null)
                         {
-                            if (m.Value.IsFounder)
-                            {
-                                membersString += ("\nFounder " + test.DisplayName);
-                                break;
-                            }
-                            if (m.Value.IsLeader)
-                            {
-                                membersString += ("\nLeader " + test.DisplayName);
-                                break;
-                            }
-                            membersString += ("\n" + test.DisplayName);
+                            sb.Append("\n" + test.DisplayName);
 
 
                         }
                     }
-                    Torch.Mod.ModCommunication.SendMessageTo(new DialogMessage("", "Name: " + fac.Name + "\nTag: " + fac.Tag + "\nMembers: " + fac.Members.Count + "\n" + membersString), Context.Player.SteamUserId);
-                    Context.Respond(fac.Description);
+                    if (!console)
+                    {
+                        DialogMessage m = new DialogMessage("Faction Info", fac.Name,  "\nTag: " + fac.Tag + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count + "\n" + sb.ToString());
+                        ModCommunication.SendMessageTo(m, Context.Player.SteamUserId);
+                    }
+                    else
+                    {
+                        Context.Respond("Name: " + fac.Name + "\nTag: " + fac.Tag + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count + "\n" + sb.ToString());
+                    }
                     return;
                 }
                 else
