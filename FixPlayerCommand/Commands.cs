@@ -757,6 +757,347 @@ namespace CrunchUtilities
 
             }
         }
+
+        [Command("declarewar", "declare war")]
+        [Permission(MyPromoteLevel.None)]
+        public void declareWar(string tag, bool members = false)
+        {
+            if (CrunchUtilitiesPlugin.file.facInfo)
+            {
+                bool console = false;
+                members = true;
+                if (Context.Player == null)
+                {
+                    console = true;
+                }
+                IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
+                if (fac == null)
+                {
+                    MyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(tag) as MyPlayer;
+                    if (player == null)
+                    {
+                        IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(tag);
+                        if (id == null)
+                        {
+                            Context.Respond("Cant find that faction or player.");
+                            return;
+                        }
+                        else
+                        {
+                            fac = FacUtils.GetPlayersFaction(id.IdentityId);
+                            if (fac == null)
+                            {
+                                Context.Respond("The player that was found does not have a faction.");
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        fac = FacUtils.GetPlayersFaction(player.Identity.IdentityId);
+                        if (fac == null)
+                        {
+                            Context.Respond("The player that was found does not have a faction.");
+                            return;
+                        }
+                    }
+
+
+
+                }
+                //now do the send peace request
+                IMyFaction playerFac = FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId);
+                if (playerFac == null)
+                {
+                    Context.Respond("You dont have a faction.");
+                    return;
+                }
+                if (playerFac.IsLeader(Context.Player.IdentityId) || playerFac.IsFounder(Context.Player.IdentityId))
+                {
+                    Sandbox.Game.Multiplayer.MyFactionCollection.DeclareWar(playerFac.FactionId, fac.FactionId);
+                    Context.Respond("War were declared.");
+                }
+                else
+                {
+                    Context.Respond("You are not a faction leader or founder!");
+                }
+            }
+            else
+            {
+                Context.Respond("Fac info not enabled");
+            }
+
+        }
+
+        [Command("nationjoin", "Join a nation")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void massjoin(string tag)
+        {
+
+     
+                if (Context.Player == null)
+                {
+                Context.Respond("Consoles not allowed to join a faction.");
+                return;
+                }
+
+
+                IMyFaction playerFac = FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId);
+                if (playerFac == null)
+                {
+                    Context.Respond("You dont have a faction.");
+                    return;
+                }
+       
+            
+            if (playerFac.IsLeader(Context.Player.IdentityId) || playerFac.IsFounder(Context.Player.IdentityId))
+            {
+
+                if (playerFac.Description.Contains(tag))
+                {
+                    foreach (KeyValuePair<long, MyFaction> f in MySession.Static.Factions)
+                    {
+                        if (f.Value != playerFac)
+                        {
+                            if (f.Value.Description != null && f.Value.Description.Contains(tag))
+                            {
+                                Sandbox.Game.Multiplayer.MyFactionCollection.SendPeaceRequest(playerFac.FactionId, f.Value.FactionId);
+                            }else
+                            {
+                                if (f.Value.Tag.Length == 3)
+                                {
+                                    //if you ever want this
+                                    //Sandbox.Game.Multiplayer.MyFactionCollection.DeclareWar(playerFac.FactionId, f.Value.FactionId);
+                                }
+                            }
+                           
+                        }
+                    }
+                    Context.Respond("Sent peace requests to all factions with the tag and declared war on all others!");
+                }
+                else
+                {
+                    Context.Respond("Your faction description does not contain that tag!");
+                }
+            }
+            else
+            {
+                    Context.Respond("You are not a faction leader or founder!");
+                    return;
+            }
+
+        }
+
+        [Command("stripalliances", "declare war on everyone")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void declarewarall(string tag)
+        {
+            if (CrunchUtilitiesPlugin.file.facInfo)
+            {
+                bool console = false;
+
+                if (Context.Player == null)
+                {
+                    console = true;
+                }
+                IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
+                if (fac == null)
+                {
+                    MyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(tag) as MyPlayer;
+                    if (player == null)
+                    {
+                        IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(tag);
+                        if (id == null)
+                        {
+                            Context.Respond("Cant find that faction or player.");
+                            return;
+                        }
+                        else
+                        {
+                            fac = FacUtils.GetPlayersFaction(id.IdentityId);
+                            if (fac == null)
+                            {
+                                Context.Respond("The player that was found does not have a faction.");
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        fac = FacUtils.GetPlayersFaction(player.Identity.IdentityId);
+                        if (fac == null)
+                        {
+                            Context.Respond("The player that was found does not have a faction.");
+                            return;
+                        }
+                    }
+
+
+
+                }
+                foreach (KeyValuePair<long, MyFaction> f in MySession.Static.Factions)
+                {
+                    if (f.Value != fac)
+                    {
+                        if (f.Value.Description != null && f.Value.Tag.Length == 3)
+                        {
+                            Sandbox.Game.Multiplayer.MyFactionCollection.DeclareWar(fac.FactionId, f.Value.FactionId);
+                        }
+                        else
+                        {
+                        }
+
+                    }
+                }
+                Context.Respond("That faction has now declared war on all factions");
+
+            }
+            else
+            {
+                Context.Respond("Fac info not enabled");
+            }
+
+        }
+
+
+        [Command("nofriendforyou", "make a faction declare war on everyone")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void declarewaronall(string tag)
+        {
+            if (CrunchUtilitiesPlugin.file.facInfo)
+            {
+                bool console = false;
+    
+                if (Context.Player == null)
+                {
+                    console = true;
+                }
+                IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
+                if (fac == null)
+                {
+                    MyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(tag) as MyPlayer;
+                    if (player == null)
+                    {
+                        IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(tag);
+                        if (id == null)
+                        {
+                            Context.Respond("Cant find that faction or player.");
+                            return;
+                        }
+                        else
+                        {
+                            fac = FacUtils.GetPlayersFaction(id.IdentityId);
+                            if (fac == null)
+                            {
+                                Context.Respond("The player that was found does not have a faction.");
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        fac = FacUtils.GetPlayersFaction(player.Identity.IdentityId);
+                        if (fac == null)
+                        {
+                            Context.Respond("The player that was found does not have a faction.");
+                            return;
+                        }
+                    }
+
+
+
+                }
+               foreach (KeyValuePair<long, MyFaction> f in MySession.Static.Factions){
+                    if (f.Value != fac)
+                    {
+                        Sandbox.Game.Multiplayer.MyFactionCollection.DeclareWar(fac.FactionId, f.Value.FactionId);
+                    }
+                }
+                Context.Respond("That faction has now declared war on all factions");
+
+            }
+            else
+            {
+                Context.Respond("Fac info not enabled");
+            }
+
+        }
+
+
+        [Command("sendpeace", "send a peace request")]
+        [Permission(MyPromoteLevel.None)]
+        public void sendPeaceRequest(string tag)
+        {
+            if (CrunchUtilitiesPlugin.file.facInfo)
+            {
+                bool console = false;
+              
+                if (Context.Player == null)
+                {
+                    console = true;
+                }
+                IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
+                if (fac == null)
+                {
+                    MyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(tag) as MyPlayer;
+                    if (player == null)
+                    {
+                        IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(tag);
+                        if (id == null)
+                        {
+                            Context.Respond("Cant find that faction or player.");
+                            return;
+                        }
+                        else
+                        {
+                            fac = FacUtils.GetPlayersFaction(id.IdentityId);
+                            if (fac == null)
+                            {
+                                Context.Respond("The player that was found does not have a faction.");
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        fac = FacUtils.GetPlayersFaction(player.Identity.IdentityId);
+                        if (fac == null)
+                        {
+                            Context.Respond("The player that was found does not have a faction.");
+                            return;
+                        }
+                    }
+
+
+
+                }
+                //now do the send peace request
+                IMyFaction playerFac = FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId);
+                if (playerFac == null)
+                {
+                    Context.Respond("You dont have a faction.");
+                    return;
+                }
+                if (playerFac.IsLeader(Context.Player.IdentityId) || playerFac.IsFounder(Context.Player.IdentityId))
+                {
+                    Sandbox.Game.Multiplayer.MyFactionCollection.SendPeaceRequest(playerFac.FactionId, fac.FactionId);
+                    Context.Respond("Peace request sent");
+                }
+                else
+                {
+                    Context.Respond("You are not a faction leader or founder!");
+                }
+
+
+            }
+            else
+            {
+                Context.Respond("Fac info not enabled");
+            }
+
+        }
+
+
         [Command("facinfo", "display a factions description")]
         [Permission(MyPromoteLevel.None)]
         public void DisplayFactionInfo(string tag, bool members = false)
