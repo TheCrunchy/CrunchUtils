@@ -32,7 +32,10 @@ namespace CrunchUtilities
         public static ConfigFile file;
         private static string path;
         public Dictionary<long, CurrentCooldown> CurrentCooldownMap { get; } = new Dictionary<long, CurrentCooldown>();
-         public long Cooldown { get { return file.CooldownInSeconds * 1000; } }
+ 
+        public long Cooldown { get { return file.CooldownInSeconds * 1000; } }
+
+        public Dictionary<long, CurrentCooldown> CurrentCooldownMapFix { get; } = new Dictionary<long, CurrentCooldown>();
 
         private static Timer aTimer = new Timer();
         public static ConfigFile LoadConfig()

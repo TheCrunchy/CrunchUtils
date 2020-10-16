@@ -46,7 +46,7 @@ namespace CrunchUtilities
     {
         private static Logger _log = LogManager.GetCurrentClassLogger();
         private static Dictionary<long, int> warnedGrids = new Dictionary<long, int>();
-        private List<long> confirmations = new List<long>();
+        private static Dictionary<long, long> confirmations = new Dictionary<long, long>();
 
         private Vector3 defaultColour = new Vector3(50, 168, 168);
         [Command("crunch reload", "Reload the config")]
@@ -484,28 +484,44 @@ namespace CrunchUtilities
                 {
                     playerId = player.IdentityId;
                 }
-                if (confirmations.Contains(player.Identity.IdentityId)) {
-                    try
+                //rewrite this
+               
+                if (confirmations.ContainsKey(playerId)) {
+                
+              
+                    confirmations.TryGetValue(playerId, out long time);
+           
+                    if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() <= time)
                     {
-                        Context.Respond("You should be fixed after respawning");
-                        player.Character.Kill();
-                        player.Character.Delete();
-                        MyMultiplayer.Static.DisconnectClient(player.SteamUserId);
-                        confirmations.Remove(player.Identity.IdentityId);
+                        try
+                        {
+                            Context.Respond("You should be fixed after respawning");
+                            player.Character.Kill();
+                            player.Character.Delete();
+                            MyMultiplayer.Static.DisconnectClient(player.SteamUserId);
+                            confirmations.Remove(player.Identity.IdentityId);
+                        }
+                        catch (Exception)
+                        {
+                            Context.Respond("You are really broken, this might help");
+                            player.Character.Kill();
+                            player.Character.Delete();
+                            MyMultiplayer.Static.DisconnectClient(player.SteamUserId);
+                            return;
+                        }
                     }
-                    catch (Exception)
+                    else
                     {
-                        Context.Respond("You are really broken, this might help");
-                        player.Character.Kill();
-                        player.Character.Delete();
-                        MyMultiplayer.Static.DisconnectClient(player.SteamUserId);
-                        return;
+                        Context.Respond("Time ran out, use !fixme again");
+                        confirmations.Remove(Context.Player.IdentityId);
                     }
                 }
                 else
                 {
-                    Context.Respond("You will be killed and disconnected - run command again to confirm.");
-                    confirmations.Add(player.Identity.IdentityId);
+                    long timeToAdd = (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + 20000);
+                    
+                    confirmations.Add(playerId, timeToAdd);
+                    Context.Respond("You will be killed and disconnected - run command again within 20 seconds to confirm.");
                 }
             }
             else
