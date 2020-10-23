@@ -1106,8 +1106,13 @@ namespace CrunchUtilities
             {
                 bool purged = true;
                 bool npc = false;
+                bool notPurging = false;
                 foreach (KeyValuePair<long, MyFactionMember> m in f.Value.Members)
                 {
+                    if (notPurging)
+                    {
+                        break;
+                    }
                     MyIdentity test = MySession.Static.Players.TryGetIdentity(m.Key);
                     if (MySession.Static.Players.IdentityIsNpc(m.Key))
                     {
@@ -1126,7 +1131,9 @@ namespace CrunchUtilities
                         }
                         else
                         {
+                            notPurging = true;
                             purged = false;
+                            break;
                         }
                     }
 
