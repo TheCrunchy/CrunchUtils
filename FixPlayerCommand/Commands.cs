@@ -1133,6 +1133,10 @@ namespace CrunchUtilities
                         {
                             notPurging = true;
                             purged = false;
+                            if (purging.Contains(f.Value))
+                            {
+                                purging.Remove(f.Value);
+                            }
                             break;
                         }
                     }
@@ -1376,7 +1380,47 @@ namespace CrunchUtilities
                     Context.Respond("Couldnt find a grid");
                     return;
                 }
+                //dpeosit from player inventory
+                List<VRage.Game.ModAPI.IMyInventoryItem> itemList3 = new List<VRage.Game.ModAPI.IMyInventoryItem>();
+                itemList3 = player.Character.GetInventory().GetItems();
+                int i = 0;
+                    for (i = 0; i < itemList3.Count; i++)
+                    {
 
+                        string itemId = itemList3[i].Content.SubtypeId.ToString();
+                        if (itemId.Contains("SpaceCredit"))
+                        {
+
+                            float amountToMakeInt = float.Parse(itemList3[i].Amount.ToString());
+                            Int64 amount = Convert.ToInt64(amountToMakeInt);
+                            if (amount >= Int32.MaxValue)
+                            {
+                                bool hasCredits = true;
+                                while (hasCredits)
+                                {
+                                    deposited += amount;
+
+                                    player.Character.GetInventory().RemoveItemAmount(itemList3[i], VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()));
+                                    //Context.Respond("Stack exceeds 2.147 billion, split the stack!");
+                                    if (!player.Character.GetInventory().GetItems().Contains(itemList3[i]))
+                                    {
+                                        hasCredits = false;
+                                    }
+                                }
+                                EconUtils.addMoney(player.IdentityId, amount);
+                            }
+                            else
+                            {
+                                deposited += itemList3[i].Amount.ToIntSafe();
+                                EconUtils.addMoney(player.IdentityId, itemList3[i].Amount.ToIntSafe());
+                            player.Character.GetInventory().RemoveItemAmount(itemList3[i], VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()));
+ 
+                            }
+
+                        }
+
+                    }
+                
                 foreach (var item in gridWithSubGrids)
                 {
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
@@ -1434,7 +1478,7 @@ namespace CrunchUtilities
                                     }
                                     List<VRage.Game.ModAPI.IMyInventoryItem> itemList2 = new List<VRage.Game.ModAPI.IMyInventoryItem>();
                                     itemList2 = block.FatBlock.GetInventory().GetItems();
-                                    int i = 0;
+                                    i = 0;
                                     if (owned)
                                     {
 
@@ -1476,10 +1520,7 @@ namespace CrunchUtilities
 
                                         }
                                     }
-                                    else
-                                    {
-                                        Context.Respond("You dont own this container.");
-                                    }
+       
                                 }
                             }
 
