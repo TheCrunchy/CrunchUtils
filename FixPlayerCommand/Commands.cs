@@ -1149,7 +1149,7 @@ namespace CrunchUtilities
                     foreach (KeyValuePair<long, MyFactionMember> m in f.Value.Members)
                     {
                         f.Value.KickMember(m.Key);
-                        
+
                     }
                 }
 
@@ -1384,43 +1384,43 @@ namespace CrunchUtilities
                 List<VRage.Game.ModAPI.IMyInventoryItem> itemList3 = new List<VRage.Game.ModAPI.IMyInventoryItem>();
                 itemList3 = player.Character.GetInventory().GetItems();
                 int i = 0;
-                    for (i = 0; i < itemList3.Count; i++)
+                for (i = 0; i < itemList3.Count; i++)
+                {
+
+                    string itemId = itemList3[i].Content.SubtypeId.ToString();
+                    if (itemId.Contains("SpaceCredit"))
                     {
 
-                        string itemId = itemList3[i].Content.SubtypeId.ToString();
-                        if (itemId.Contains("SpaceCredit"))
+                        float amountToMakeInt = float.Parse(itemList3[i].Amount.ToString());
+                        Int64 amount = Convert.ToInt64(amountToMakeInt);
+                        if (amount >= Int32.MaxValue)
                         {
-
-                            float amountToMakeInt = float.Parse(itemList3[i].Amount.ToString());
-                            Int64 amount = Convert.ToInt64(amountToMakeInt);
-                            if (amount >= Int32.MaxValue)
+                            bool hasCredits = true;
+                            while (hasCredits)
                             {
-                                bool hasCredits = true;
-                                while (hasCredits)
+                                deposited += amount;
+
+                                player.Character.GetInventory().RemoveItemAmount(itemList3[i], VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()));
+                                //Context.Respond("Stack exceeds 2.147 billion, split the stack!");
+                                if (!player.Character.GetInventory().GetItems().Contains(itemList3[i]))
                                 {
-                                    deposited += amount;
-
-                                    player.Character.GetInventory().RemoveItemAmount(itemList3[i], VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()));
-                                    //Context.Respond("Stack exceeds 2.147 billion, split the stack!");
-                                    if (!player.Character.GetInventory().GetItems().Contains(itemList3[i]))
-                                    {
-                                        hasCredits = false;
-                                    }
+                                    hasCredits = false;
                                 }
-                                EconUtils.addMoney(player.IdentityId, amount);
                             }
-                            else
-                            {
-                                deposited += itemList3[i].Amount.ToIntSafe();
-                                EconUtils.addMoney(player.IdentityId, itemList3[i].Amount.ToIntSafe());
+                            EconUtils.addMoney(player.IdentityId, amount);
+                        }
+                        else
+                        {
+                            deposited += itemList3[i].Amount.ToIntSafe();
+                            EconUtils.addMoney(player.IdentityId, itemList3[i].Amount.ToIntSafe());
                             player.Character.GetInventory().RemoveItemAmount(itemList3[i], VRage.MyFixedPoint.DeserializeStringSafe(amount.ToString()));
- 
-                            }
 
                         }
 
                     }
-                
+
+                }
+
                 foreach (var item in gridWithSubGrids)
                 {
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
@@ -1520,7 +1520,7 @@ namespace CrunchUtilities
 
                                         }
                                     }
-       
+
                                 }
                             }
 
@@ -1660,7 +1660,7 @@ namespace CrunchUtilities
 
         [Command("giveitem", "Give target player an item")]
         [Permission(MyPromoteLevel.Admin)]
-        public void PlayerWithdraw(string PlayerName, string type, string subtypeName, Int64 amount, bool force = false)
+        public void PlayerWithdraw(string PlayerName, string type, string subtypeName, int amount, bool force = false)
         {
 
             IMyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(PlayerName) as MyPlayer;
@@ -1672,6 +1672,24 @@ namespace CrunchUtilities
             MyInventory invent = player.Character.GetInventory() as MyInventory;
             MyObjectBuilder_PhysicalObject item = null;
             MyItemType itemType;
+            string newType;
+            if (type.ToLower().Equals("ammo"))
+            {
+                newType = "AmmoMagazine";
+            }
+            else
+            {
+                newType = type;
+            }
+
+            string itemtype = "MyObjectBuilder_" + newType;
+            MyDefinitionId.TryParse(itemtype, subtypeName, out MyDefinitionId id);
+            if (id.ToString().Contains("null"))
+            {
+                Context.Respond("Invalid item, try Ammo, Ore, Ingot, Component, PhysicalGunObject");
+                return;
+            }
+
 
             switch (type.ToLower())
             {
@@ -1696,11 +1714,14 @@ namespace CrunchUtilities
                     item = new MyObjectBuilder_Component() { SubtypeName = subtypeName };
                     itemType = new MyInventoryItemFilter("MyObjectBuilder_Component/" + subtypeName).ItemType;
                     break;
-            }
-            if (item == null)
-            {
-                Context.Respond("Couldnt assign item");
-                return;
+                case "physicalgunobject":
+                    item = new MyObjectBuilder_PhysicalGunObject { SubtypeName = subtypeName };
+                    itemType = new MyInventoryItemFilter("MyObjectBuilder_PhysicalGunObject/" + subtypeName).ItemType;
+                    break;
+                default:
+                    Context.Respond("Error : use Object, Ammo, Ore, Ingot, Component, PhysicalGunObject");
+                    return;
+
             }
             if (!force)
             {
@@ -1721,25 +1742,20 @@ namespace CrunchUtilities
             {
                 MethodInfo method = typeof(MyInventory).GetMethod("AddItemsInternal", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, (Binder)null, new Type[4]
                 {
-             typeof (MyFixedPoint),
-             typeof (MyObjectBuilder_PhysicalObject),
-             typeof (uint?),
-             typeof (int)
-                }, (ParameterModifier[])null);
+             typeof (MyFixedPoint), typeof (MyObjectBuilder_PhysicalObject), typeof (uint?), typeof (int)
+                },
+                (ParameterModifier[])null);
                 if (method == (MethodInfo)null)
                     throw new Exception("reflection error");
                 method.Invoke((object)invent, new object[4]
-                {
-             VRage.MyFixedPoint.DeserializeString(amount.ToString()),
-             item,
-            new uint?(),
-            -1
-                });
+                {VRage.MyFixedPoint.DeserializeString(amount.ToString()), item, new uint?(),-1});
                 //refresh this or buggy stuff happens
                 invent.Refresh();
                 SendMessage("[C]", "You were given " + amount + " " + subtypeName, Color.Green, (long)player.SteamUserId);
                 Context.Respond("items are added");
             }
+
+
         }
 
 
