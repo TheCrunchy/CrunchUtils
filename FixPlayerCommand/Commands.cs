@@ -380,7 +380,7 @@ namespace CrunchUtilities
                             else
                             {
                                 //fix this lmao, one grid static, others dynamic it turns the dynamics to static and static to dynamic
-
+                               
                                 if (grid.IsStatic)
                                 {
                                     if (isDynamic)
@@ -427,7 +427,41 @@ namespace CrunchUtilities
                 Context.Respond("PlayerMakeShip not enabled");
             }
         }
+        [Command("pcucount", "Player command, count PCU of connected grids")]
+        [Permission(MyPromoteLevel.None)]
+        public void CountPCU()
+        {
+            int totalPCU = 0;
+            StringBuilder sb = new StringBuilder();
+                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+                if (gridWithSubGrids.Count > 0)
+                {
 
+                    foreach (var item in gridWithSubGrids)
+                    {
+                        foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                        {
+
+                            MyCubeGrid grid = groupNodes.NodeData;
+
+      
+                                    sb.Append(grid.DisplayName + " : " + grid.BlocksPCU + ",");
+                            totalPCU += grid.BlocksPCU;
+
+                              
+                            
+                        }
+                    }
+                }
+                else
+                {
+                    Context.Respond("Cant find a grid");
+                }
+            //sb.Append("Total : " + totalPCU);
+            Context.Respond(totalPCU.ToString(), "Total PCU");
+            Context.Respond(sb.ToString(), "PCU");
+
+        }
         [Command("rename", "Player command, Rename a ship")]
         [Permission(MyPromoteLevel.None)]
         public void RenameGrid(string gridname, string newname)
@@ -1096,70 +1130,91 @@ namespace CrunchUtilities
         }
         [Command("factionpurge", "Purge factions if all members havent logged on for x days")]
         [Permission(MyPromoteLevel.Admin)]
-        public void purgeFactions(int days)
+        public void purgeFactions(int days, Boolean zero = false)
         {
-
+            if (days == 0 && !zero)
+            {
+                Context.Respond("Are you sure? this probably isnt a good idea, attach true to end of command.");
+                return;
+            }
             int purgedFactions;
             var cutoff = DateTime.Now - TimeSpan.FromDays(days);
             List<MyFaction> purging = new List<MyFaction>();
+            //rewrite this shit entirely
             foreach (KeyValuePair<long, MyFaction> f in MySession.Static.Factions)
             {
+              Context.Respond(f.Value.Tag);
                 bool purged = true;
-                bool npc = false;
-                bool notPurging = false;
+               bool npc = false;
+                //bool notPurging = false;
+
+                if (f.Value.Tag.Length > 3)
+                {
+
+                    break;
+                }
+                //if (f.Value.Members.Count > 0)
+                //{
+
+                //}
+                //else
+                //{
+                //    purging.Add(f.Value);
+                //    break;
+                //}
+
                 foreach (KeyValuePair<long, MyFactionMember> m in f.Value.Members)
                 {
-                    if (notPurging)
+                    //do this shit
+                    if (npc)
                     {
                         break;
                     }
                     MyIdentity test = MySession.Static.Players.TryGetIdentity(m.Key);
-                    if (MySession.Static.Players.IdentityIsNpc(m.Key))
+                  
+                    //this method fucks it up, its probably this
+                    if (test != null && MySession.Static.Players.IdentityIsNpc(test.IdentityId))
                     {
-                        if (purging.Contains(f.Value))
-                        {
-                            purging.Remove(f.Value);
-                        }
+                        purged = false;
                         npc = true;
                         break;
                     }
-                    if (test != null && test.DisplayName != null && !npc)
+                    if (test != null && test.DisplayName != null && test.LastLoginTime < cutoff)
                     {
-                        if (test.LastLoginTime < cutoff)
-                        {
-                            purged = true;
-                        }
-                        else
-                        {
-                            notPurging = true;
-                            purged = false;
-                            if (purging.Contains(f.Value))
-                            {
-                                purging.Remove(f.Value);
-                            }
-                            break;
-                        }
+                        //debug messages
+                        Context.Respond("FUCK YOU");
+                        purged = true;
+
+                    }else
+                    {
+                        purged = false;
                     }
-
-
                 }
                 if (purged)
                 {
+                    Context.Respond("Purging " + f.Value.Tag);
                     purging.Add(f.Value);
+                    List<long> kick = new List<long>();
                     foreach (KeyValuePair<long, MyFactionMember> m in f.Value.Members)
                     {
-                        f.Value.KickMember(m.Key);
+                        kick.Add(m.Key);
 
+                    }
+                    foreach (long n in kick)
+                    {
+                        f.Value.KickMember(n);
                     }
                 }
 
             }
+            Context.Respond(purging.Count.ToString());
             foreach (MyFaction f in purging)
             {
                 //add this to a logger
                 CrunchUtilitiesPlugin.Log.Info("Purging " + f.Name + " TAG : " + f.Tag);
+                Context.Respond("Purged " + purging.Count);
                 NetworkManager.RaiseStaticEvent(_factionChangeSuccessInfo, MyFactionStateChange.RemoveFaction, f.FactionId, f.FactionId, 0L, 0L);
-                if (!MyAPIGateway.Session.Factions.FactionTagExists(f.Tag)) return;
+                if (!MyAPIGateway.Session.Factions.FactionTagExists(f.Tag)) break;
                 MyAPIGateway.Session.Factions.RemoveFaction(f.FactionId);
             }
 
