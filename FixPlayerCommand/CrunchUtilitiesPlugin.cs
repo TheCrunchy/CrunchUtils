@@ -136,6 +136,7 @@ namespace CrunchUtilities
             {
                 string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
                 MyIdentity identity = GetIdentityByNameOrId(player.Id.SteamId.ToString());
+          
                 if (!player.DisplayName.Equals(name))
                 {
                     Log.Info("Updating name of : " + name + " from : " + player.DisplayName);

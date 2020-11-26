@@ -241,9 +241,11 @@ namespace CrunchUtilities
                             }
                         }
 
-                        Context.Respond(count + " Stone Deleted");
+                        
                     }
+                   
                 }
+                Context.Respond(count + " Stone Deleted");
             }
             else
             {
@@ -402,9 +404,13 @@ namespace CrunchUtilities
                                     try
                                     {
                                         isDynamic = true;
+                                        if (grid.GridSizeEnum == MyCubeSize.Small)
+                                        {
+                                            break;
+                                        }
                                         grid.Physics.ClearSpeed();
                                         grid.OnConvertedToStationRequest();
-
+                                          
                                         Context.Respond("Converting to station IF grid is not moving." + grid.DisplayName);
                                     }
                                     catch (Exception)
@@ -644,7 +650,7 @@ namespace CrunchUtilities
                         Context.Respond("Possibly bugged body " + name);
                         break;
                     }
-                    badNames.Add(name, player.Id.SteamId.ToString());
+                    badNames.Add(name + " : " + identity.DisplayName, player.Id.SteamId.ToString());
                 }
                 else
                 {
@@ -1634,7 +1640,9 @@ namespace CrunchUtilities
                 Context.Respond("Cant find that player");
                 return;
             }
+           
             MyInventory invent = player.Character.GetInventory() as MyInventory;
+            
             MyObjectBuilder_PhysicalObject item = null;
             MyItemType itemType;
             string newType;
