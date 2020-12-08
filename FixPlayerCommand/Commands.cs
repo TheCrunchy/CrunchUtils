@@ -114,31 +114,89 @@ namespace CrunchUtilities
                 }
             }
         }
-        [Command("removebody", "Removes every body with this display name")]
-        [Permission(MyPromoteLevel.Admin)]
-        public void DeleteBody(string name)
+
+        public static IMyPlayer GetPlayerByNameOrId(string nameOrPlayerId)
         {
-            List<MyEntity> temp = new List<MyEntity>();
-            foreach (MyEntity entity in MyEntities.GetEntities())
+            if (!long.TryParse(nameOrPlayerId, out long id))
             {
-                if (entity.DisplayName != null && entity.DisplayName.Equals(name))
+                foreach (var identity in MySession.Static.Players.GetAllIdentities())
                 {
-                    temp.Add(entity);
+                    if (identity.DisplayName == nameOrPlayerId)
+                    {
+                        id = identity.IdentityId;
+                    }
                 }
             }
 
-            foreach (MyEntity id in temp)
+            if (MySession.Static.Players.TryGetPlayerId(id, out MyPlayer.PlayerId playerId))
             {
-                if (id is IMyCharacter)
+                if (MySession.Static.Players.TryGetPlayerById(playerId, out MyPlayer player))
                 {
-                    //MyEntities.Remove(id);
-                    Context.Respond("Removing " + id.EntityId);
-                    IMyCharacter character = id as IMyCharacter;
-                    character.Kill();
-                    character.Delete();
-                    id.Close();
+                    return player;
                 }
             }
+
+            return null;
+        }
+
+        [Command("removebody", "Removes every body with this display name")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void DeleteBody(string playerName)
+        {
+            //essentials code
+            //https://github.com/TorchAPI/Essentials/blob/415a7e12809c75fc1efcfbc878cfee1730efa6ff/Essentials/Commands/EntityModule.cs#L297
+            //      //essentials code
+            //https://github.com/TorchAPI/Essentials/blob/415a7e12809c75fc1efcfbc878cfee1730efa6ff/Essentials/Commands/EntityModule.cs#L297
+            //      //essentials code
+            //https://github.com/TorchAPI/Essentials/blob/415a7e12809c75fc1efcfbc878cfee1730efa6ff/Essentials/Commands/EntityModule.cs#L297
+            //      //essentials code
+            //https://github.com/TorchAPI/Essentials/blob/415a7e12809c75fc1efcfbc878cfee1730efa6ff/Essentials/Commands/EntityModule.cs#L297
+            //
+            Boolean found = false;
+            var player = GetPlayerByNameOrId(playerName);
+            if (player != null)
+            {
+                /* If he is online we check if he is currently seated. If he is eject him. */
+                if (player?.Controller.ControlledEntity is MyCockpit controller && !found)
+                {
+                    controller.Use();
+                    Context.Respond($"Player '{playerName}' ejected and murdered.");
+                    player.Character.Kill();
+                    player.Character.Delete();
+                    MyMultiplayer.Static.DisconnectClient(player.SteamUserId);
+                    found = true;
+                }
+                else
+                {
+                    Context.Respond("Player murdered.");
+                    player.Character.Kill();
+                    player.Character.Delete();
+                    MyMultiplayer.Static.DisconnectClient(player.SteamUserId);
+                }
+
+                return;
+            }
+           
+     
+                foreach (var grid in MyEntities.GetEntities().OfType<MyCubeGrid>().ToList())
+                {
+                    foreach (var controller in grid.GetFatBlocks<MyShipController>())
+                    {
+                        var pilot = controller.Pilot;
+
+                        if (pilot != null && pilot.DisplayName == playerName)
+                        {
+                            controller.Use();
+                            IMyCharacter character = pilot as IMyCharacter;
+                            character.Kill();
+                            character.Delete();
+                            Context.Respond("Murdering " + pilot.EntityId);
+                            return;
+                        }
+                    }
+                }
+
+            Context.Respond("If it got here, the playername you entered could not be found");
 
         }
         [Command("admin makestation", "Admin command, Turn a station and connected grids into a ship")]
@@ -454,7 +512,7 @@ namespace CrunchUtilities
                                     sb.Append(grid.DisplayName + " : " + grid.BlocksPCU + ",");
                             totalPCU += grid.BlocksPCU;
 
-                              
+                           
                             
                         }
                     }
@@ -650,7 +708,7 @@ namespace CrunchUtilities
                         Context.Respond("Possibly bugged body " + name);
                         break;
                     }
-                    badNames.Add(name + " : " + identity.DisplayName, player.Id.SteamId.ToString());
+                    badNames.Add(name + " : " + identity.DisplayName, player.Id.SteamId.ToString()); 
                 }
                 else
                 {
@@ -742,7 +800,7 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.Admin)]
         public void UpdateIdentities(String playerNameOrId, String newName)
         {
-
+            
 
             MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
 

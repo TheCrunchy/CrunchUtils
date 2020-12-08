@@ -34,7 +34,7 @@ namespace CrunchUtilities
         public Dictionary<long, CurrentCooldown> CurrentCooldownMap { get; } = new Dictionary<long, CurrentCooldown>();
  
         public long Cooldown { get { return file.CooldownInSeconds * 1000; } }
-
+        private static TorchSessionState derp;
         public Dictionary<long, CurrentCooldown> CurrentCooldownMapFix { get; } = new Dictionary<long, CurrentCooldown>();
 
         private static Timer aTimer = new Timer();
@@ -131,19 +131,23 @@ namespace CrunchUtilities
         }
         public static void UpdateNamesTask()
         {
-            Log.Info("Updating names");
-            foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
-            {
-                string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
-                MyIdentity identity = GetIdentityByNameOrId(player.Id.SteamId.ToString());
           
-                if (!player.DisplayName.Equals(name))
+            
+        //    if (derp == TorchSessionState.Loaded) {
+                Log.Info("Updating names");
+                foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
                 {
-                    Log.Info("Updating name of : " + name + " from : " + player.DisplayName);
-                    player.Identity.SetDisplayName(MyMultiplayer.Static.GetMemberName(player.Id.SteamId));
-                    identity.SetDisplayName(MyMultiplayer.Static.GetMemberName(player.Id.SteamId));
+                    string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
+                    MyIdentity identity = GetIdentityByNameOrId(player.Id.SteamId.ToString());
 
-                }
+                    if (!player.DisplayName.Equals(name))
+                    {
+                        Log.Info("Updating name of : " + name + " from : " + player.DisplayName);
+                        player.Identity.SetDisplayName(MyMultiplayer.Static.GetMemberName(player.Id.SteamId));
+                        identity.SetDisplayName(MyMultiplayer.Static.GetMemberName(player.Id.SteamId));
+
+                    }
+               // }
             }
         }
         private void SessionChanged(ITorchSession session, TorchSessionState newState)
@@ -152,7 +156,7 @@ namespace CrunchUtilities
             Log.Info("Session-State is now " + newState);
             if (newState == TorchSessionState.Loaded)
             {
-                
+                derp = TorchSessionState.Loaded;
             }
 
         }
