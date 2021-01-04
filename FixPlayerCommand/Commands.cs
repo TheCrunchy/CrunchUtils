@@ -95,21 +95,41 @@ namespace CrunchUtilities
 
         [Command("admin makeship", "Admin command, Turn a station and connected grids into a ship")]
         [Permission(MyPromoteLevel.Admin)]
-        public void MakeShip()
+        public void MakeShip(String name = "")
         {
-
-            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
-            foreach (var item in gridWithSubGrids)
+            if (name.Equals(""))
             {
-                foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+                foreach (var item in gridWithSubGrids)
                 {
-                    MyCubeGrid grid = groupNodes.NodeData;
-
-                    if (grid.IsStatic)
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                     {
-                        Action m_convertToShipResult = null;
-                        grid.RequestConversionToShip(m_convertToShipResult);
-                        Context.Respond("Converting to ship " + grid.DisplayName);
+                        MyCubeGrid grid = groupNodes.NodeData;
+
+                        if (grid.IsStatic)
+                        {
+                            Action m_convertToShipResult = null;
+                            grid.RequestConversionToShip(m_convertToShipResult);
+                            Context.Respond("Converting to ship " + grid.DisplayName);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindGridGroup(name);
+                foreach (var item in gridWithSubGrids)
+                {
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                    {
+                        MyCubeGrid grid = groupNodes.NodeData;
+
+                        if (grid.IsStatic)
+                        {
+                            Action m_convertToShipResult = null;
+                            grid.RequestConversionToShip(m_convertToShipResult);
+                            Context.Respond("Converting to ship " + grid.DisplayName);
+                        }
                     }
                 }
             }
@@ -201,19 +221,36 @@ namespace CrunchUtilities
         }
         [Command("admin makestation", "Admin command, Turn a station and connected grids into a ship")]
         [Permission(MyPromoteLevel.Admin)]
-        public void MakeStation()
+        public void MakeStation(String name = "")
         {
-
-            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
-            foreach (var item in gridWithSubGrids)
+            if (name.Equals(""))
             {
-                foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+                foreach (var item in gridWithSubGrids)
                 {
-                    MyCubeGrid grid = groupNodes.NodeData;
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                    {
+                        MyCubeGrid grid = groupNodes.NodeData;
 
-                    if (!grid.IsStatic)
-                        grid.OnConvertedToStationRequest();
-                    Context.Respond("Converting to station " + grid.DisplayName);
+                        if (!grid.IsStatic)
+                            grid.OnConvertedToStationRequest();
+                        Context.Respond("Converting to station " + grid.DisplayName);
+                    }
+                }
+            }
+            else
+            {
+                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindGridGroup(name);
+                foreach (var item in gridWithSubGrids)
+                {
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                    {
+                        MyCubeGrid grid = groupNodes.NodeData;
+
+                        if (!grid.IsStatic)
+                            grid.OnConvertedToStationRequest();
+                        Context.Respond("Converting to station " + grid.DisplayName);
+                    }
                 }
             }
         }
@@ -339,7 +376,7 @@ namespace CrunchUtilities
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
                 if (gridWithSubGrids.Count > 0)
                 {
-
+               
                     foreach (var item in gridWithSubGrids)
                     {
                         bool isStatic = false;
@@ -348,9 +385,27 @@ namespace CrunchUtilities
                         {
 
                             MyCubeGrid grid = groupNodes.NodeData;
+                          
+                            var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+                            var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
+                            gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
+                            Boolean npc = false;
+                            foreach (long id in grid.BigOwners)
+                            {
+                                if (FacUtils.GetFactionTag(id).Length > 3)
+                                {
+                                    npc = true;
+                                }
+                            }
+                            //rewrite this shit eventually to not be trash
+                            if (blockList.Count == 0 && !npc) 
+                            {
 
+                           
                             foreach (MySlimBlock block in grid.GetBlocks())
                             {
+                              
+
                                 if (block.FatBlock != null && block.FatBlock.OwnerId > 0)
                                 {
                                     blockCount += 1;
@@ -371,6 +426,7 @@ namespace CrunchUtilities
                                             break;
                                     }
                                 }
+                            }
                             }
                             double totalShared = factionShared + sharedWithAll;
 
@@ -525,6 +581,37 @@ namespace CrunchUtilities
             Context.Respond(totalPCU.ToString(), "Total PCU");
             Context.Respond(sb.ToString(), "PCU");
 
+        }
+        [Command("admin rename", "admin command, rename a ship")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void RenameGridAdmin(string gridname, string newname)
+        {
+
+            bool changed = false;
+        
+            
+                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindGridGroup(gridname);
+                foreach (var item in gridWithSubGrids)
+                {
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                    {
+                        MyCubeGrid grid = groupNodes.NodeData;
+                 
+                            Context.Respond("Renaming " + grid.DisplayName + ". You may need to relog to see changes.");
+                            grid.ChangeDisplayNameRequest(newname);
+
+
+                            changed = true;
+                            return;
+                        
+                    }
+                }
+                if (!changed)
+                {
+                    Context.Respond("Couldnt find that grid, are you sure its owned by you or faction?");
+                }
+            
+    
         }
         [Command("rename", "Player command, Rename a ship")]
         [Permission(MyPromoteLevel.None)]
@@ -1049,75 +1136,74 @@ namespace CrunchUtilities
 
         }
 
-        [Command("joinfac", "send a request to join a faction")]
-        [Permission(MyPromoteLevel.None)]
-        public void sendJoinRequest(string tag)
-        {
-            //this things buggy as fuck
-            return;
-            if (CrunchUtilitiesPlugin.file.facInfo)
-            {
-                bool console = false;
+        //[Command("joinfac", "send a request to join a faction")]
+        //[Permission(MyPromoteLevel.None)]
+        //public void sendJoinRequest(string tag)
+        //{
+       
+        //    if (CrunchUtilitiesPlugin.file.facInfo)
+        //    {
+        //        bool console = false;
 
-                if (Context.Player == null)
-                {
-                    console = true;
-                }
-                IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
-                if (fac == null)
-                {
-                    MyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(tag) as MyPlayer;
-                    if (player == null)
-                    {
-                        IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(tag);
-                        if (id == null)
-                        {
-                            Context.Respond("Cant find that faction or player.");
-                            return;
-                        }
-                        else
-                        {
-                            fac = FacUtils.GetPlayersFaction(id.IdentityId);
-                            if (fac == null)
-                            {
-                                Context.Respond("The player that was found does not have a faction.");
-                                return;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        fac = FacUtils.GetPlayersFaction(player.Identity.IdentityId);
-                        if (fac == null)
-                        {
-                            Context.Respond("The player that was found does not have a faction.");
-                            return;
-                        }
-                    }
-
-
-
-                }
-                //now do the send peace request
-                IMyFaction playerFac = FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId);
-                if (playerFac != null)
-                {
-                    Context.Respond("You are already in a faction!");
-                    return;
-                }
-                //this things legitimately buggy as fuck
-                // Sandbox.Game.Multiplayer.MyFactionCollection.SendJoinRequest(fac.FactionId, (long) Context.Player.SteamUserId);
-                Context.Respond("Sent a join request!");
+        //        if (Context.Player == null)
+        //        {
+        //            console = true;
+        //        }
+        //        IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
+        //        if (fac == null)
+        //        {
+        //            MyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(tag) as MyPlayer;
+        //            if (player == null)
+        //            {
+        //                IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(tag);
+        //                if (id == null)
+        //                {
+        //                    Context.Respond("Cant find that faction or player.");
+        //                    return;
+        //                }
+        //                else
+        //                {
+        //                    fac = FacUtils.GetPlayersFaction(id.IdentityId);
+        //                    if (fac == null)
+        //                    {
+        //                        Context.Respond("The player that was found does not have a faction.");
+        //                        return;
+        //                    }
+        //                }
+        //            }
+        //            else
+        //            {
+        //                fac = FacUtils.GetPlayersFaction(player.Identity.IdentityId);
+        //                if (fac == null)
+        //                {
+        //                    Context.Respond("The player that was found does not have a faction.");
+        //                    return;
+        //                }
+        //            }
 
 
 
-            }
-            else
-            {
-                Context.Respond("Fac info not enabled");
-            }
+        //        }
+        //        //now do the send peace request
+        //        IMyFaction playerFac = FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId);
+        //        if (playerFac != null)
+        //        {
+        //            Context.Respond("You are already in a faction!");
+        //            return;
+        //        }
+            
+        //        MySession.Static.Factions.SendJoinRequest(fac.FactionId, (long) Context.Player.SteamUserId);
+        //        Context.Respond("Sent a join request!");
 
-        }
+
+
+        //    }
+        //    else
+        //    {
+        //        Context.Respond("Fac info not enabled");
+        //    }
+
+        //}
 
 
         [Command("sendpeace", "send a peace request")]
@@ -2444,7 +2530,7 @@ namespace CrunchUtilities
             }
         }
         [Command("gridtype", "return if its a station or not")]
-        [Permission(MyPromoteLevel.Admin)]
+        [Permission(MyPromoteLevel.None)]
         public void GetStaticOrDynamic(string gridname = "")
         {
             bool found = false;
