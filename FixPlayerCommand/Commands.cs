@@ -963,12 +963,12 @@ namespace CrunchUtilities
         }
         [Command("eco top", "moneys")]
         [Permission(MyPromoteLevel.Admin)]
-        public void ecotop(bool factions = false)
+        public void ecotop(int limit = 30, bool factions = false)
         {
             //essentials eco stuff but with factions and formatting for the numbers
             StringBuilder data = new StringBuilder();
-            
-          
+
+            int iteration = 0;
             if (factions == false) {
                 Dictionary<ulong, long> moneys = new Dictionary<ulong, long>();
                 foreach (var p in MySession.Static.Players.GetAllPlayers())
@@ -978,43 +978,68 @@ namespace CrunchUtilities
                 moneys.Add(p.SteamId, EconUtils.getBalance(IdentityID));
             }
             var sortedmoneys = moneys.OrderByDescending(x => x.Value).ThenBy(x => x.Key);
+              
             foreach (var value in sortedmoneys)
             {
-               
+                    if (iteration <= limit) { 
+                    iteration++;
                 data.AppendLine(MySession.Static.Players.TryGetIdentityNameFromSteamId(value.Key).ToString() + " - Balance: " + String.Format("{0:n0}",value.Value));
                     CrunchUtilitiesPlugin.Log.Info(MySession.Static.Players.TryGetIdentityNameFromSteamId(value.Key).ToString() + " - Balance: " + String.Format("{0:n0}", value.Value));
+                    }
+                    else
+                    {
+                        break;
+                    }
             }
 
             if (Context.Player == null)
             {
-                Context.Respond(data.ToString());
+                Context.Respond("Top " + limit + " player balances\n" + data.ToString());
                 return;
             }
-            ModCommunication.SendMessageTo(new DialogMessage("Player Balances", "", data.ToString()), Context.Player.SteamUserId);
+            ModCommunication.SendMessageTo(new DialogMessage("Top "+ limit +" Player Balances", "", data.ToString()), Context.Player.SteamUserId);
             }
             else
             {
                 Dictionary<String, long> moneys = new Dictionary<String, long>();
                 foreach (KeyValuePair<long, MyFaction> f in MySession.Static.Factions)
                 {
-                    
+                    if (f.Value.Tag.Length > 3)
+                    {
+                        if (f.Value.Tag.ToLower().Equals("unin") || f.Value.Tag.ToLower().Equals("fedr") || f.Value.Tag.ToLower().Equals("cons"))
+                        {
+                            moneys.Add(f.Value.Name + " - " + f.Value.Tag, EconUtils.getBalance(f.Value.FactionId));
+                        }
+                    }
+                    else
+                    {
+                        moneys.Add(f.Value.Name + " - " + f.Value.Tag, EconUtils.getBalance(f.Value.FactionId));
+                    }
                 
-                    moneys.Add(f.Value.Name + " - " + f.Value.Tag, EconUtils.getBalance(f.Value.FactionId));
+                  
                 }
                 var sortedmoneys = moneys.OrderByDescending(x => x.Value).ThenBy(x => x.Key);
                 foreach (var value in sortedmoneys)
                 {
-
-                    data.AppendLine(value.Key + " - Balance: " + String.Format("{0:n0}", value.Value));
+                    if (iteration <= limit)
+                    {
+                    
+                        iteration++;
+                        data.AppendLine(value.Key + " - Balance: " + String.Format("{0:n0}", value.Value));
                     CrunchUtilitiesPlugin.Log.Info(value.Key + " - Balance: " + String.Format("{0:n0}", value.Value));
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
 
                 if (Context.Player == null)
                 {
-                    Context.Respond(data.ToString());
+                    Context.Respond("Top " + limit + " faction balances\n" + data.ToString());
                     return;
                 }
-                ModCommunication.SendMessageTo(new DialogMessage("Faction Balances", "", data.ToString()), Context.Player.SteamUserId);
+                ModCommunication.SendMessageTo(new DialogMessage("Top " + limit + " Faction Balances", "", data.ToString()), Context.Player.SteamUserId);
             }
         
         }
