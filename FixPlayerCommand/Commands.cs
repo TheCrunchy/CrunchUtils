@@ -42,6 +42,7 @@ using Torch.Mod;
 using Sandbox.Common.ObjectBuilders;
 using VRage.ObjectBuilders;
 using Sandbox.Game.Entities.Blocks;
+using System.IO;
 
 namespace CrunchUtilities
 {
@@ -967,6 +968,7 @@ namespace CrunchUtilities
         {
             //essentials eco stuff but with factions and formatting for the numbers
             StringBuilder data = new StringBuilder();
+            StringBuilder data2 = new StringBuilder();
 
             int iteration = 0;
             if (factions == false) {
@@ -985,14 +987,18 @@ namespace CrunchUtilities
                     iteration++;
                 data.AppendLine(MySession.Static.Players.TryGetIdentityNameFromSteamId(value.Key).ToString() + " - Balance: " + String.Format("{0:n0}",value.Value));
                     CrunchUtilitiesPlugin.Log.Info(MySession.Static.Players.TryGetIdentityNameFromSteamId(value.Key).ToString() + " - Balance: " + String.Format("{0:n0}", value.Value));
+                        data2.AppendLine(MySession.Static.Players.TryGetIdentityNameFromSteamId(value.Key).ToString() + "," + value.Value);
                     }
                     else
                     {
                         break;
                     }
             }
+             
 
-            if (Context.Player == null)
+                File.WriteAllText(CrunchUtilitiesPlugin.path + "//eco.csv", data2.ToString());
+                File.WriteAllText(CrunchUtilitiesPlugin.path + "//eco-" + string.Format("{0:yyyy-MM-dd_HH-mm-ss-fff}", DateTime.Now) + ".csv", data2.ToString());
+                if (Context.Player == null)
             {
                 Context.Respond("Top " + limit + " player balances\n" + data.ToString());
                 return;
@@ -1027,13 +1033,18 @@ namespace CrunchUtilities
                         iteration++;
                         data.AppendLine(value.Key + " - Balance: " + String.Format("{0:n0}", value.Value));
                     CrunchUtilitiesPlugin.Log.Info(value.Key + " - Balance: " + String.Format("{0:n0}", value.Value));
+                        data2.AppendLine(value.Key + value.Key + "," + value.Value);
                     }
                     else
                     {
                         break;
                     }
                 }
-
+                File.WriteAllText(CrunchUtilitiesPlugin.path + "//ecofac.csv", data2.ToString());
+  
+                    File.WriteAllText(CrunchUtilitiesPlugin.path + "//ecofac-" + string.Format("{0:yyyy-MM-dd_HH-mm-ss-fff}", DateTime.Now) + ".csv", data2.ToString());
+            
+                
                 if (Context.Player == null)
                 {
                     Context.Respond("Top " + limit + " faction balances\n" + data.ToString());
