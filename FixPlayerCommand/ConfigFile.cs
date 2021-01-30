@@ -9,19 +9,24 @@ namespace CrunchUtilities
 {
     public class ConfigFile : ViewModel
     {
+        public bool solarPatch = false;
         public bool PlayerMakeShip = false;
         public bool PlayerFixMe = false;
         public bool DeleteStone = false;
+        public bool DeleteStoneAuto = false;
+        public int deletedStoneCount = 0;
         public bool Withdraw = false;
         public bool facInfo = true;
         public bool PlayerEcoPay = false;
         public bool Deposit = false;
         public bool convertInGravity = false;
         public bool FactionShareDeposit = true;
-        private int _cooldownInSeconds = 10 * 60;
+        private int cooldownInSeconds = 10 * 60;
+        private int respawncooldownInSeconds = 20 * 60;
         public bool IdentityUpdate = false;
         public bool Claim = false;
         public int ClaimPercent = 70;
-        public int CooldownInSeconds { get => _cooldownInSeconds; set => SetValue(ref _cooldownInSeconds, value); }
+        public int CooldownInSeconds { get => cooldownInSeconds; set => SetValue(ref cooldownInSeconds, value); }
+        public int RespawnCooldownInSeconds { get => respawncooldownInSeconds; set => SetValue(ref respawncooldownInSeconds, value); }
     }
 }

@@ -60,7 +60,16 @@ namespace CrunchUtilities
             CrunchUtilitiesPlugin.LoadConfig();
             Context.Respond("Reloaded config");
         }
-
+        [Command("enablestone", "Reload the config")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void enableconfig()
+        {
+            
+            CrunchUtilitiesPlugin.LoadConfig();
+            CrunchUtilitiesPlugin.file.DeleteStoneAuto = true;
+            CrunchUtilitiesPlugin.SaveConfig();
+            Context.Respond("Reloaded config");
+        }
         [Command("crunch config", "Reload the config")]
         [Permission(MyPromoteLevel.Admin)]
         public void ReloadConfig(string option, string value)
@@ -94,7 +103,7 @@ namespace CrunchUtilities
             }
 
         }
-
+        private static Dictionary<long, long> cooldowns = new Dictionary<long, long>();
         [Command("admin makeship", "Admin command, Turn a station and connected grids into a ship")]
         [Permission(MyPromoteLevel.Admin)]
         public void MakeShip(String name = "")
@@ -119,7 +128,8 @@ namespace CrunchUtilities
             }
             else
             {
-                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindGridGroup(name);
+      
+                       ConcurrentBag <MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindGridGroup(name);
                 foreach (var item in gridWithSubGrids)
                 {
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
@@ -268,13 +278,45 @@ namespace CrunchUtilities
 
             return currentCooldown;
         }
+        [Command("togglestone", "Delete all stone in a grid")]
+        [Permission(MyPromoteLevel.None)]
+        public void ToggleDeleteStone()
+        {
+            if (Context.Player == null)
+            {
+                CrunchUtilitiesPlugin.Log.Info("How the fuck isnt this a player");
+                return;
 
+            }
+            if (CrunchUtilitiesPlugin.file.DeleteStoneAuto)
+            {
+                CrunchUtilitiesPlugin.Log.Info(Context.Player.Identity.IdentityId);
+                    if (CrunchUtilitiesPlugin.ids.Contains(Context.Player.Identity.IdentityId))
+                    {
+                        CrunchUtilitiesPlugin.ids.Remove(Context.Player.Identity.IdentityId);
+                        Context.Respond("No longer deleting stone", Color.Cyan, "Tiny Drill Elves");
+                    }
+                    else
+                    {
+                        CrunchUtilitiesPlugin.ids.Add(Context.Player.Identity.IdentityId);
+                        Context.Respond("Now deleting stone, if you own the drill", Color.Cyan, "Tiny Drill Elves");
+                    }
+              
+            }
+            else
+            {
+                Context.Respond("not enabled");
+            }
+        }
+        public static int totalcount = 0;
         [Command("stone", "Delete all stone in a grid")]
         [Permission(MyPromoteLevel.None)]
-        public void DeleteStone()
+        public void DeleteStone(bool outputcount = false)
         {
+          
             if (CrunchUtilitiesPlugin.file.DeleteStone)
             {
+             
                 CrunchUtilitiesPlugin plugin = (CrunchUtilitiesPlugin)Context.Plugin;
                 var currentCooldownMap = plugin.CurrentCooldownMap;
                 if (currentCooldownMap.TryGetValue(Context.Player.IdentityId, out CurrentCooldown currentCooldown))
@@ -299,6 +341,7 @@ namespace CrunchUtilities
                 }
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
                 int count = 0;
+              
                 foreach (var item in gridWithSubGrids)
                 {
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
@@ -307,7 +350,7 @@ namespace CrunchUtilities
                         MyCubeGrid grid = groupNodes.NodeData;
                         var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
 
-
+                       
                         var blockList = new List<Sandbox.ModAPI.IMyTerminalBlock>();
                         gts.GetBlocksOfType<Sandbox.ModAPI.IMyTerminalBlock>(blockList);
                         if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
@@ -342,7 +385,17 @@ namespace CrunchUtilities
                     }
                    
                 }
+                if (count == 0)
+                {
+                    currentCooldownMap.Remove(Context.Player.IdentityId);
+                   
+                }
                 Context.Respond(count + " Stone Deleted");
+                totalcount += count;
+                if (outputcount)
+                {
+                    Context.Respond(String.Format("{0:n0}", totalcount) + " Deleted in total on this instance.");
+                }
             }
             else
             {
@@ -350,6 +403,42 @@ namespace CrunchUtilities
             }
 
         }
+        //[Command("addgas", "add gas offers to look at grid")]
+        //[Permission(MyPromoteLevel.None)]
+        //public void gasOffer(int price)
+        //{
+        //    ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+        //    if (gridWithSubGrids.Count > 0)
+        //    {
+        //        foreach (var item in gridWithSubGrids)
+        //        {
+               
+        //            foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+        //            {
+        //                MyCubeGrid grid = groupNodes.NodeData;
+        //                var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+        //                var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
+        //                gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
+        //                foreach (Sandbox.ModAPI.IMyStoreBlock store in blockList)
+        //                {
+                       
+        //                    SerializableDefinitionId itemId = new SerializableDefinitionId();
+        //                    itemId.SubtypeId = "Hydrogen";
+        //                    itemId.TypeIdString = "MyObjectBuilder_GasProperties";
+                          
+        //                    MyStoreItemData data = new MyStoreItemData(itemId, 1, 1000, (Action<int, int, long, long, long>)null, (Action)null);
+        //                    store.InsertOffer(data, out long IdentityId);
+        //                    //  store.InsertOffer
+        //                }
+        //            }
+        //        }
+        //    }
+        //    else
+        //    {
+        //        Context.Respond("Cant find a grid");
+        //    }
+
+        //}
         [Command("claim", "Player command, claim a shared grid")]
         [Permission(MyPromoteLevel.None)]
         public void ClaimCommand()
@@ -463,6 +552,50 @@ namespace CrunchUtilities
             }
 
         }
+        [Command("fixrespawn", "remove the respawnship status")]
+        [Permission(MyPromoteLevel.None)]
+        public void norespawn()
+        {
+
+            CrunchUtilitiesPlugin plugin = (CrunchUtilitiesPlugin)Context.Plugin;
+            var currentCooldownMap = plugin.CurrentCooldownMap2;
+            if (currentCooldownMap.TryGetValue(Context.Player.IdentityId, out CurrentCooldown currentCooldown))
+            {
+
+                long remainingSeconds = currentCooldown.GetRemainingSeconds(null);
+
+                if (remainingSeconds > 0)
+                {
+
+                    CrunchUtilitiesPlugin.Log.Info("Cooldown for Player " + Context.Player.DisplayName + " still running! " + remainingSeconds + " seconds remaining!");
+                    Context.Respond("Command is still on cooldown for " + remainingSeconds + " seconds.");
+                    return;
+                }
+                currentCooldown = CreateNewCooldown(currentCooldownMap, Context.Player.IdentityId, plugin.CooldownRespawn);
+                currentCooldown.StartCooldown(null);
+            }
+            else
+            {
+                currentCooldown = CreateNewCooldown(currentCooldownMap, Context.Player.IdentityId, plugin.CooldownRespawn);
+                currentCooldown.StartCooldown(null);
+            }
+            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+                if (gridWithSubGrids.Count > 0)
+                {
+
+                foreach (var item in gridWithSubGrids) {
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                    {
+                        MyCubeGrid grid = groupNodes.NodeData;
+                        grid.IsRespawnGrid = false;
+                        Context.Respond("Ship wont get deleted by Keen. Try not to die.");
+                    }
+                }
+
+                        
+            }
+        }
+
         [Command("convert", "Player command, Turn a ship and connected grids into a station")]
         [Permission(MyPromoteLevel.None)]
         public void MakeStationPlayer()
@@ -1054,6 +1187,11 @@ namespace CrunchUtilities
             }
         
         }
+
+
+
+
+
         [Command("warstatus", "check war status")]
         [Permission(MyPromoteLevel.None)]
         public void declareWar(string tag1, string tag2)
@@ -1093,12 +1231,12 @@ namespace CrunchUtilities
         }
         [Command("declarewar", "declare war")]
         [Permission(MyPromoteLevel.None)]
-        public void declareWar(string tag, bool members = false)
+        public void declareWar(string tag)
         {
             if (CrunchUtilitiesPlugin.file.facInfo)
             {
                 bool console = false;
-                members = true;
+                
                 if (Context.Player == null)
                 {
                     console = true;
@@ -1391,7 +1529,21 @@ namespace CrunchUtilities
                 }
                 if (playerFac.IsLeader(Context.Player.IdentityId) || playerFac.IsFounder(Context.Player.IdentityId))
                 {
-                    Sandbox.Game.Multiplayer.MyFactionCollection.SendPeaceRequest(playerFac.FactionId, fac.FactionId);
+                    MyFactionPeaceRequestState state = MySession.Static.Factions.GetRequestState(playerFac.FactionId, fac.FactionId);
+
+        
+                            if (state != MyFactionPeaceRequestState.Sent)
+                            {
+                                Sandbox.Game.Multiplayer.MyFactionCollection.SendPeaceRequest(playerFac.FactionId, fac.FactionId);
+                              
+                            }
+                            if (state == MyFactionPeaceRequestState.Pending)
+                            {
+                                Sandbox.Game.Multiplayer.MyFactionCollection.AcceptPeace(playerFac.FactionId, fac.FactionId);
+                      
+                           
+                            }
+                            Sandbox.Game.Multiplayer.MyFactionCollection.SendPeaceRequest(playerFac.FactionId, fac.FactionId);
                     Context.Respond("Peace request sent");
                 }
                 else
@@ -1422,6 +1574,8 @@ namespace CrunchUtilities
                 {
                     console = true;
                 }
+                
+                
                 IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
                 if (fac == null)
                 {
@@ -1932,60 +2086,59 @@ namespace CrunchUtilities
             MyDefinitionId.TryParse(itemtype, subtypeName, out MyDefinitionId id);
             if (id.ToString().Contains("null"))
             {
-                Context.Respond("Invalid item, try Ammo, Ore, Ingot, Component, PhysicalGunObject");
+                Context.Respond("Invalid item, try Ammo, Ore, Ingot, Component, PhysicalGunObject, PhysicalItem");
                 return;
             }
 
+            VRage.Game.MyDefinitionId.TryParse(type, subtypeName, out VRage.Game.MyDefinitionId itemDefinition);
 
-            switch (type.ToLower())
-            {
-                //Eventually add some checks to see if the item exists before adding it
-                case "object":
-                    item = new MyObjectBuilder_PhysicalGunObject { SubtypeName = subtypeName };
-                    itemType = new MyInventoryItemFilter("MyObjectBuilder_PhysicalGunObject/" + subtypeName).ItemType;
-                    break;
-                case "ammo":
-                    item = new MyObjectBuilder_AmmoMagazine { SubtypeName = subtypeName };
-                    itemType = new MyInventoryItemFilter("MyObjectBuilder_AmmoMagazine/" + subtypeName).ItemType;
-                    break;
-                case "ore":
-                    item = new MyObjectBuilder_Ore() { SubtypeName = subtypeName };
-                    itemType = new MyInventoryItemFilter("MyObjectBuilder_Ore/" + subtypeName).ItemType;
-                    break;
-                case "ingot":
-                    item = new MyObjectBuilder_Ingot() { SubtypeName = subtypeName };
-                    itemType = new MyInventoryItemFilter("MyObjectBuilder_Ingot/" + subtypeName).ItemType;
-                    break;
-                case "component":
-                    item = new MyObjectBuilder_Component() { SubtypeName = subtypeName };
-                    itemType = new MyInventoryItemFilter("MyObjectBuilder_Component/" + subtypeName).ItemType;
-                    break;
-                case "physicalgunobject":
-                    item = new MyObjectBuilder_PhysicalGunObject { SubtypeName = subtypeName };
-                    itemType = new MyInventoryItemFilter("MyObjectBuilder_PhysicalGunObject/" + subtypeName).ItemType;
-                    break;
-                default:
-                    Context.Respond("Error : use Object, Ammo, Ore, Ingot, Component, PhysicalGunObject");
-                    return;
-
-            }
+          
+     
             if (!force)
             {
-                if (invent.CanItemsBeAdded(VRage.MyFixedPoint.DeserializeString(amount.ToString()), item.GetObjectId()))
-                {
-                    invent.AddItems(VRage.MyFixedPoint.DeserializeString(amount.ToString()), item);
+          
+                    Sandbox.Game.MyVisualScriptLogicProvider.AddToPlayersInventory(player.IdentityId, itemDefinition, amount);
+             
                     Context.Respond("Added the items");
                     SendMessage("[C]", "You were given " + amount + " " + subtypeName, Color.Green, (long)player.SteamUserId);
                     return;
-                }
-                else
-                {
-                    Context.Respond("Cant add the items");
-                    return;
-                }
+            
             }
             else
             {
+                switch (type.ToLower())
+                {
+                    //Eventually add some checks to see if the item exists before adding it
+                    case "object":
+                        item = new MyObjectBuilder_PhysicalGunObject { SubtypeName = subtypeName };
+                        itemType = new MyInventoryItemFilter("MyObjectBuilder_PhysicalGunObject/" + subtypeName).ItemType;
+                        break;
+                    case "ammo":
+                        item = new MyObjectBuilder_AmmoMagazine { SubtypeName = subtypeName };
+                        itemType = new MyInventoryItemFilter("MyObjectBuilder_AmmoMagazine/" + subtypeName).ItemType;
+                        break;
+                    case "ore":
+                        item = new MyObjectBuilder_Ore() { SubtypeName = subtypeName };
+                        itemType = new MyInventoryItemFilter("MyObjectBuilder_Ore/" + subtypeName).ItemType;
+                        break;
+                    case "ingot":
+                        item = new MyObjectBuilder_Ingot() { SubtypeName = subtypeName };
+                        itemType = new MyInventoryItemFilter("MyObjectBuilder_Ingot/" + subtypeName).ItemType;
+                        break;
+
+                    case "component":
+                        item = new MyObjectBuilder_Component() { SubtypeName = subtypeName };
+                        itemType = new MyInventoryItemFilter("MyObjectBuilder_Component/" + subtypeName).ItemType;
+                        break;
+                    case "physicalgunobject":
+                        item = new MyObjectBuilder_PhysicalGunObject { SubtypeName = subtypeName };
+                        itemType = new MyInventoryItemFilter("MyObjectBuilder_PhysicalGunObject/" + subtypeName).ItemType;
+                        break;
+                    default:
+                        Context.Respond("Error : use Object, Ammo, Ore, Ingot, Component, PhysicalGunObject");
+                        return;
+
+                }
                 MethodInfo method = typeof(MyInventory).GetMethod("AddItemsInternal", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, (Binder)null, new Type[4]
                 {
              typeof (MyFixedPoint), typeof (MyObjectBuilder_PhysicalObject), typeof (uint?), typeof (int)
@@ -2234,7 +2387,7 @@ namespace CrunchUtilities
 
         [Command("eco pay", "Transfer money from one player to another")]
         [Permission(MyPromoteLevel.None)]
-        public void PayPlayer(string type, string recipient, string inputAmount)
+        public void PayPlayer(string type, string recipient, string inputAmount, bool acrossInstances = false)
         {
             if (Context.Player == null)
             {
@@ -2269,12 +2422,54 @@ namespace CrunchUtilities
                         MyPlayer player = null;
                         bool found = false;
 
+                        if (acrossInstances)
+                        {
+                            IMyIdentity targetid = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
+                            if (targetid == null)
+                            {
+                                SendMessage("[CrunchEcon]", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
+                                return;
+                            }
+                            if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
+                            {
+                                EconUtils.takeMoney(Context.Player.IdentityId, amount);
+                                EconUtils.addMoney(targetid.IdentityId, amount);
 
+
+                                //SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                                SendMessage("[CrunchEcon]", "You sent " + targetid.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                            }
+                            else
+                            {
+                                SendMessage("[CrunchEcon]", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                            }
+                            return;
+                        }
                         player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(recipient) as MyPlayer;
                         if (player == null)
                         {
-                            SendMessage("[]", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
-                            return;
+                            SendMessage("[CrunchEcon]", "They arent online, trying across instance", Color.Red, (long)Context.Player.SteamUserId);
+                            IMyIdentity targetid = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
+                            if (targetid == null)
+                            {
+                                SendMessage("[CrunchEcon]", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
+                                return;
+                            }
+                            if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
+                            {
+                                EconUtils.takeMoney(Context.Player.IdentityId, amount);
+                                EconUtils.addMoney(targetid.IdentityId, amount);
+
+
+                                //SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                                SendMessage("[CrunchEcon]", "You sent " + targetid.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                                return;
+                            }
+                            else
+                            {
+                                SendMessage("[CrunchEcon]", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                                return;
+                            }
                         }
 
                         if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
@@ -2797,7 +2992,7 @@ namespace CrunchUtilities
                 MySession.Static.Factions.SetReputationBetweenFactions(fac.FactionId, fac2.FactionId, int.Parse(amount.ToString()));
                 Context.Respond(fac.Name + " FACTION Reputation After Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
 
-
+                
 
 
             }

@@ -49,6 +49,9 @@
     <Reference Include="Sandbox.RenderDirect">
       <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\Sandbox.RenderDirect.dll</HintPath>
     </Reference>
+    <Reference Include="SpaceEngineers.Game">
+      <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\SpaceEngineers.Game.dll</HintPath>
+    </Reference>
     <Reference Include="SpaceEngineers.ObjectBuilders">
       <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\SpaceEngineers.ObjectBuilders.dll</HintPath>
     </Reference>

@@ -22,18 +22,421 @@ using System.Collections.Concurrent;
 using Sandbox.Game.Entities.Cube;
 using System.Collections.Generic;
 using Sandbox.Engine.Multiplayer;
+using Torch.Managers.PatchManager;
+using System.Reflection;
+using Sandbox.Game.Weapons;
+using VRage.ObjectBuilders;
+using Sandbox.ModAPI;
+using VRageMath;
+using VRage.ModAPI;
+using Sandbox.Game.Entities.Character;
+using Sandbox.Game.Entities.Blocks;
+using VRage.Game.Entity;
+using Torch.Mod.Messages;
+using Torch.Mod;
+using SpaceEngineers.Game.EntityComponents.GameLogic;
+using Sandbox.Game.SessionComponents;
+using SpaceEngineers.Game.Entities.Blocks;
 
 namespace CrunchUtilities
 {
     public class CrunchUtilitiesPlugin : TorchPluginBase
     {
 
+
+
+        [PatchShim]
+        public static class MyPatch
+        {
+
+            public static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+            internal static readonly MethodInfo update =
+                typeof(MyDrillBase).GetMethod("TryHarvestOreMaterial", BindingFlags.Instance | BindingFlags.NonPublic) ??
+                throw new Exception("Failed to find patch method");
+
+            internal static readonly MethodInfo updatePatch =
+                typeof(MyPatch).GetMethod(nameof(TestPatchMethod), BindingFlags.Static | BindingFlags.Public) ??
+                throw new Exception("Failed to find patch method");
+
+            public static void Patch(PatchContext ctx)
+            {
+     
+                ctx.GetPattern(update).Prefixes.Add(updatePatch);
+                Log.Info("Patching Successful CrunchDrill!");
+            }
+
+            public static bool TestPatchMethod(MyDrillBase __instance, MyVoxelMaterialDefinition material, Vector3 hitPosition)
+            {
+
+                // var playerId = __instance.Owner.GetPlayerIdentityId();
+
+                //     Log.Info(__instance.OutputInventory.Owner.GetBaseEntity().EntityId);
+                //     Log.Info(MyAPIGateway.Entities.GetEntityById(__instance.OutputInventory.Owner.GetBaseEntity().EntityId).GetType());
+                if (file != null && !file.DeleteStoneAuto)
+                {
+                    return true;
+                }
+
+                List<IMyEntity> l = new List<IMyEntity>();
+                if (__instance.OutputInventory == null || __instance.OutputInventory.Owner == null || __instance.OutputInventory.Owner.GetBaseEntity() == null)
+                {
+                    return true;
+                }
+                if (__instance.OutputInventory != null && __instance.OutputInventory.Owner != null)
+                {
+                    if (__instance.OutputInventory.Owner.GetBaseEntity() is MyShipDrill)
+                    {
+                        MyShipDrill drill = __instance.OutputInventory.Owner.GetBaseEntity() as MyShipDrill;
+                        if (drill == null)
+                        {
+                            return true;
+                        }
+
+                        //     BoundingSphereD sphere = new BoundingSphereD(hitPosition, 400);
+                        //    l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
+                        //  foreach (IMyEntity e in l)
+                        //  {
+                        //    if (e is MyCharacter)
+                        //   {
+
+                        if (drill.DisplayNameText != null && containsName(drill.DisplayNameText))
+                        {
+                            MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
+                            if (newObject.SubtypeName.ToLower().Contains("stone"))
+                            {
+                                return false;
+                            }
+                        }
+                        if (ids.Contains(drill.OwnerId))
+                        {
+                            MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
+                            if (newObject.SubtypeName.ToLower().Contains("stone"))
+                            {
+                                return false;
+                            }
+                        }
+                        else
+                        {
+                            return true;
+                        }
+                    }
+                }
+                    return true;
+                
+            }
+
+            // }
+
+
+            //return true;
+
+            //  }
+        }
+        public static bool containsName(String name)
+        {
+            if (name.ToLower().Contains("no stone") || name.ToLower().Contains("!stone"))
+            {
+                return true;
+            }
+            return false;
+        }
+        //  [PatchShim]
+        //  public static class MyGasPatch
+        //  {
+
+        //      public static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+        //      internal static readonly MethodInfo update =
+        //          typeof(MyStoreBlock).GetMethod("BuyGas", BindingFlags.Instance | BindingFlags.NonPublic) ??
+        //          throw new Exception("Failed to find patch method");
+
+        //      internal static readonly MethodInfo storePatch =
+        //          typeof(MyGasPatch).GetMethod(nameof(GasPatchMethod), BindingFlags.Static | BindingFlags.Public) ??
+        //          throw new Exception("Failed to find patch method");
+
+        //      public static void Patch(PatchContext ctx)
+        //      {
+
+        //          ctx.GetPattern(update).Prefixes.Add(storePatch);
+        //          Log.Info("Patching Successful CrunchDrill!");
+        //      }
+
+        //      public static bool GasPatchMethod(MyStoreBlock __instance, MyStoreItem storeItem,
+        //int amount,
+        //MyPlayer player,
+        //MyStation station,
+        //MyEntity entity,
+        //long totalPrice,
+        //MyDefinitionId gasId)
+        //      {
+        //          // Log.Info(storeItem.Item);
+        //          Log.Info("Hydrogen!");
+        //          //MyStoreItem storeItem = (MyStoreItem)null;
+        //          //  foreach (MyStoreItem playerItem in __instance.PlayerItems)
+        //          //  {
+        //          //  if (playerItem.Id == id)
+        //          //  {
+        //          //     storeItem = playerItem;
+        //          //     Log.Info(storeItem.Item.Value.SubtypeName);
+        //          //     break;
+        //          //   }
+        //          //   }
+
+        //          return true;
+        //      }
+        //  }
+
+        //[PatchShim]
+        //public static class MyStorePatch
+        //{
+
+        //    public static readonly Logger Log = LogManager.GetCurrentClassLogger();
+
+        //    internal static readonly MethodInfo update =
+        //        typeof(MyStoreBlock).GetMethod("BuyFromPlayer", BindingFlags.Instance | BindingFlags.NonPublic) ??
+        //        throw new Exception("Failed to find patch method");
+
+        //    internal static readonly MethodInfo storePatch =
+        //        typeof(MyStorePatch).GetMethod(nameof(StorePatchMethod), BindingFlags.Static | BindingFlags.Public) ??
+        //        throw new Exception("Failed to find patch method");
+
+        //    public static void Patch(PatchContext ctx)
+        //    {
+
+        //        ctx.GetPattern(update).Prefixes.Add(storePatch);
+        //        Log.Info("Patching Successful CrunchDrill!");
+        //    }
+
+        //    public static void yeetHydrogen(List<Sandbox.ModAPI.IMyGasTank> tanks, double amountToTake, long OwnerId)
+        //    {
+        //        double amountTaken = 0;
+        //        double toTake = amountToTake;
+        //        foreach (Sandbox.ModAPI.IMyGasTank tank in tanks)
+        //        {
+        //            MyGasTank tankk = tank as MyGasTank;
+
+        //            if (tankk.FilledRatio > 0 && tankk.OwnerId == OwnerId)
+        //            {
+        //                double gasintank = (tankk.FilledRatio / tankk.Capacity) * 100;
+        //                if (toTake > 0)
+        //                {
+        //                    if (gasintank >= toTake)
+        //                    {
+        //                        double gasTaken = gasintank - (gasintank -= toTake);
+        //                        double gasLeft = gasintank - toTake;
+        //                        if (gasLeft == 0)
+        //                        {
+        //                            tankk.ChangeFillRatioAmount(0);
+        //                        }
+        //                        else
+        //                        {
+        //                            tankk.ChangeFillRatioAmount((gasLeft / tankk.GasCapacity) * 100);
+        //                        }
+        //                    }
+        //                    else
+        //                    {
+        //                        toTake -= gasintank;
+        //                        tankk.ChangeFillRatioAmount(0);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+
+        //    public static bool StorePatchMethod(MyStoreBlock __instance, long id, int amount, long targetEntityId, MyPlayer player, MyAccountInfo playerAccountInfo)
+        //    {
+
+        //        MyStoreItem storeItem = (MyStoreItem)null;
+        //        foreach (MyStoreItem playerItem in __instance.PlayerItems)
+        //        {
+        //            //add the hydrogen thing
+        //            Boolean isItem = false;
+        //          //  if (playerItem.Item.Value.SubtypeName.Contains("GSI Premium Hydrogen") || playerItem.Item.Value.SubtypeName.Contains("Premium Hydrogen"))
+        //           // {
+        //                isItem = true;
+        //          //  }
+        //            if (playerItem.Id == id && isItem)
+        //            {
+        //                storeItem = playerItem;
+        //                Log.Info(storeItem.Item.Value.SubtypeName);
+        //                MyCubeGrid grid = __instance.CubeGrid;
+        //                Log.Info(grid.DisplayName);
+        //                var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+        //                VRage.Game.ObjectBuilders.Definitions.MyObjectBuilder_GasProperties gas = new VRage.Game.ObjectBuilders.Definitions.MyObjectBuilder_GasProperties { SubtypeName = "Hydrogen" };
+        //                var blockList = new List<Sandbox.ModAPI.IMyGasTank>();
+        //                gts.GetBlocksOfType<Sandbox.ModAPI.IMyGasTank>(blockList);
+        //                double totalGas = 0f;
+        //                foreach (Sandbox.ModAPI.IMyGasTank tank in blockList)
+        //                {
+        //                    MyGasTank tankk = tank as MyGasTank;
+
+        //                    if (tankk.FilledRatio > 0 && tankk.OwnerId == __instance.OwnerId && tankk.BlockDefinition.StoredGasId == MyDefinitionId.FromContent(gas))
+        //                    {
+        //                        double gasintank = (tankk.FilledRatio / tankk.Capacity) * 100;
+        //                        totalGas += gasintank;
+        //                    }
+        //                }
+        //                MyIdentity identity = MySession.Static.Players.TryGetIdentity(playerAccountInfo.OwnerIdentifier);
+        //                double amountToUse = amount;
+        //                if (amount > totalGas)
+        //                {
+        //                    amountToUse = totalGas;
+        //                  //  DialogMessage m = new DialogMessage("Shop Error", "Selected amount exceeds tank capacity");
+        //                   // ModCommunication.SendMessageTo(m, identity.Character.ControlSteamId);
+        //                }
+                      
+        //                Log.Info(totalGas);
+        //                if (totalGas == 0)
+        //                {
+        //                     DialogMessage m = new DialogMessage("Shop Error", "Tanks have no gas to sell!");
+        //                     ModCommunication.SendMessageTo(m, identity.Character.ControlSteamId);
+        //                    return false;
+        //                }
+        //                if (Sandbox.Game.Entities.MyEntities.TryGetEntityById(targetEntityId, out MyEntity entity, false))
+        //                {
+        //                    if (entity is MyCubeBlock myCubeBlock)
+        //                    {
+        //                        Log.Info(myCubeBlock.CubeGrid.DisplayName);
+        //                        var gts2 = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(myCubeBlock.CubeGrid);
+        //                        var blockList2 = new List<Sandbox.ModAPI.IMyGasTank>();
+        //                        gts.GetBlocksOfType<Sandbox.ModAPI.IMyGasTank>(blockList2);
+
+        //                       double cost = 0;
+        //                      double filledAmount = 0f;
+                             
+
+
+        //                        foreach (Sandbox.ModAPI.IMyGasTank tank in blockList2)
+        //                        {
+
+        //                            if (filledAmount <amountToUse)
+        //                            {
+
+        //                                MyGasTank tank2 = tank as MyGasTank;
+
+
+
+        //                                if (tank2.BlockDefinition.StoredGasId == MyDefinitionId.FromContent(gas))
+        //                                {
+
+        //                                    Log.Info("hydrogen Tank");
+        //                                    double newamount;
+        //                                    if (filledAmount > 0)
+        //                                    {
+        //                                        newamount = (amountToUse - filledAmount) * 100;
+        //                                    }
+        //                                    else
+        //                                    {
+        //                                        newamount = amountToUse * 100;
+        //                                    }
+
+        //                                    double num = (1.0 - tank2.FilledRatio) * (double)tank2.Capacity;
+        //                                    //num = whats in tank
+
+        //                                    //  Log.Info(num);
+                                          
+        //                                    if ((double)newamount > num)
+        //                                    {
+                                             
+        //                                        DialogMessage m = new DialogMessage("Shop Error", "Selected amount exceeds tank capacity");
+        //                                        ModCommunication.SendMessageTo(m, identity.Character.ControlSteamId);
+        //                                        return false;
+        //                                    }
+        //                                    double newpercent = (newamount / tank2.Capacity) * 100;
+        //                                    Log.Info((tank2.FilledRatio * (double)tank2.Capacity).ToString());
+        //                                    double test = (tank2.FilledRatio / (double)tank2.Capacity) * 100;
+        //                                    test += newamount;
+        //                                    if (tank2.FilledRatio + (test / tank2.Capacity) * 100 > tank2.Capacity)
+        //                                    {
+        //                                        double canFill = (tank2.FilledRatio / tank2.Capacity) * 100;
+        //                                        filledAmount += newamount / 100;
+        //                                        double localCost = storeItem.PricePerUnit * (canFill / 100);
+        //                                        tank2.ChangeFillRatioAmount(tank2.FilledRatio + (canFill / tank2.Capacity) * 100);
+        //                                        EconUtils.takeMoney(playerAccountInfo.OwnerIdentifier, (long)localCost);
+        //                                        EconUtils.addMoney(__instance.OwnerId, (long)localCost);
+        //                                        playerItem.Amount -= (int)canFill / 100;
+        //                                        //  MyIdentity identity = MySession.Static.Players.TryGetIdentity(tank2.OwnerId);
+        //                                        //   DialogMessage m = new DialogMessage("Shop Error", "Selected amount exceeds tank capacity");
+        //                                        //  ModCommunication.SendMessageTo(m, identity.Character.ControlSteamId);
+        //                                        //  return false;
+        //                                    }
+        //                                    else
+        //                                    {
+        //                                        if (totalGas >= test)
+        //                                        {
+        //                                            cost += storeItem.PricePerUnit * (newamount / 100);
+        //                                            totalGas -= newamount;
+        //                                           double localCost = storeItem.PricePerUnit * (newamount / 100);
+        //                                            if (playerAccountInfo.Balance >= localCost)
+        //                                            {
+        //                                                filledAmount += newamount / 100;
+        //                                                tank2.ChangeFillRatioAmount(tank2.FilledRatio + (test / tank2.Capacity) * 100);
+        //                                                EconUtils.takeMoney(playerAccountInfo.OwnerIdentifier, (long) localCost);
+        //                                                playerItem.Amount -= (int) filledAmount / 100;
+        //                                                EconUtils.addMoney(__instance.OwnerId, (long)localCost);
+        //                                            }
+        //                                        }
+        //                                    }
+                                       
+
+
+
+        //                                    //loop through tanks, check if each tanks can take the full amount, if it can fill it and charge the user
+        //                                    //if it cant, fill what it can and charge the user then move onto the next tank
+
+
+
+        //                                    //  object[] MethodInput = new object[] { newamount };
+        //                                    //  fillTank.Invoke(tank2, MethodInput);
+        //                                }
+        //                            }
+        //                        }
+        //                        if (cost > 0)
+        //                        {
+        //                            yeetHydrogen(blockList, filledAmount, __instance.OwnerId);
+        //                            return false;
+        //                        }
+        //                        else
+        //                        {
+        //                            return true;
+        //                        }
+        //                    }
+
+        //                    else
+        //                    {
+        //                        if (entity is MyCharacter character)
+        //                        {
+                               
+        //                            DialogMessage m = new DialogMessage("Shop Error", "Hydrogen credits must be bought to a cargo container of the target ship");
+        //                            ModCommunication.SendMessageTo(m, identity.Character.ControlSteamId);
+        //                        }
+        //                        return false;
+        //                    }
+        //                }
+
+
+
+        //                //   var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+        //                //   var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
+        //                //    gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
+        //                // foreach (Sandbox.ModAPI.IMyStoreBlock store in blockList)
+
+        //            }
+        //        }
+
+        //        return true;
+        //    }
+        //}
+
+        public static List<long> ids = new List<long>();
         public static Logger Log = LogManager.GetCurrentClassLogger();
         public static ConfigFile file;
         public static string path;
         public Dictionary<long, CurrentCooldown> CurrentCooldownMap { get; } = new Dictionary<long, CurrentCooldown>();
- 
+        public Dictionary<long, CurrentCooldown> CurrentCooldownMap2 { get; } = new Dictionary<long, CurrentCooldown>();
         public long Cooldown { get { return file.CooldownInSeconds * 1000; } }
+        public long CooldownRespawn { get { return file.RespawnCooldownInSeconds * 1000; } }
         private static TorchSessionState derp;
         public Dictionary<long, CurrentCooldown> CurrentCooldownMapFix { get; } = new Dictionary<long, CurrentCooldown>();
 
@@ -157,6 +560,7 @@ namespace CrunchUtilities
             if (newState == TorchSessionState.Loaded)
             {
                 derp = TorchSessionState.Loaded;
+            
             }
 
         }
