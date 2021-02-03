@@ -9,10 +9,15 @@ namespace CrunchUtilities
 {
     public class ConfigFile : ViewModel
     {
-        public bool solarPatch = false;
+        public bool SortGPSOnJoin = true;
         public bool PlayerMakeShip = false;
         public bool PlayerFixMe = false;
         public bool DeleteStone = false;
+        public bool UsingDraconisEliteDrills = false;
+        public double Drill2xAmount = 0.8;
+        public double Drill4xAmount = 0.6;
+        public double Drill8xAmount = 0.2;
+        public Int32 EcoWithdrawMax = Int32.MaxValue;
         public bool DeleteStoneAuto = false;
         public int deletedStoneCount = 0;
         public bool Withdraw = false;

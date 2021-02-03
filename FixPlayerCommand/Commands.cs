@@ -64,7 +64,7 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.Admin)]
         public void enableconfig()
         {
-            
+
             CrunchUtilitiesPlugin.LoadConfig();
             CrunchUtilitiesPlugin.file.DeleteStoneAuto = true;
             CrunchUtilitiesPlugin.SaveConfig();
@@ -128,8 +128,8 @@ namespace CrunchUtilities
             }
             else
             {
-      
-                       ConcurrentBag <MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindGridGroup(name);
+
+                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindGridGroup(name);
                 foreach (var item in gridWithSubGrids)
                 {
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
@@ -208,25 +208,25 @@ namespace CrunchUtilities
 
                 return;
             }
-           
-     
-                foreach (var grid in MyEntities.GetEntities().OfType<MyCubeGrid>().ToList())
-                {
-                    foreach (var controller in grid.GetFatBlocks<MyShipController>())
-                    {
-                        var pilot = controller.Pilot;
 
-                        if (pilot != null && pilot.DisplayName == playerName)
-                        {
-                            controller.Use();
-                            IMyCharacter character = pilot as IMyCharacter;
-                            character.Kill();
-                            character.Delete();
-                            Context.Respond("Murdering " + pilot.EntityId);
-                            return;
-                        }
+
+            foreach (var grid in MyEntities.GetEntities().OfType<MyCubeGrid>().ToList())
+            {
+                foreach (var controller in grid.GetFatBlocks<MyShipController>())
+                {
+                    var pilot = controller.Pilot;
+
+                    if (pilot != null && pilot.DisplayName == playerName)
+                    {
+                        controller.Use();
+                        IMyCharacter character = pilot as IMyCharacter;
+                        character.Kill();
+                        character.Delete();
+                        Context.Respond("Murdering " + pilot.EntityId);
+                        return;
                     }
                 }
+            }
 
             Context.Respond("If it got here, the playername you entered could not be found");
 
@@ -291,17 +291,17 @@ namespace CrunchUtilities
             if (CrunchUtilitiesPlugin.file.DeleteStoneAuto)
             {
                 CrunchUtilitiesPlugin.Log.Info(Context.Player.Identity.IdentityId);
-                    if (CrunchUtilitiesPlugin.ids.Contains(Context.Player.Identity.IdentityId))
-                    {
-                        CrunchUtilitiesPlugin.ids.Remove(Context.Player.Identity.IdentityId);
-                        Context.Respond("No longer deleting stone", Color.Cyan, "Tiny Drill Elves");
-                    }
-                    else
-                    {
-                        CrunchUtilitiesPlugin.ids.Add(Context.Player.Identity.IdentityId);
-                        Context.Respond("Now deleting stone, if you own the drill", Color.Cyan, "Tiny Drill Elves");
-                    }
-              
+                if (CrunchUtilitiesPlugin.ids.Contains(Context.Player.Identity.IdentityId))
+                {
+                    CrunchUtilitiesPlugin.ids.Remove(Context.Player.Identity.IdentityId);
+                    Context.Respond("No longer deleting stone", Color.Cyan, "Tiny Drill Elves");
+                }
+                else
+                {
+                    CrunchUtilitiesPlugin.ids.Add(Context.Player.Identity.IdentityId);
+                    Context.Respond("Now deleting stone, if you own the drill", Color.Cyan, "Tiny Drill Elves");
+                }
+
             }
             else
             {
@@ -313,10 +313,10 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.None)]
         public void DeleteStone(bool outputcount = false)
         {
-          
+
             if (CrunchUtilitiesPlugin.file.DeleteStone)
             {
-             
+
                 CrunchUtilitiesPlugin plugin = (CrunchUtilitiesPlugin)Context.Plugin;
                 var currentCooldownMap = plugin.CurrentCooldownMap;
                 if (currentCooldownMap.TryGetValue(Context.Player.IdentityId, out CurrentCooldown currentCooldown))
@@ -341,7 +341,7 @@ namespace CrunchUtilities
                 }
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
                 int count = 0;
-              
+
                 foreach (var item in gridWithSubGrids)
                 {
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
@@ -350,7 +350,7 @@ namespace CrunchUtilities
                         MyCubeGrid grid = groupNodes.NodeData;
                         var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
 
-                       
+
                         var blockList = new List<Sandbox.ModAPI.IMyTerminalBlock>();
                         gts.GetBlocksOfType<Sandbox.ModAPI.IMyTerminalBlock>(blockList);
                         if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
@@ -381,14 +381,14 @@ namespace CrunchUtilities
                             }
                         }
 
-                        
+
                     }
-                   
+
                 }
                 if (count == 0)
                 {
                     currentCooldownMap.Remove(Context.Player.IdentityId);
-                   
+
                 }
                 Context.Respond(count + " Stone Deleted");
                 totalcount += count;
@@ -412,7 +412,7 @@ namespace CrunchUtilities
         //    {
         //        foreach (var item in gridWithSubGrids)
         //        {
-               
+
         //            foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
         //            {
         //                MyCubeGrid grid = groupNodes.NodeData;
@@ -421,11 +421,11 @@ namespace CrunchUtilities
         //                gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
         //                foreach (Sandbox.ModAPI.IMyStoreBlock store in blockList)
         //                {
-                       
+
         //                    SerializableDefinitionId itemId = new SerializableDefinitionId();
         //                    itemId.SubtypeId = "Hydrogen";
         //                    itemId.TypeIdString = "MyObjectBuilder_GasProperties";
-                          
+
         //                    MyStoreItemData data = new MyStoreItemData(itemId, 1, 1000, (Action<int, int, long, long, long>)null, (Action)null);
         //                    store.InsertOffer(data, out long IdentityId);
         //                    //  store.InsertOffer
@@ -467,7 +467,7 @@ namespace CrunchUtilities
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
                 if (gridWithSubGrids.Count > 0)
                 {
-               
+
                     foreach (var item in gridWithSubGrids)
                     {
                         bool isStatic = false;
@@ -476,7 +476,7 @@ namespace CrunchUtilities
                         {
 
                             MyCubeGrid grid = groupNodes.NodeData;
-                          
+
                             var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
                             var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
                             gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
@@ -489,35 +489,35 @@ namespace CrunchUtilities
                                 }
                             }
                             //rewrite this shit eventually to not be trash
-                            if (blockList.Count == 0 && !npc) 
+                            if (blockList.Count == 0 && !npc)
                             {
 
-                           
-                            foreach (MySlimBlock block in grid.GetBlocks())
-                            {
-                              
 
-                                if (block.FatBlock != null && block.FatBlock.OwnerId > 0)
+                                foreach (MySlimBlock block in grid.GetBlocks())
                                 {
-                                    blockCount += 1;
 
-                                    switch (block.FatBlock.GetUserRelationToOwner(Context.Player.IdentityId))
+
+                                    if (block.FatBlock != null && block.FatBlock.OwnerId > 0)
                                     {
-                                        case MyRelationsBetweenPlayerAndBlock.Owner:
+                                        blockCount += 1;
 
-                                            factionShared += 1;
-                                            break;
-                                        case MyRelationsBetweenPlayerAndBlock.FactionShare:
-                                            factionShared += 1;
-                                            break;
-                                        case MyRelationsBetweenPlayerAndBlock.NoOwnership:
-                                            //sharedWithAll += 1;
-                                            break;
-                                        default:
-                                            break;
+                                        switch (block.FatBlock.GetUserRelationToOwner(Context.Player.IdentityId))
+                                        {
+                                            case MyRelationsBetweenPlayerAndBlock.Owner:
+
+                                                factionShared += 1;
+                                                break;
+                                            case MyRelationsBetweenPlayerAndBlock.FactionShare:
+                                                factionShared += 1;
+                                                break;
+                                            case MyRelationsBetweenPlayerAndBlock.NoOwnership:
+                                                //sharedWithAll += 1;
+                                                break;
+                                            default:
+                                                break;
+                                        }
                                     }
                                 }
-                            }
                             }
                             double totalShared = factionShared + sharedWithAll;
 
@@ -580,8 +580,8 @@ namespace CrunchUtilities
                 currentCooldown.StartCooldown(null);
             }
             ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
-                if (gridWithSubGrids.Count > 0)
-                {
+            if (gridWithSubGrids.Count > 0)
+            {
 
                 foreach (var item in gridWithSubGrids) {
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
@@ -592,7 +592,7 @@ namespace CrunchUtilities
                     }
                 }
 
-                        
+
             }
         }
 
@@ -631,7 +631,7 @@ namespace CrunchUtilities
                             else
                             {
                                 //fix this lmao, one grid static, others dynamic it turns the dynamics to static and static to dynamic
-                               
+
                                 if (grid.IsStatic)
                                 {
                                     if (isDynamic)
@@ -659,7 +659,7 @@ namespace CrunchUtilities
                                         }
                                         grid.Physics.ClearSpeed();
                                         grid.OnConvertedToStationRequest();
-                                          
+
                                         Context.Respond("Converting to station IF grid is not moving." + grid.DisplayName);
                                     }
                                     catch (Exception)
@@ -688,30 +688,30 @@ namespace CrunchUtilities
         {
             int totalPCU = 0;
             StringBuilder sb = new StringBuilder();
-                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
-                if (gridWithSubGrids.Count > 0)
+            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+            if (gridWithSubGrids.Count > 0)
+            {
+
+                foreach (var item in gridWithSubGrids)
                 {
-
-                    foreach (var item in gridWithSubGrids)
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                     {
-                        foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
-                        {
 
-                            MyCubeGrid grid = groupNodes.NodeData;
+                        MyCubeGrid grid = groupNodes.NodeData;
 
-      
-                                    sb.Append(grid.DisplayName + " : " + grid.BlocksPCU + ",");
-                            totalPCU += grid.BlocksPCU;
 
-                           
-                            
-                        }
+                        sb.Append(grid.DisplayName + " : " + grid.BlocksPCU + ",");
+                        totalPCU += grid.BlocksPCU;
+
+
+
                     }
                 }
-                else
-                {
-                    Context.Respond("Cant find a grid");
-                }
+            }
+            else
+            {
+                Context.Respond("Cant find a grid");
+            }
             //sb.Append("Total : " + totalPCU);
             Context.Respond(totalPCU.ToString(), "Total PCU");
             Context.Respond(sb.ToString(), "PCU");
@@ -723,29 +723,29 @@ namespace CrunchUtilities
         {
 
             bool changed = false;
-            
-                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindGridGroup(gridname);
-                foreach (var item in gridWithSubGrids)
+
+            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindGridGroup(gridname);
+            foreach (var item in gridWithSubGrids)
+            {
+                foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                 {
-                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
-                    {
-                        MyCubeGrid grid = groupNodes.NodeData;
-                 
-                            Context.Respond("Renaming " + grid.DisplayName + ". You may need to relog to see changes.");
-                            grid.ChangeDisplayNameRequest(newname);
+                    MyCubeGrid grid = groupNodes.NodeData;
+
+                    Context.Respond("Renaming " + grid.DisplayName + ". You may need to relog to see changes.");
+                    grid.ChangeDisplayNameRequest(newname);
 
 
-                            changed = true;
-                            return;
-                        
-                    }
+                    changed = true;
+                    return;
+
                 }
-                if (!changed)
-                {
-                    Context.Respond("Couldnt find that grid, are you sure its owned by you or faction?");
-                }
-            
-    
+            }
+            if (!changed)
+            {
+                Context.Respond("Couldnt find that grid, are you sure its owned by you or faction?");
+            }
+
+
         }
         [Command("rename", "Player command, Rename a ship")]
         [Permission(MyPromoteLevel.None)]
@@ -929,7 +929,7 @@ namespace CrunchUtilities
                         Context.Respond("Possibly bugged body " + name);
                         break;
                     }
-                    badNames.Add(name + " : " + identity.DisplayName, player.Id.SteamId.ToString()); 
+                    badNames.Add(name + " : " + identity.DisplayName, player.Id.SteamId.ToString());
                 }
                 else
                 {
@@ -1021,7 +1021,7 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.Admin)]
         public void UpdateIdentities(String playerNameOrId, String newName)
         {
-            
+
 
             MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
 
@@ -1107,36 +1107,36 @@ namespace CrunchUtilities
             if (factions == false) {
                 Dictionary<ulong, long> moneys = new Dictionary<ulong, long>();
                 foreach (var p in MySession.Static.Players.GetAllPlayers())
-            {
-                long IdentityID = MySession.Static.Players.TryGetIdentityId(p.SteamId);
-           
-                moneys.Add(p.SteamId, EconUtils.getBalance(IdentityID));
-            }
-            var sortedmoneys = moneys.OrderByDescending(x => x.Value).ThenBy(x => x.Key);
-              
-            foreach (var value in sortedmoneys)
-            {
-                    if (iteration <= limit) { 
-                    iteration++;
-                data.AppendLine(MySession.Static.Players.TryGetIdentityNameFromSteamId(value.Key).ToString() + " - Balance: " + String.Format("{0:n0}",value.Value));
-                    CrunchUtilitiesPlugin.Log.Info(MySession.Static.Players.TryGetIdentityNameFromSteamId(value.Key).ToString() + " - Balance: " + String.Format("{0:n0}", value.Value));
+                {
+                    long IdentityID = MySession.Static.Players.TryGetIdentityId(p.SteamId);
+
+                    moneys.Add(p.SteamId, EconUtils.getBalance(IdentityID));
+                }
+                var sortedmoneys = moneys.OrderByDescending(x => x.Value).ThenBy(x => x.Key);
+
+                foreach (var value in sortedmoneys)
+                {
+                    if (iteration <= limit) {
+                        iteration++;
+                        data.AppendLine(MySession.Static.Players.TryGetIdentityNameFromSteamId(value.Key).ToString() + " - Balance: " + String.Format("{0:n0}", value.Value));
+                        CrunchUtilitiesPlugin.Log.Info(MySession.Static.Players.TryGetIdentityNameFromSteamId(value.Key).ToString() + " - Balance: " + String.Format("{0:n0}", value.Value));
                         data2.AppendLine(MySession.Static.Players.TryGetIdentityNameFromSteamId(value.Key).ToString() + "," + value.Value);
                     }
                     else
                     {
                         break;
                     }
-            }
-             
+                }
+
 
                 File.WriteAllText(CrunchUtilitiesPlugin.path + "//eco.csv", data2.ToString());
                 File.WriteAllText(CrunchUtilitiesPlugin.path + "//eco-" + string.Format("{0:yyyy-MM-dd_HH-mm-ss-fff}", DateTime.Now) + ".csv", data2.ToString());
                 if (Context.Player == null)
-            {
-                Context.Respond("Top " + limit + " player balances\n" + data.ToString());
-                return;
-            }
-            ModCommunication.SendMessageTo(new DialogMessage("Top "+ limit +" Player Balances", "", data.ToString()), Context.Player.SteamUserId);
+                {
+                    Context.Respond("Top " + limit + " player balances\n" + data.ToString());
+                    return;
+                }
+                ModCommunication.SendMessageTo(new DialogMessage("Top " + limit + " Player Balances", "", data.ToString()), Context.Player.SteamUserId);
             }
             else
             {
@@ -1154,18 +1154,18 @@ namespace CrunchUtilities
                     {
                         moneys.Add(f.Value.Name + " - " + f.Value.Tag, EconUtils.getBalance(f.Value.FactionId));
                     }
-                
-                  
+
+
                 }
                 var sortedmoneys = moneys.OrderByDescending(x => x.Value).ThenBy(x => x.Key);
                 foreach (var value in sortedmoneys)
                 {
                     if (iteration <= limit)
                     {
-                    
+
                         iteration++;
                         data.AppendLine(value.Key + " - Balance: " + String.Format("{0:n0}", value.Value));
-                    CrunchUtilitiesPlugin.Log.Info(value.Key + " - Balance: " + String.Format("{0:n0}", value.Value));
+                        CrunchUtilitiesPlugin.Log.Info(value.Key + " - Balance: " + String.Format("{0:n0}", value.Value));
                         data2.AppendLine(value.Key + value.Key + "," + value.Value);
                     }
                     else
@@ -1174,10 +1174,10 @@ namespace CrunchUtilities
                     }
                 }
                 File.WriteAllText(CrunchUtilitiesPlugin.path + "//ecofac.csv", data2.ToString());
-  
-                    File.WriteAllText(CrunchUtilitiesPlugin.path + "//ecofac-" + string.Format("{0:yyyy-MM-dd_HH-mm-ss-fff}", DateTime.Now) + ".csv", data2.ToString());
-            
-                
+
+                File.WriteAllText(CrunchUtilitiesPlugin.path + "//ecofac-" + string.Format("{0:yyyy-MM-dd_HH-mm-ss-fff}", DateTime.Now) + ".csv", data2.ToString());
+
+
                 if (Context.Player == null)
                 {
                     Context.Respond("Top " + limit + " faction balances\n" + data.ToString());
@@ -1185,7 +1185,7 @@ namespace CrunchUtilities
                 }
                 ModCommunication.SendMessageTo(new DialogMessage("Top " + limit + " Faction Balances", "", data.ToString()), Context.Player.SteamUserId);
             }
-        
+
         }
 
 
@@ -1196,9 +1196,9 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.None)]
         public void declareWar(string tag1, string tag2)
         {
-      
-     
-                IMyFaction fac1 = MySession.Static.Factions.TryGetFactionByTag(tag1);
+
+
+            IMyFaction fac1 = MySession.Static.Factions.TryGetFactionByTag(tag1);
             IMyFaction fac2 = MySession.Static.Factions.TryGetFactionByTag(tag2);
             if (fac1 == null)
             {
@@ -1220,13 +1220,13 @@ namespace CrunchUtilities
                 Context.Respond(fac1.Name + " " + fac1.Tag + " are at war with " + fac2.Name + " " + fac2.Tag);
 
             }
-     
 
 
-                
-      
-            
-         
+
+
+
+
+
 
         }
         [Command("declarewar", "declare war")]
@@ -1236,7 +1236,7 @@ namespace CrunchUtilities
             if (CrunchUtilitiesPlugin.file.facInfo)
             {
                 bool console = false;
-                
+
                 if (Context.Player == null)
                 {
                     console = true;
@@ -1407,7 +1407,7 @@ namespace CrunchUtilities
         //[Permission(MyPromoteLevel.None)]
         //public void sendJoinRequest(string tag)
         //{
-       
+
         //    if (CrunchUtilitiesPlugin.file.facInfo)
         //    {
         //        bool console = false;
@@ -1458,7 +1458,7 @@ namespace CrunchUtilities
         //            Context.Respond("You are already in a faction!");
         //            return;
         //        }
-            
+
         //        MySession.Static.Factions.SendJoinRequest(fac.FactionId, (long) Context.Player.SteamUserId);
         //        Context.Respond("Sent a join request!");
 
@@ -1531,19 +1531,19 @@ namespace CrunchUtilities
                 {
                     MyFactionPeaceRequestState state = MySession.Static.Factions.GetRequestState(playerFac.FactionId, fac.FactionId);
 
-        
-                            if (state != MyFactionPeaceRequestState.Sent)
-                            {
-                                Sandbox.Game.Multiplayer.MyFactionCollection.SendPeaceRequest(playerFac.FactionId, fac.FactionId);
-                              
-                            }
-                            if (state == MyFactionPeaceRequestState.Pending)
-                            {
-                                Sandbox.Game.Multiplayer.MyFactionCollection.AcceptPeace(playerFac.FactionId, fac.FactionId);
-                      
-                           
-                            }
-                            Sandbox.Game.Multiplayer.MyFactionCollection.SendPeaceRequest(playerFac.FactionId, fac.FactionId);
+
+                    if (state != MyFactionPeaceRequestState.Sent)
+                    {
+                        Sandbox.Game.Multiplayer.MyFactionCollection.SendPeaceRequest(playerFac.FactionId, fac.FactionId);
+
+                    }
+                    if (state == MyFactionPeaceRequestState.Pending)
+                    {
+                        Sandbox.Game.Multiplayer.MyFactionCollection.AcceptPeace(playerFac.FactionId, fac.FactionId);
+
+
+                    }
+                    Sandbox.Game.Multiplayer.MyFactionCollection.SendPeaceRequest(playerFac.FactionId, fac.FactionId);
                     Context.Respond("Peace request sent");
                 }
                 else
@@ -1574,8 +1574,8 @@ namespace CrunchUtilities
                 {
                     console = true;
                 }
-                
-                
+
+
                 IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
                 if (fac == null)
                 {
@@ -1758,6 +1758,102 @@ namespace CrunchUtilities
                 }
             }
             Context.Respond("Withdrew : " + String.Format("{0:n0}", withdrew));
+        }
+
+
+        [Command("drives", "organise jump drive gps list")]
+        [Permission(MyPromoteLevel.None)]
+        public void fixDrives()
+        {
+            List<IMyGps> playergpsList = MyAPIGateway.Session?.GPS.GetGpsList(Context.Player.Identity.IdentityId);
+
+            if (playergpsList == null)
+            {
+
+            
+                Context.Respond("You have no gps!");
+            return;
+            }
+            Dictionary<int, IMyGps> someOrganisation = new Dictionary<int, IMyGps>();
+            List<IMyGps> unsorted = new List<IMyGps>();
+            int highest = 0;
+            foreach (IMyGps gps in playergpsList)
+            {
+                if (gps.Name.StartsWith("#"))
+                {
+                 
+                        String part1 = gps.Name.Split(' ')[0].Replace("#", "");
+                       if (int.TryParse(part1, out int result))
+                    {
+                        if (!someOrganisation.ContainsKey(result))
+                        {
+                            if (result > highest)
+                            {
+                                highest = result;
+                            }
+                            someOrganisation.Add(result, gps);
+                        }
+                        else
+                        {
+                            unsorted.Add(gps);
+                        }
+                    }
+                       else
+                    {
+                        unsorted.Add(gps);
+                    }
+               
+                }
+                else
+                {
+                    unsorted.Add(gps);
+                }
+ 
+
+            }
+            Context.Respond("Sorting list!");
+            if (highest > 100)
+            {
+                highest = 100;
+            }
+         foreach (IMyGps g in playergpsList)
+            {
+                MyAPIGateway.Session?.GPS.RemoveGps(Context.Player.Identity.IdentityId, g);
+            }
+            MyGpsCollection gpsCollection = (MyGpsCollection)MyAPIGateway.Session?.GPS;
+          
+            if (unsorted.Count > 0)
+            {
+              foreach (IMyGps gps in unsorted)
+                {
+                    MyGps gpsRef = gps as MyGps;
+                    long entityId = 0L;
+                    entityId = gpsRef.EntityId;
+                    gpsCollection.SendAddGps(Context.Player.Identity.IdentityId, ref gpsRef, entityId, false);
+                }
+            }
+            if (someOrganisation.Count > 0)
+            {
+                for (int i = highest; i > 0; i--)
+                {
+                    if (someOrganisation.ContainsKey(i))
+                    {
+                        someOrganisation.TryGetValue(i, out IMyGps gps);
+                        MyGps gpsRef = gps as MyGps;
+                        long entityId = 0L;
+                        entityId = gpsRef.EntityId;
+                        gpsCollection.SendAddGps(Context.Player.Identity.IdentityId, ref gpsRef, entityId, false);
+
+                    }
+                }
+            }
+        }
+
+        [Command("econ top", "block econ top")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void EconTop()
+        {
+            Context.Respond("Use !eco top");
         }
         [Command("eco deposit", "Deposit moneys")]
         [Permission(MyPromoteLevel.None)]
@@ -1946,6 +2042,11 @@ namespace CrunchUtilities
                 if (amount >= Int32.MaxValue)
                 {
                     Context.Respond("Keen code doesnt allow stacks over 2.147 billion, try again with a smaller number");
+                    return;
+                }
+                if (amount > CrunchUtilitiesPlugin.file.EcoWithdrawMax)
+                {
+                    Context.Respond("Cant withdraw over the maximum of " + String.Format("{0:n0}", CrunchUtilitiesPlugin.file.EcoWithdrawMax));
                     return;
                 }
                 IMyPlayer player = Context.Player;

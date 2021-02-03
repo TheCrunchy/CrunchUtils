@@ -37,14 +37,13 @@ using Torch.Mod;
 using SpaceEngineers.Game.EntityComponents.GameLogic;
 using Sandbox.Game.SessionComponents;
 using SpaceEngineers.Game.Entities.Blocks;
+using Sandbox.Game.Multiplayer;
+using Sandbox.Game.Screens.Helpers;
 
 namespace CrunchUtilities
 {
     public class CrunchUtilitiesPlugin : TorchPluginBase
     {
-
-
-
         [PatchShim]
         public static class MyPatch
         {
@@ -61,7 +60,7 @@ namespace CrunchUtilities
 
             public static void Patch(PatchContext ctx)
             {
-     
+
                 ctx.GetPattern(update).Prefixes.Add(updatePatch);
                 Log.Info("Patching Successful CrunchDrill!");
             }
@@ -77,7 +76,8 @@ namespace CrunchUtilities
                 {
                     return true;
                 }
-
+                if (string.IsNullOrEmpty(material.MinedOre))
+                    return false;
                 List<IMyEntity> l = new List<IMyEntity>();
                 if (__instance.OutputInventory == null || __instance.OutputInventory.Owner == null || __instance.OutputInventory.Owner.GetBaseEntity() == null)
                 {
@@ -88,11 +88,12 @@ namespace CrunchUtilities
                     if (__instance.OutputInventory.Owner.GetBaseEntity() is MyShipDrill)
                     {
                         MyShipDrill drill = __instance.OutputInventory.Owner.GetBaseEntity() as MyShipDrill;
+                  
                         if (drill == null)
                         {
                             return true;
                         }
-
+                 
                         //     BoundingSphereD sphere = new BoundingSphereD(hitPosition, 400);
                         //    l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
                         //  foreach (IMyEntity e in l)
@@ -105,6 +106,14 @@ namespace CrunchUtilities
                             MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
                             if (newObject.SubtypeName.ToLower().Contains("stone"))
                             {
+                                if (file.UsingDraconisEliteDrills)
+                                {
+                                    if (!drill.BlockDefinition.BlockPairName.Equals("Drill8x"))
+                                    {
+                                        return true;
+                                    }
+
+                                }
                                 return false;
                             }
                         }
@@ -113,6 +122,13 @@ namespace CrunchUtilities
                             MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
                             if (newObject.SubtypeName.ToLower().Contains("stone"))
                             {
+                                if (file.UsingDraconisEliteDrills)
+                                {
+                                    if (!drill.BlockDefinition.BlockPairName.Equals("Drill8x"))
+                                    {
+                                        return true;
+                                    }
+                                }
                                 return false;
                             }
                         }
@@ -122,8 +138,8 @@ namespace CrunchUtilities
                         }
                     }
                 }
-                    return true;
-                
+                return true;
+
             }
 
             // }
@@ -441,6 +457,113 @@ namespace CrunchUtilities
         public Dictionary<long, CurrentCooldown> CurrentCooldownMapFix { get; } = new Dictionary<long, CurrentCooldown>();
 
         private static Timer aTimer = new Timer();
+
+        public void test(IPlayer p)
+        {
+            if (file != null && file.SortGPSOnJoin)
+            {
+                if (p == null)
+                {
+                    return;
+                }
+                MyIdentity id = GetIdentityByNameOrId(p.SteamId.ToString());
+                if (id == null)
+                {
+                    return;
+                }
+
+                List<IMyGps> playergpsList = MyAPIGateway.Session?.GPS.GetGpsList(id.IdentityId);
+                bool hasSorting = false;
+                if (playergpsList == null)
+                {
+                    return;
+                }
+                foreach (IMyGps gps in playergpsList)
+                {
+                    if (gps.Name.StartsWith("#"))
+                    {
+                        hasSorting = true;
+                    }
+                }
+                if (hasSorting)
+                {
+
+                    Dictionary<int, IMyGps> someOrganisation = new Dictionary<int, IMyGps>();
+                    List<IMyGps> unsorted = new List<IMyGps>();
+                    int highest = 0;
+                    foreach (IMyGps gps in playergpsList)
+                    {
+                        if (gps.Name.StartsWith("#"))
+                        {
+
+                            String part1 = gps.Name.Split(' ')[0].Replace("#", "");
+                            if (int.TryParse(part1, out int result))
+                            {
+                                if (!someOrganisation.ContainsKey(result))
+                                {
+                                    if (result > highest)
+                                    {
+                                        highest = result;
+                                    }
+                                    someOrganisation.Add(result, gps);
+                                }
+                                else
+                                {
+                                    unsorted.Add(gps);
+                                }
+                            }
+                            else
+                            {
+                                unsorted.Add(gps);
+                            }
+
+                        }
+                        else
+                        {
+                            unsorted.Add(gps);
+                        }
+
+
+                    }
+
+                    foreach (IMyGps g in playergpsList)
+                    {
+                        MyAPIGateway.Session?.GPS.RemoveGps(id.IdentityId, g);
+                    }
+                    MyGpsCollection gpsCollection = (MyGpsCollection)MyAPIGateway.Session?.GPS;
+
+                    if (unsorted.Count > 0)
+                    {
+                        foreach (IMyGps gps in unsorted)
+                        {
+                            MyGps gpsRef = gps as MyGps;
+                            long entityId = 0L;
+                            entityId = gpsRef.EntityId;
+                            gpsCollection.SendAddGps(id.IdentityId, ref gpsRef, entityId, false);
+                        }
+                    }
+                    if (highest > 100)
+                    {
+                        highest = 100;
+                    }
+                    if (someOrganisation.Count > 0)
+                    {
+                        for (int i = highest; i > 0; i--)
+                        {
+                            if (someOrganisation.ContainsKey(i))
+                            {
+                                someOrganisation.TryGetValue(i, out IMyGps gps);
+                                MyGps gpsRef = gps as MyGps;
+                                long entityId = 0L;
+                                entityId = gpsRef.EntityId;
+                                gpsCollection.SendAddGps(id.IdentityId, ref gpsRef, entityId, false);
+
+                            }
+                        }
+                    }
+                }
+            }
+         }
         public static ConfigFile LoadConfig()
         {
             FileUtils utils = new FileUtils();
@@ -453,6 +576,7 @@ namespace CrunchUtilities
                 aTimer.AutoReset = true;
                 aTimer.Enabled = true;
             }
+ 
             return file;
         }
         public static ConfigFile SaveConfig()
@@ -532,6 +656,20 @@ namespace CrunchUtilities
                 UpdateNamesTask();
             });
         }
+        private static void OnTimedEventB(Object source, System.Timers.ElapsedEventArgs e)
+        {
+            Task.Run(() =>
+            {
+                DoJumpDriveShit();
+            });
+        }
+        public static void DoJumpDriveShit()
+        {
+            foreach (MyPlayer p in MySession.Static.Players.GetOnlinePlayers())
+            {
+                
+            }
+        }
         public static void UpdateNamesTask()
         {
           
@@ -560,7 +698,7 @@ namespace CrunchUtilities
             if (newState == TorchSessionState.Loaded)
             {
                 derp = TorchSessionState.Loaded;
-            
+                session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
             }
 
         }
