@@ -39,6 +39,7 @@ using Sandbox.Game.SessionComponents;
 using SpaceEngineers.Game.Entities.Blocks;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
+using Sandbox.Graphics.GUI;
 
 namespace CrunchUtilities
 {
@@ -157,51 +158,107 @@ namespace CrunchUtilities
             }
             return false;
         }
-        //  [PatchShim]
-        //  public static class MyGasPatch
-        //  {
 
-        //      public static readonly Logger Log = LogManager.GetCurrentClassLogger();
+        //[PatchShim]
+        //public static class MyJumpPatch
+        //{
 
-        //      internal static readonly MethodInfo update =
-        //          typeof(MyStoreBlock).GetMethod("BuyGas", BindingFlags.Instance | BindingFlags.NonPublic) ??
-        //          throw new Exception("Failed to find patch method");
+        //    public static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-        //      internal static readonly MethodInfo storePatch =
-        //          typeof(MyGasPatch).GetMethod(nameof(GasPatchMethod), BindingFlags.Static | BindingFlags.Public) ??
-        //          throw new Exception("Failed to find patch method");
+        //    internal static readonly MethodInfo update =
+        //        typeof(MyGpsCollection).GetMethod("GetGpsList", BindingFlags.Instance | BindingFlags.Public) ??
+        //        throw new Exception("Failed to find patch method");
 
-        //      public static void Patch(PatchContext ctx)
-        //      {
+        //    internal static readonly MethodInfo storePatch =
+        //        typeof(MyJumpPatch).GetMethod(nameof(GasPatchMethod), BindingFlags.Static | BindingFlags.Public) ??
+        //        throw new Exception("Failed to find patch method");
 
-        //          ctx.GetPattern(update).Prefixes.Add(storePatch);
-        //          Log.Info("Patching Successful CrunchDrill!");
-        //      }
+        //    public static void Patch(PatchContext ctx)
+        //    {
 
-        //      public static bool GasPatchMethod(MyStoreBlock __instance, MyStoreItem storeItem,
-        //int amount,
-        //MyPlayer player,
-        //MyStation station,
-        //MyEntity entity,
-        //long totalPrice,
-        //MyDefinitionId gasId)
-        //      {
-        //          // Log.Info(storeItem.Item);
-        //          Log.Info("Hydrogen!");
-        //          //MyStoreItem storeItem = (MyStoreItem)null;
-        //          //  foreach (MyStoreItem playerItem in __instance.PlayerItems)
-        //          //  {
-        //          //  if (playerItem.Id == id)
-        //          //  {
-        //          //     storeItem = playerItem;
-        //          //     Log.Info(storeItem.Item.Value.SubtypeName);
-        //          //     break;
-        //          //   }
-        //          //   }
+        //        ctx.GetPattern(update).Suffixes.Add(storePatch);
+        //        Log.Info("Patching Successful CrunchDrill!");
+        //    }
 
-        //          return true;
-        //      }
-        //  }
+        //    public static void GasPatchMethod(MyGpsCollection __instance, long identityId, List<IMyGps> list)
+        //    {
+        //        Log.Info("JUMP DRIVE?");
+
+        //                Dictionary<int, IMyGps> someOrganisation = new Dictionary<int, IMyGps>();
+        //    List<IMyGps> unsorted = new List<IMyGps>();
+        //    int highest = 0;
+        //                foreach (IMyGps gps in list)
+        //                {
+        //                    if (gps != null && gps.Name != null && gps.Name.StartsWith("#"))
+        //                    {
+
+        //                        String part1 = gps.Name.Split(' ')[0].Replace("#", "");
+        //                        if (int.TryParse(part1, out int result))
+        //                        {
+        //                            if (!someOrganisation.ContainsKey(result))
+        //                            {
+        //                                if (result > highest)
+        //                                {
+        //                                    highest = result;
+        //                                }
+        //                                if (result <= 100)
+        //                                {
+        //                                    someOrganisation.Add(result, gps);
+        //                                }
+        //                                else
+        //                                {
+        //                                    unsorted.Add(gps);
+        //                                }
+        //                            }
+        //                            else
+        //                            {
+        //                                unsorted.Add(gps);
+        //                            }
+        //                        }
+        //                        else
+        //                        {
+        //                            unsorted.Add(gps);
+        //                        }
+
+        //                    }
+        //                    else
+        //                    {
+        //                        unsorted.Add(gps);
+        //                    }
+
+
+        //                }
+
+        //                if (highest > 100)
+        //                {
+        //                    highest = 100;
+        //                }
+        //                list.Clear();
+
+
+        //                if (someOrganisation.Count > 0)
+        //                {
+        //                    for (int i = 0; i <= highest; i++)
+        //                    {
+        //                        if (someOrganisation.ContainsKey(i))
+        //                        {
+        //                            someOrganisation.TryGetValue(i, out IMyGps gps);
+        //                            list.Add(gps);
+
+        //                        }
+        //                    }
+        //                }
+
+        //                if (unsorted.Count > 0)
+        //                {
+
+        //                    list.AddList(unsorted);
+
+        //                }
+
+        //                return;
+        //            }
+        //        }
 
         //[PatchShim]
         //public static class MyStorePatch
@@ -301,7 +358,7 @@ namespace CrunchUtilities
         //                  //  DialogMessage m = new DialogMessage("Shop Error", "Selected amount exceeds tank capacity");
         //                   // ModCommunication.SendMessageTo(m, identity.Character.ControlSteamId);
         //                }
-                      
+
         //                Log.Info(totalGas);
         //                if (totalGas == 0)
         //                {
@@ -320,7 +377,7 @@ namespace CrunchUtilities
 
         //                       double cost = 0;
         //                      double filledAmount = 0f;
-                             
+
 
 
         //                        foreach (Sandbox.ModAPI.IMyGasTank tank in blockList2)
@@ -351,10 +408,10 @@ namespace CrunchUtilities
         //                                    //num = whats in tank
 
         //                                    //  Log.Info(num);
-                                          
+
         //                                    if ((double)newamount > num)
         //                                    {
-                                             
+
         //                                        DialogMessage m = new DialogMessage("Shop Error", "Selected amount exceeds tank capacity");
         //                                        ModCommunication.SendMessageTo(m, identity.Character.ControlSteamId);
         //                                        return false;
@@ -394,7 +451,7 @@ namespace CrunchUtilities
         //                                            }
         //                                        }
         //                                    }
-                                       
+
 
 
 
@@ -423,7 +480,7 @@ namespace CrunchUtilities
         //                    {
         //                        if (entity is MyCharacter character)
         //                        {
-                               
+
         //                            DialogMessage m = new DialogMessage("Shop Error", "Hydrogen credits must be bought to a cargo container of the target ship");
         //                            ModCommunication.SendMessageTo(m, identity.Character.ControlSteamId);
         //                        }
@@ -458,112 +515,123 @@ namespace CrunchUtilities
 
         private static Timer aTimer = new Timer();
 
-        public void test(IPlayer p)
-        {
-            if (file != null && file.SortGPSOnJoin)
-            {
-                if (p == null)
-                {
-                    return;
-                }
-                MyIdentity id = GetIdentityByNameOrId(p.SteamId.ToString());
-                if (id == null)
-                {
-                    return;
-                }
+        //public void test(IPlayer p)
+        //{
+        //    if (file != null && file.SortGPSOnJoin)
+        //    {
+            
+        //        if (p == null)
+        //        {
+        //            return;
+        //        }
+        //        MyIdentity id = GetIdentityByNameOrId(p.SteamId.ToString());
+        //        if (id == null)
+        //        {
+        //            return;
+        //        }
 
-                List<IMyGps> playergpsList = MyAPIGateway.Session?.GPS.GetGpsList(id.IdentityId);
-                bool hasSorting = false;
-                if (playergpsList == null)
-                {
-                    return;
-                }
-                foreach (IMyGps gps in playergpsList)
-                {
-                    if (gps.Name.StartsWith("#"))
-                    {
-                        hasSorting = true;
-                    }
-                }
-                if (hasSorting)
-                {
+        //        List<IMyGps> playergpsList = MyAPIGateway.Session?.GPS.GetGpsList(id.IdentityId);
+        //        bool hasSorting = false;
+        //        if (playergpsList == null)
+        //        {
+        //            return;
+        //        }
+        //        foreach (IMyGps gps in playergpsList)
+        //        {
+        //            if (gps != null && gps.Name != null && gps.Name.StartsWith("#"))
+        //            {
+        //                hasSorting = true;
+        //            }
+        //        }
+        //        if (hasSorting)
+        //        {
 
-                    Dictionary<int, IMyGps> someOrganisation = new Dictionary<int, IMyGps>();
-                    List<IMyGps> unsorted = new List<IMyGps>();
-                    int highest = 0;
-                    foreach (IMyGps gps in playergpsList)
-                    {
-                        if (gps.Name.StartsWith("#"))
-                        {
+        //            Dictionary<int, IMyGps> someOrganisation = new Dictionary<int, IMyGps>();
+        //            List<IMyGps> unsorted = new List<IMyGps>();
+        //            int highest = 0;
+                   
+        //            foreach (IMyGps gps in playergpsList)
+        //            {
+        //                if (gps != null && gps.Name != null && gps.Name.StartsWith("#"))
+        //                {
 
-                            String part1 = gps.Name.Split(' ')[0].Replace("#", "");
-                            if (int.TryParse(part1, out int result))
-                            {
-                                if (!someOrganisation.ContainsKey(result))
-                                {
-                                    if (result > highest)
-                                    {
-                                        highest = result;
-                                    }
-                                    someOrganisation.Add(result, gps);
-                                }
-                                else
-                                {
-                                    unsorted.Add(gps);
-                                }
-                            }
-                            else
-                            {
-                                unsorted.Add(gps);
-                            }
+        //                    String part1 = gps.Name.Split(' ')[0].Replace("#", "");
+        //                    if (int.TryParse(part1, out int result))
+        //                    {
+        //                        if (!someOrganisation.ContainsKey(result))
+        //                        {
+        //                            if (result > highest)
+        //                            {
+        //                                highest = result;
+        //                            }
+        //                            if (result <= 100)
+        //                            {
+        //                                someOrganisation.Add(result, gps);
+        //                            }
+        //                            else
+        //                            {
+        //                                unsorted.Add(gps);
+        //                            }
+        //                        }
+        //                        else
+        //                        {
+        //                            unsorted.Add(gps);
+        //                        }
+        //                    }
+        //                    else
+        //                    {
+        //                        unsorted.Add(gps);
+        //                    }
 
-                        }
-                        else
-                        {
-                            unsorted.Add(gps);
-                        }
+        //                }
+        //                else
+        //                {
+        //                    unsorted.Add(gps);
+        //                }
 
 
-                    }
+        //            }
 
-                    foreach (IMyGps g in playergpsList)
-                    {
-                        MyAPIGateway.Session?.GPS.RemoveGps(id.IdentityId, g);
-                    }
-                    MyGpsCollection gpsCollection = (MyGpsCollection)MyAPIGateway.Session?.GPS;
+        //            foreach (IMyGps g in playergpsList)
+        //            {
+        //                MyAPIGateway.Session?.GPS.RemoveGps(id.IdentityId, g);
+        //            }
+        //            MyGpsCollection gpsCollection = (MyGpsCollection)MyAPIGateway.Session?.GPS;
+                 
+        //            if (highest > 100)
+        //            {
+        //                highest = 100;
+        //            }
+        //            if (unsorted.Count > 0)
+        //            {
+        //                foreach (IMyGps gps in unsorted)
+        //                {
+        //                    MyGps gpsRef = gps as MyGps;
+        //                    long entityId = 0L;
+        //                    entityId = gpsRef.EntityId;
+        //                    gpsCollection.SendAddGps(id.IdentityId, ref gpsRef, entityId, false);
+        //                }
+        //            }
+        //            if (someOrganisation.Count > 0)
+        //            {
+        //                for (int i = highest; i > 0; i--)
+        //                {
+        //                    if (someOrganisation.ContainsKey(i))
+        //                    {
+        //                        someOrganisation.TryGetValue(i, out IMyGps gps);
+        //                        MyGps gpsRef = gps as MyGps;
+        //                        long entityId = 0L;
+        //                        entityId = gpsRef.EntityId;
+        //                        gpsCollection.SendAddGps(id.IdentityId, ref gpsRef, entityId, false);
 
-                    if (unsorted.Count > 0)
-                    {
-                        foreach (IMyGps gps in unsorted)
-                        {
-                            MyGps gpsRef = gps as MyGps;
-                            long entityId = 0L;
-                            entityId = gpsRef.EntityId;
-                            gpsCollection.SendAddGps(id.IdentityId, ref gpsRef, entityId, false);
-                        }
-                    }
-                    if (highest > 100)
-                    {
-                        highest = 100;
-                    }
-                    if (someOrganisation.Count > 0)
-                    {
-                        for (int i = highest; i > 0; i--)
-                        {
-                            if (someOrganisation.ContainsKey(i))
-                            {
-                                someOrganisation.TryGetValue(i, out IMyGps gps);
-                                MyGps gpsRef = gps as MyGps;
-                                long entityId = 0L;
-                                entityId = gpsRef.EntityId;
-                                gpsCollection.SendAddGps(id.IdentityId, ref gpsRef, entityId, false);
-
-                            }
-                        }
-                    }
-                }
-            }
-         }
+        //                    }
+        //                }
+        //            }
+              
+                 
+        //        }
+        //    }
+        // }
         public static ConfigFile LoadConfig()
         {
             FileUtils utils = new FileUtils();
@@ -683,8 +751,8 @@ namespace CrunchUtilities
 
                     if (!player.DisplayName.Equals(name))
                     {
-                        Log.Info("Updating name of : " + name + " from : " + player.DisplayName);
-                        player.Identity.SetDisplayName(MyMultiplayer.Static.GetMemberName(player.Id.SteamId));
+                      
+                      
                         identity.SetDisplayName(MyMultiplayer.Static.GetMemberName(player.Id.SteamId));
 
                     }
@@ -698,7 +766,8 @@ namespace CrunchUtilities
             if (newState == TorchSessionState.Loaded)
             {
                 derp = TorchSessionState.Loaded;
-                session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
+              //  session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
+      
             }
 
         }

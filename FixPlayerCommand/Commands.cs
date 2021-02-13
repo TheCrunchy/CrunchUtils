@@ -595,6 +595,30 @@ namespace CrunchUtilities
 
             }
         }
+        [Command("prediction", "remove the prediction shit")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void noprediction()
+        {
+
+            CrunchUtilitiesPlugin plugin = (CrunchUtilitiesPlugin)Context.Plugin;
+           
+            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+            if (gridWithSubGrids.Count > 0)
+            {
+
+                foreach (var item in gridWithSubGrids)
+                {
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                    {
+                        MyCubeGrid grid = groupNodes.NodeData;
+                        grid.ForceDisablePrediction = !grid.ForceDisablePrediction;
+                        Context.Respond("Prediction set to " + grid.ForceDisablePrediction);
+                    }
+                }
+
+
+            }
+        }
 
         [Command("convert", "Player command, Turn a ship and connected grids into a station")]
         [Permission(MyPromoteLevel.None)]
@@ -907,7 +931,109 @@ namespace CrunchUtilities
 
             }
         }
+        [Command("fac search", "shouldnt be required but keen wont add a search bar")]
+        [Permission(MyPromoteLevel.None)]
+        public void searchAllFactions(String name)
+        {
+            bool console = false;
+            if (Context.Player == null)
+            {
+                console = true;
+            }
+            int count = 0;
+            var sb = new StringBuilder();
+            foreach (KeyValuePair<long, MyFaction> facs in MySession.Static.Factions)
+            {
+                if (facs.Value != null && facs.Value.Name != null && facs.Value.Name.ToLower().Contains(name.ToLower()))
+                {
+                    count++;
+                    sb.Append("\n" + facs.Value.Name + " - [" + facs.Value.Tag + "]");
+                }
+            }
 
+         
+
+            if (!console)
+            {
+                DialogMessage m = new DialogMessage("Search for '" + name.ToLower() + "'", count + " Results", "For detailed information use !fac info TAG, the tag is the letters between the [] \n" +  sb.ToString());
+                ModCommunication.SendMessageTo(m, Context.Player.SteamUserId);
+
+            }
+            else
+            {
+                Context.Respond("Tags of online players", sb.ToString());
+            }
+
+        }
+        [Command("tags", "show players faction tags")]
+        [Permission(MyPromoteLevel.None)]
+        public void showFactionTags()
+        {
+            bool console = false;
+            if (Context.Player == null)
+            {
+                console = true;
+            }
+            Dictionary<String, String> tagsAndNames = new Dictionary<string, string>();
+            foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+            {
+                string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
+                MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(player.Id.SteamId.ToString());
+                if (FacUtils.GetPlayersFaction(player.Identity.IdentityId) != null)
+                {
+                    if (tagsAndNames.ContainsKey(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag))
+                    {
+                        tagsAndNames.TryGetValue(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, out String temp);
+                       
+
+                        if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
+                        {
+                            temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                        }
+                        else
+                        {
+                            if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
+                            {
+                                temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                            }
+
+                            else
+                            {
+                                temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                            }
+                        }
+                            tagsAndNames.Remove(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag);
+                            tagsAndNames.Add(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, temp);
+                    }
+                    else
+                    {
+                      String temp = "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                        tagsAndNames.Add(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, temp);
+                    }
+                }
+           
+              
+            }
+            var sb = new StringBuilder();
+
+
+            foreach (KeyValuePair<String, String> keys in tagsAndNames)
+                {
+                sb.Append("\nMembers of " + MySession.Static.Factions.TryGetFactionByTag(keys.Key).Name + " - [" + keys.Key + "]");
+                sb.Append(keys.Value);
+                }
+
+            if (!console)
+            {
+                DialogMessage m = new DialogMessage("Tags of online players", "", sb.ToString());
+                ModCommunication.SendMessageTo(m, Context.Player.SteamUserId);
+
+            }
+            else {
+                Context.Respond("Tags of online players", sb.ToString());
+            }
+           
+        }
         [Command("listids", "Lists players steam IDs")]
         [Permission(MyPromoteLevel.None)]
         public void listSteamIDs()
@@ -1561,6 +1687,12 @@ namespace CrunchUtilities
         }
 
         private static MethodInfo _factionChangeSuccessInfo = typeof(MyFactionCollection).GetMethod("FactionStateChangeSuccess", BindingFlags.NonPublic | BindingFlags.Static);
+        [Command("fac info", "display a factions description")]
+        [Permission(MyPromoteLevel.None)]
+        public void DisplayFactionInfo2(string tag, bool members = false)
+        {
+            DisplayFactionInfo(tag, members);
+        }
 
         [Command("facinfo", "display a factions description")]
         [Permission(MyPromoteLevel.None)]
@@ -1609,8 +1741,33 @@ namespace CrunchUtilities
                     }
 
                 }
+                string warstatus = "Relationship : ";
+                IMyFaction playerfac = FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId);
+                if (playerfac != null)
+                {
+                    if (MySession.Static.Factions.AreFactionsFriends(fac.FactionId, playerfac.FactionId))
+                    {
+                        warstatus += "Friends";
 
+                    }
+                    else
+                    {
+                        if (MySession.Static.Factions.AreFactionsNeutrals(fac.FactionId, playerfac.FactionId))
+                        {
+                            warstatus += "Neutral";
+                        }
+                        else
+                        {
+                            warstatus += "At War";
 
+                        }
+                    }
+                }
+                else
+                {
+                    warstatus += "Unknown";
+
+                }
                 var sb = new StringBuilder();
                 if (members)
                 {
@@ -1628,18 +1785,18 @@ namespace CrunchUtilities
                     }
                     if (!console)
                     {
-                        DialogMessage m = new DialogMessage("Faction Info", fac.Name, "\nTag: " + fac.Tag + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count + "\n" + sb.ToString());
+                        DialogMessage m = new DialogMessage("Faction Info", fac.Name, "\nTag: " + fac.Tag + "\n" + warstatus + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count + "\n" + sb.ToString());
                         ModCommunication.SendMessageTo(m, Context.Player.SteamUserId);
                     }
                     else
                     {
-                        Context.Respond("Name: " + fac.Name + "\nTag: " + fac.Tag + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count + "\n" + sb.ToString());
+                        Context.Respond("Name: " + fac.Name + "\nTag: " + fac.Tag + "\n" + warstatus + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count + "\n" + sb.ToString());
                     }
                     return;
                 }
                 else
                 {
-                    Context.Respond("\nName: " + fac.Name + "\nTag: " + fac.Tag + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count);
+                    Context.Respond("\nName: " + fac.Name + "\nTag: " + fac.Tag + "\n" + warstatus + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count);
 
                 }
             }
@@ -1770,16 +1927,17 @@ namespace CrunchUtilities
             if (playergpsList == null)
             {
 
-            
+
                 Context.Respond("You have no gps!");
-            return;
+                return;
             }
+         
             Dictionary<int, IMyGps> someOrganisation = new Dictionary<int, IMyGps>();
             List<IMyGps> unsorted = new List<IMyGps>();
             int highest = 0;
             foreach (IMyGps gps in playergpsList)
             {
-                if (gps.Name.StartsWith("#"))
+                if (gps != null && gps.Name != null && gps.Name.StartsWith("#"))
                 {
                  
                         String part1 = gps.Name.Split(' ')[0].Replace("#", "");
@@ -1791,7 +1949,13 @@ namespace CrunchUtilities
                             {
                                 highest = result;
                             }
+                            if (result <= 100) { 
                             someOrganisation.Add(result, gps);
+                            }
+                            else
+                            {
+                                unsorted.Add(gps);
+                            }
                         }
                         else
                         {
@@ -1821,10 +1985,9 @@ namespace CrunchUtilities
                 MyAPIGateway.Session?.GPS.RemoveGps(Context.Player.Identity.IdentityId, g);
             }
             MyGpsCollection gpsCollection = (MyGpsCollection)MyAPIGateway.Session?.GPS;
-          
             if (unsorted.Count > 0)
             {
-              foreach (IMyGps gps in unsorted)
+                foreach (IMyGps gps in unsorted)
                 {
                     MyGps gpsRef = gps as MyGps;
                     long entityId = 0L;
@@ -1832,10 +1995,12 @@ namespace CrunchUtilities
                     gpsCollection.SendAddGps(Context.Player.Identity.IdentityId, ref gpsRef, entityId, false);
                 }
             }
+           
             if (someOrganisation.Count > 0)
             {
                 for (int i = highest; i > 0; i--)
-                {
+                
+                    {
                     if (someOrganisation.ContainsKey(i))
                     {
                         someOrganisation.TryGetValue(i, out IMyGps gps);
@@ -1847,6 +2012,8 @@ namespace CrunchUtilities
                     }
                 }
             }
+    
+            
         }
 
         [Command("econ top", "block econ top")]
