@@ -726,7 +726,7 @@ namespace CrunchUtilities
 
                         sb.Append(grid.DisplayName + " : " + grid.BlocksPCU + ",");
                         totalPCU += grid.BlocksPCU;
-
+                        
 
 
                     }
@@ -931,6 +931,148 @@ namespace CrunchUtilities
 
             }
         }
+        //[Command("fixtradestations", "fuck fuck fuck")]
+        //[Permission(MyPromoteLevel.Admin)]
+        //public void fixAllStations()
+        //{
+        //    foreach (KeyValuePair<long, MyFaction> keyValuePair in MySession.Static.Factions)
+        //    {
+        //        foreach (MyStation myStation in keyValuePair.Value.Stations)
+        //        {
+        //            List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
+
+        //            BoundingSphereD sphere = new BoundingSphereD(myStation.Position, 500);
+        //            l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
+
+        //            List<VRage.Game.ModAPI.IMyCubeGrid> NPCGrids = new List<VRage.Game.ModAPI.IMyCubeGrid>();
+        //            foreach (IMyEntity e in l)
+        //            {
+        //                VRage.Game.ModAPI.IMyCubeGrid grid = (e as VRage.Game.ModAPI.IMyCubeGrid);
+
+        //                if (grid != null && FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3)
+        //                {
+        //                    var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+        //                    var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
+        //                    gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
+        //                    if (blockList.Count > 0)
+        //                    {
+        //                        NPCGrids.Add(grid);
+        //                    }
+        //                }
+        //            }
+        //            if (NPCGrids.Count > 1)
+        //            {
+        //                bool deleted = false;
+        //                foreach (VRage.Game.ModAPI.IMyCubeGrid grid in NPCGrids)
+        //                {
+        //                    if (FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3 && !deleted)
+        //                    {
+        //                        grid.Close();
+        //                        confirmations.Remove(Context.Player.Identity.IdentityId);
+        //                        Context.Respond("Deleting a grid.");
+        //                        deleted = true;
+        //                        break;
+
+
+        //                    }
+        //                }
+        //            }
+        //            else
+        //            {
+        //                Context.Respond("Cannot find a duplicate station.");
+        //            }
+        //        }
+        //    }
+
+        //}
+        [Command("worldpcu", "output the worlds pcu")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void worldpcu()
+        {
+            Context.Respond("Total world PCU : " + MySession.Static.TotalSessionPCU);
+            
+        }
+        [Command("fixstation", "fuck fuck fuck")]
+        [Permission(MyPromoteLevel.None)]
+        public void fixNearbyStations()
+        {
+            if (CrunchUtilitiesPlugin.file.FixTradeStation)
+            {
+             
+                List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
+
+                BoundingSphereD sphere = new BoundingSphereD(Context.Player.Character.PositionComp.GetPosition(), 500);
+                l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
+
+                List<VRage.Game.ModAPI.IMyCubeGrid> NPCGrids = new List<VRage.Game.ModAPI.IMyCubeGrid>();
+                foreach (IMyEntity e in l)
+                {
+                    VRage.Game.ModAPI.IMyCubeGrid grid = (e as VRage.Game.ModAPI.IMyCubeGrid);
+
+                    if (grid != null && FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3)
+                    {
+                        var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+                        var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
+                        gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
+                        if (blockList.Count > 0)
+                        {
+                            NPCGrids.Add(grid);
+                        }
+                    }
+                }
+                if (NPCGrids.Count > 1)
+                {
+                    foreach (VRage.Game.ModAPI.IMyCubeGrid grid in NPCGrids)
+                    {
+                        if (FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3)
+                        {
+
+                            if (confirmations.ContainsKey(Context.Player.Identity.IdentityId))
+                            {
+
+
+                                confirmations.TryGetValue(Context.Player.Identity.IdentityId, out long time);
+
+                                if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() <= time)
+                                {
+                            
+                                        grid.Close();
+                                        confirmations.Remove(Context.Player.Identity.IdentityId);
+                                    Context.Respond("Deleting a grid.");
+                                    
+                                    return;
+                                
+                                 
+                
+                                }
+                                else
+                                {
+                                    Context.Respond("Time ran out, use !fixstation again");
+                                    confirmations.Remove(Context.Player.IdentityId);
+                                }
+                            }
+                            else
+                            {
+                                long timeToAdd = (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + 20000);
+
+                                confirmations.Add(Context.Player.Identity.IdentityId, timeToAdd);
+                                Context.Respond("Ensure you have no grids connected to the station and use !fixstation again within 20 seconds.");
+                            }
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    Context.Respond("Cannot find a duplicate station.");
+                }
+            }
+            else
+            {
+                Context.Respond("Command not enabled.");
+            }
+        }
+
         [Command("fac search", "shouldnt be required but keen wont add a search bar")]
         [Permission(MyPromoteLevel.None)]
         public void searchAllFactions(String name)
@@ -948,6 +1090,14 @@ namespace CrunchUtilities
                 {
                     count++;
                     sb.Append("\n" + facs.Value.Name + " - [" + facs.Value.Tag + "]");
+                }
+                else
+                {
+                    if (facs.Value != null && facs.Value.Tag != null && facs.Value.Tag.ToLower().Contains(name.ToLower()))
+                    {
+                        count++;
+                        sb.Append("\n" + facs.Value.Name + " - [" + facs.Value.Tag + "]");
+                    }
                 }
             }
 
@@ -975,40 +1125,224 @@ namespace CrunchUtilities
                 console = true;
             }
             Dictionary<String, String> tagsAndNames = new Dictionary<string, string>();
+            Dictionary<String, String> friends = new Dictionary<string, string>();
+            Dictionary<String, String> neutrals = new Dictionary<string, string>();
+          
+            IMyFaction playerFac = null;
+            if (FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId) != null)
+            {
+              
+                playerFac = FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId);
+            }
             foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
             {
                 string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
                 MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(player.Id.SteamId.ToString());
                 if (FacUtils.GetPlayersFaction(player.Identity.IdentityId) != null)
                 {
-                    if (tagsAndNames.ContainsKey(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag))
+                    if (playerFac != null)
                     {
-                        tagsAndNames.TryGetValue(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, out String temp);
-                       
-
-                        if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
-                        {
-                            temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
-                        }
-                        else
-                        {
-                            if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
+                        if (MySession.Static.Factions.AreFactionsFriends(playerFac.FactionId, FacUtils.GetPlayersFaction(player.Identity.IdentityId).FactionId)){
+                            if (friends.ContainsKey(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag))
                             {
-                                temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
-                            }
+                                friends.TryGetValue(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, out String temp);
 
+
+                                if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
+                                {
+                                    temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                }
+                                else
+                                {
+                                    if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
+                                    {
+                                        temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    }
+
+                                    else
+                                    {
+                                        temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    }
+                                }
+                                friends.Remove(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag);
+                                friends.Add(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, temp);
+                            }
                             else
                             {
-                                temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                String temp = "";
+                                if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
+                                {
+                                    temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                }
+                                else
+                                {
+                                    if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
+                                    {
+                                        temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    }
+
+                                    else
+                                    {
+                                        temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    }
+                                }
+
+                                friends.Add(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, temp);
                             }
                         }
-                            tagsAndNames.Remove(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag);
-                            tagsAndNames.Add(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, temp);
+                        else {
+                            if (MySession.Static.Factions.AreFactionsEnemies(playerFac.FactionId, FacUtils.GetPlayersFaction(player.Identity.IdentityId).FactionId)){
+                                if (tagsAndNames.ContainsKey(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag))
+                                {
+                                    tagsAndNames.TryGetValue(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, out String temp);
+
+
+                                    if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
+                                    {
+                                        temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    }
+                                    else
+                                    {
+                                        if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
+                                        {
+                                            temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        }
+
+                                        else
+                                        {
+                                            temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        }
+                                    }
+                                    tagsAndNames.Remove(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag);
+                                    tagsAndNames.Add(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, temp);
+                                }
+                                else
+                                {
+                                    String temp = "";
+                                    if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
+                                    {
+                                        temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    }
+                                    else
+                                    {
+                                        if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
+                                        {
+                                            temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        }
+
+                                        else
+                                        {
+                                            temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        }
+                                    }
+
+                                    tagsAndNames.Add(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, temp);
+                                }
+                            }
+                            else
+                            {
+                                if (neutrals.ContainsKey(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag))
+                                {
+                                    neutrals.TryGetValue(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, out String temp);
+
+
+                                    if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
+                                    {
+                                        temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    }
+                                    else
+                                    {
+                                        if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
+                                        {
+                                            temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        }
+
+                                        else
+                                        {
+                                            temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        }
+                                    }
+                                    neutrals.Remove(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag);
+                                    neutrals.Add(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, temp);
+                                }
+                                else
+                                {
+                                    String temp = "";
+                                    if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
+                                    {
+                                        temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    }
+                                    else
+                                    {
+                                        if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
+                                        {
+                                            temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        }
+
+                                        else
+                                        {
+                                            temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        }
+                                    }
+
+                                    neutrals.Add(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, temp);
+                                }
+                            }
+                        }
+
+                       
+                       
                     }
                     else
                     {
-                      String temp = "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
-                        tagsAndNames.Add(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, temp);
+
+
+                        if (tagsAndNames.ContainsKey(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag))
+                        {
+                            tagsAndNames.TryGetValue(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, out String temp);
+
+
+                            if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
+                            {
+                                temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                            }
+                            else
+                            {
+                                if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
+                                {
+                                    temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                }
+
+                                else
+                                {
+                                    temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                }
+                            }
+                            tagsAndNames.Remove(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag);
+                            tagsAndNames.Add(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, temp);
+                        }
+                        else
+                        {
+                            String temp = "";
+                            if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
+                            {
+                                temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                            }
+                            else
+                            {
+                                if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
+                                {
+                                    temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                }
+
+                                else
+                                {
+                                    temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                }
+                            }
+
+                            tagsAndNames.Add(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag, temp);
+                        }
                     }
                 }
            
@@ -1016,13 +1350,26 @@ namespace CrunchUtilities
             }
             var sb = new StringBuilder();
 
-
+      
             foreach (KeyValuePair<String, String> keys in tagsAndNames)
                 {
-                sb.Append("\nMembers of " + MySession.Static.Factions.TryGetFactionByTag(keys.Key).Name + " - [" + keys.Key + "]");
+                sb.Append("\n At War");
                 sb.Append(keys.Value);
+               
                 }
 
+            foreach (KeyValuePair<String, String> keys in friends)
+            {
+                sb.Append("\n Friends");
+                sb.Append(keys.Value);
+              
+            }
+            foreach (KeyValuePair<String, String> keys in neutrals)
+            {
+                sb.Append("\n Neutral");
+                sb.Append(keys.Value);
+
+            }
             if (!console)
             {
                 DialogMessage m = new DialogMessage("Tags of online players", "", sb.ToString());
@@ -1985,6 +2332,7 @@ namespace CrunchUtilities
                 MyAPIGateway.Session?.GPS.RemoveGps(Context.Player.Identity.IdentityId, g);
             }
             MyGpsCollection gpsCollection = (MyGpsCollection)MyAPIGateway.Session?.GPS;
+            
             if (unsorted.Count > 0)
             {
                 foreach (IMyGps gps in unsorted)
