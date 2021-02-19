@@ -9,6 +9,7 @@ namespace CrunchUtilities
 {
     public class ConfigFile : ViewModel
     {
+        public bool projectorPatch = false;
         public bool FixTradeStation = false;
         public bool SortGPSOnJoin = true;
         public bool PlayerMakeShip = false;

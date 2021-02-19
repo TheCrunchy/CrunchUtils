@@ -588,6 +588,8 @@ namespace CrunchUtilities
                     {
                         MyCubeGrid grid = groupNodes.NodeData;
                         grid.IsRespawnGrid = false;
+
+                      
                         Context.Respond("Ship wont get deleted by Keen. Try not to die.");
                     }
                 }
@@ -1128,20 +1130,21 @@ namespace CrunchUtilities
             Dictionary<String, String> friends = new Dictionary<string, string>();
             Dictionary<String, String> neutrals = new Dictionary<string, string>();
           
-            IMyFaction playerFac = null;
-            if (FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId) != null)
-            {
-              
-                playerFac = FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId);
-            }
+      
             foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
             {
                 string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
                 MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(player.Id.SteamId.ToString());
                 if (FacUtils.GetPlayersFaction(player.Identity.IdentityId) != null)
                 {
-                    if (playerFac != null)
+                    if (!console)
                     {
+                        IMyFaction playerFac = null;
+                        if (FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId) != null)
+                        {
+
+                            playerFac = FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId);
+                        }
                         if (MySession.Static.Factions.AreFactionsFriends(playerFac.FactionId, FacUtils.GetPlayersFaction(player.Identity.IdentityId).FactionId)){
                             if (friends.ContainsKey(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag))
                             {
@@ -1150,18 +1153,18 @@ namespace CrunchUtilities
 
                                 if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
                                 {
-                                    temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Founder)";
                                 }
                                 else
                                 {
                                     if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
                                     {
-                                        temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Leader)";
                                     }
 
                                     else
                                     {
-                                        temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName;
                                     }
                                 }
                                 friends.Remove(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag);
@@ -1172,18 +1175,18 @@ namespace CrunchUtilities
                                 String temp = "";
                                 if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
                                 {
-                                    temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Founder)";
                                 }
                                 else
                                 {
                                     if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
                                     {
-                                        temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Leader)";
                                     }
 
                                     else
                                     {
-                                        temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName;
                                     }
                                 }
 
@@ -1199,18 +1202,18 @@ namespace CrunchUtilities
 
                                     if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
                                     {
-                                        temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Founder)";
                                     }
                                     else
                                     {
                                         if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
                                         {
-                                            temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                            temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Leader)";
                                         }
 
                                         else
                                         {
-                                            temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                            temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName;
                                         }
                                     }
                                     tagsAndNames.Remove(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag);
@@ -1221,18 +1224,18 @@ namespace CrunchUtilities
                                     String temp = "";
                                     if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
                                     {
-                                        temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Founder)";
                                     }
                                     else
                                     {
                                         if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
                                         {
-                                            temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                            temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Leader)";
                                         }
 
                                         else
                                         {
-                                            temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                            temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName;
                                         }
                                     }
 
@@ -1248,18 +1251,18 @@ namespace CrunchUtilities
 
                                     if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
                                     {
-                                        temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Founder)";
                                     }
                                     else
                                     {
                                         if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
                                         {
-                                            temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                            temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Leader)";
                                         }
 
                                         else
                                         {
-                                            temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                            temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName;
                                         }
                                     }
                                     neutrals.Remove(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag);
@@ -1270,18 +1273,18 @@ namespace CrunchUtilities
                                     String temp = "";
                                     if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
                                     {
-                                        temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                        temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Founder)";
                                     }
                                     else
                                     {
                                         if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
                                         {
-                                            temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                            temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Leader)";
                                         }
 
                                         else
                                         {
-                                            temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                            temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName;
                                         }
                                     }
 
@@ -1304,18 +1307,18 @@ namespace CrunchUtilities
 
                             if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
                             {
-                                temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Founder)";
                             }
                             else
                             {
                                 if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
                                 {
-                                    temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Leader)";
                                 }
 
                                 else
                                 {
-                                    temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName;
                                 }
                             }
                             tagsAndNames.Remove(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag);
@@ -1326,18 +1329,18 @@ namespace CrunchUtilities
                             String temp = "";
                             if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsFounder(player.Identity.IdentityId))
                             {
-                                temp += "\n " + player.DisplayName + " (Founder) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Founder)";
                             }
                             else
                             {
                                 if (FacUtils.GetPlayersFaction(player.Identity.IdentityId).IsLeader(player.Identity.IdentityId))
                                 {
-                                    temp += "\n " + player.DisplayName + " (Leader) - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName + " (Leader)";
                                 }
 
                                 else
                                 {
-                                    temp += "\n " + player.DisplayName + " - [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "]";
+                                    temp += "\n [" + FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag + "] - " + player.DisplayName;
                                 }
                             }
 
@@ -1350,23 +1353,26 @@ namespace CrunchUtilities
             }
             var sb = new StringBuilder();
 
-      
+            sb.Append("\n At War");
             foreach (KeyValuePair<String, String> keys in tagsAndNames)
                 {
-                sb.Append("\n At War");
+            
                 sb.Append(keys.Value);
                
                 }
-
+            sb.Append("\n ");
+            sb.Append("\n Friends");
             foreach (KeyValuePair<String, String> keys in friends)
             {
-                sb.Append("\n Friends");
+            
                 sb.Append(keys.Value);
               
             }
+            sb.Append("\n ");
+            sb.Append("\n Neutral");
             foreach (KeyValuePair<String, String> keys in neutrals)
             {
-                sb.Append("\n Neutral");
+              
                 sb.Append(keys.Value);
 
             }
@@ -2045,6 +2051,8 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.None)]
         public void DisplayFactionInfo(string tag, bool members = false)
         {
+           
+            
             if (CrunchUtilitiesPlugin.file.facInfo)
             {
                 bool console = false;
@@ -2089,25 +2097,31 @@ namespace CrunchUtilities
 
                 }
                 string warstatus = "Relationship : ";
+                if (Context.Player != null) { 
                 IMyFaction playerfac = FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId);
-                if (playerfac != null)
-                {
-                    if (MySession.Static.Factions.AreFactionsFriends(fac.FactionId, playerfac.FactionId))
+                    if (playerfac != null)
                     {
-                        warstatus += "Friends";
-
-                    }
-                    else
-                    {
-                        if (MySession.Static.Factions.AreFactionsNeutrals(fac.FactionId, playerfac.FactionId))
+                        if (MySession.Static.Factions.AreFactionsFriends(fac.FactionId, playerfac.FactionId))
                         {
-                            warstatus += "Neutral";
+                            warstatus += "Friends";
+
                         }
                         else
                         {
-                            warstatus += "At War";
+                            if (MySession.Static.Factions.AreFactionsNeutrals(fac.FactionId, playerfac.FactionId))
+                            {
+                                warstatus += "Neutral";
+                            }
+                            else
+                            {
+                                warstatus += "At War";
 
+                            }
                         }
+                    }
+                    else
+                    {
+                        warstatus += "At War";
                     }
                 }
                 else
@@ -2125,7 +2139,22 @@ namespace CrunchUtilities
                         MyIdentity test = MySession.Static.Players.TryGetIdentity(m.Key);
                         if (test != null && test.DisplayName != null)
                         {
-                            sb.Append("\n" + test.DisplayName);
+                            if (FacUtils.GetPlayersFaction(test.IdentityId).IsFounder(test.IdentityId))
+                            {
+                                sb.Append("\n " + test.DisplayName + " (Founder)");
+                            }
+                            else
+                            {
+                                if (FacUtils.GetPlayersFaction(test.IdentityId).IsLeader(test.IdentityId))
+                                {
+                                    sb.Append("\n " + test.DisplayName + " (Leader)");
+                                }
+
+                                else
+                                {
+                                    sb.Append("\n " + test.DisplayName);
+                                }
+                            }
 
 
                         }
@@ -3405,7 +3434,7 @@ namespace CrunchUtilities
                             foreach (var powerProducer in PowerProducers)
                             {
                                 power += powerProducer.CurrentOutput;
-
+                               
                             }
                         }
                         if (b.IsFunctional && power > 0f)
