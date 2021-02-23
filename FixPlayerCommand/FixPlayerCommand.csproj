@@ -134,6 +134,7 @@
   <ItemGroup>
     <Compile Include="Commands.cs" />
     <Compile Include="ConfigFile.cs" />
+    <Compile Include="CubeGridPatch.cs" />
     <Compile Include="CurrentCooldown.cs" />
     <Compile Include="EconUtils.cs" />
     <Compile Include="FacUtils.cs" />

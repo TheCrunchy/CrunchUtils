@@ -43,6 +43,7 @@ using Sandbox.Common.ObjectBuilders;
 using VRage.ObjectBuilders;
 using Sandbox.Game.Entities.Blocks;
 using System.IO;
+using VRage.Network;
 
 namespace CrunchUtilities
 {
@@ -994,6 +995,139 @@ namespace CrunchUtilities
             Context.Respond("Total world PCU : " + MySession.Static.TotalSessionPCU);
             
         }
+        [Command("isthisasteroid", "fuck fuck fuck")]
+        [Permission(MyPromoteLevel.None)]
+        public void DoAsteroidStuff()
+        {
+           
+                List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
+
+                BoundingSphereD sphere = new BoundingSphereD(Context.Player.Character.PositionComp.GetPosition(), 500);
+                l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
+
+            
+                foreach (IMyEntity e in l)
+                {
+                
+                CrunchUtilitiesPlugin.Log.Info(e.GetType().ToString());
+                }
+              
+        }
+
+        [Command("zone", "edit safezone whitelist or blacklist")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void editZone(string addOrRemove, string playerOrFac, string nameOrTag)
+        {
+      
+         //   if (!whiteOrBlack.ToLower().Contains("white") && !whiteOrBlack.ToLower().Contains("black"))
+          //  {
+            //    Context.Respond("Couldnt read input! Use whitelist or blacklist");
+           //     return;
+          //  }
+            if (!addOrRemove.ToLower().Contains("add") && !addOrRemove.ToLower().Contains("remove"))
+            {
+                Context.Respond("Couldnt read input! Use add or remove");
+                return;
+            }
+            if (!playerOrFac.ToLower().Contains("player") && !playerOrFac.ToLower().Contains("fac"))
+            {
+                Context.Respond("Couldnt read input! Use player or fac");
+                return;
+            }
+            bool isAdding = false;
+            if (addOrRemove.ToLower().Contains("add"))
+            {
+                isAdding = true;
+            }
+            BoundingSphereD sphere = new BoundingSphereD(Context.Player.Character.PositionComp.GetPosition(), 500);
+            List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
+            l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
+            MySafeZone zone = null;
+           
+            foreach (IMyEntity e in l)
+            {
+                if (e is MySafeZone z)
+                {
+                    zone = z;
+                    // CrunchUtilitiesPlugin.Log.Info("Zone");
+                    break;
+                }
+            }
+            if (zone == null)
+            {
+                Context.Respond("Cannot find a safezone, are you in one?");
+                return;
+            }
+            List<long> players = zone.Players;
+     
+            List<MyFaction> factions = zone.Factions;
+            
+            switch (playerOrFac.ToLower())
+            {
+                case "player":
+                    MyIdentity player = CrunchUtilitiesPlugin.GetIdentityByNameOrId(nameOrTag);
+                    if (player == null)
+                    {
+                        Context.Respond("Cant find that player :(");
+                        return;
+                    }
+                    if (isAdding)
+                    {
+                        if (players.Contains(player.IdentityId))
+                        {
+                            players.Remove(player.IdentityId);
+                        }
+        
+                      
+                        players.Add(player.IdentityId);
+                        Context.Respond("Added");
+                    }
+                    else
+                    {
+                        players.Remove(player.IdentityId);
+                        Context.Respond("Removed");
+                    }
+                 
+                    zone.Players = players;
+                    MySessionComponentSafeZones.UpdateSafeZone((MyObjectBuilder_SafeZone) zone.GetObjectBuilder(), true);
+                  
+
+                    break;
+                case "fac":
+                    MyFaction faction = MySession.Static.Factions.TryGetFactionByTag(nameOrTag);
+                    if (faction == null)
+                    {
+                        Context.Respond("Cant find that faction :(");
+                        return;
+                    }
+                    if (isAdding)
+                    {
+                      
+                        if (factions.Contains(faction))
+                        {
+                            factions.Remove(faction);
+                        }
+                        factions.Add(faction);
+                        Context.Respond("Added");
+                    }
+                    else
+                    {
+                        if (factions.Contains(faction))
+                        {
+                            factions.Remove(faction);
+                        }
+                        Context.Respond("Removed");
+                    }
+                   
+                    zone.Factions = factions;
+                    MySessionComponentSafeZones.UpdateSafeZone((MyObjectBuilder_SafeZone)zone.GetObjectBuilder(), true);
+
+                    break;
+            }
+        }
+
+
+
         [Command("fixstation", "fuck fuck fuck")]
         [Permission(MyPromoteLevel.None)]
         public void fixNearbyStations()
@@ -1005,8 +1139,19 @@ namespace CrunchUtilities
 
                 BoundingSphereD sphere = new BoundingSphereD(Context.Player.Character.PositionComp.GetPosition(), 500);
                 l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
-
+                MySafeZone zone = null;
                 List<VRage.Game.ModAPI.IMyCubeGrid> NPCGrids = new List<VRage.Game.ModAPI.IMyCubeGrid>();
+                List<VRage.Game.ModAPI.IMyCubeGrid> GridsOutsideZone = new List<VRage.Game.ModAPI.IMyCubeGrid>();
+                foreach (IMyEntity e in l)
+                {
+                    if (e is MySafeZone z)
+                    {
+                        zone = z;
+                       // CrunchUtilitiesPlugin.Log.Info("Zone");
+                        break;
+                    }
+                }
+                
                 foreach (IMyEntity e in l)
                 {
                     VRage.Game.ModAPI.IMyCubeGrid grid = (e as VRage.Game.ModAPI.IMyCubeGrid);
@@ -1016,59 +1161,92 @@ namespace CrunchUtilities
                         var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
                         var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
                         gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
-                        if (blockList.Count > 0)
-                        {
-                            NPCGrids.Add(grid);
-                        }
+        
+                            if (blockList.Count > 0)
+                            {
+                                NPCGrids.Add(grid);
+                            
+                            }
+                        
                     }
                 }
-                if (NPCGrids.Count > 1)
+                    if (zone == null)
                 {
                     foreach (VRage.Game.ModAPI.IMyCubeGrid grid in NPCGrids)
                     {
-                        if (FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3)
+                        grid.Close();
+                    }
+                    Context.Respond("Deleted all of them.");
+                    return;
+                }
+                VRage.Game.ModAPI.IMyCubeGrid original = null;
+        
+                foreach (VRage.Game.ModAPI.IMyCubeGrid grid in NPCGrids)
+                {
+
+                    if (MySession.Static.Factions.GetStationByGridId(grid.EntityId) != null && grid.PositionComp.GetPosition() == zone.PositionComp.GetPosition())
+                    {
+                        CrunchUtilitiesPlugin.Log.Info("Found the original");
+                        original = grid;
+                    }
+                }
+                if (original == null)
+                {
+                    Context.Respond("Cant find the original station, report in discord.");
+                    return;
+                }
+                String deletedGrids = "";
+                NPCGrids.Remove(original);
+                if (NPCGrids.Count > 0)
+                {
+                    if (confirmations.ContainsKey(Context.Player.Identity.IdentityId))
+                    {
+
+
+                        confirmations.TryGetValue(Context.Player.Identity.IdentityId, out long time);
+
+                        if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() <= time)
                         {
-
-                            if (confirmations.ContainsKey(Context.Player.Identity.IdentityId))
+                            foreach (VRage.Game.ModAPI.IMyCubeGrid grid in NPCGrids)
                             {
-
-
-                                confirmations.TryGetValue(Context.Player.Identity.IdentityId, out long time);
-
-                                if (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() <= time)
+                                if (FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3)
                                 {
-                            
-                                        grid.Close();
-                                        confirmations.Remove(Context.Player.Identity.IdentityId);
+
+
+
+
+
+                                    grid.Close();
+
+                                    confirmations.Remove(Context.Player.Identity.IdentityId);
+                                    deletedGrids += grid.DisplayName + " ";
                                     Context.Respond("Deleting a grid.");
-                                    
-                                    return;
-                                
-                                 
-                
-                                }
-                                else
-                                {
-                                    Context.Respond("Time ran out, use !fixstation again");
-                                    confirmations.Remove(Context.Player.IdentityId);
-                                }
-                            }
-                            else
-                            {
-                                long timeToAdd = (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + 20000);
 
-                                confirmations.Add(Context.Player.Identity.IdentityId, timeToAdd);
-                                Context.Respond("Ensure you have no grids connected to the station and use !fixstation again within 20 seconds.");
+                                }
                             }
-                            return;
+
                         }
+                        else
+                        {
+                            Context.Respond("Time ran out, use !fixstation again");
+                            confirmations.Remove(Context.Player.IdentityId);
+                        }
+                    }
+                    else
+                    {
+                        long timeToAdd = (DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() + 20000);
+
+                        confirmations.Add(Context.Player.Identity.IdentityId, timeToAdd);
+                        Context.Respond("Ensure you have no grids connected to the station and use !fixstation again within 20 seconds.");
                     }
                 }
                 else
                 {
                     Context.Respond("Cannot find a duplicate station.");
                 }
+                CrunchUtilitiesPlugin.Log.Info("Deleted these grids in !fixstation " + deletedGrids);
             }
+          
             else
             {
                 Context.Respond("Command not enabled.");
@@ -1779,44 +1957,7 @@ namespace CrunchUtilities
 
         }
 
-        //[Command("createzone", "")]
-        //[Permission(MyPromoteLevel.Admin)]
-        //public void createzone(string safezonename, string tag, bool whitelist = true)
-        //{
-        //        if (Context.Player == null)
-        //        {
-        //        Context.Respond("No console");
-        //        return;
-        //        }
-        //        IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
-        //        if (fac == null)
-        //        {
-        //        Context.Respond("Cant find faction");
-        //        return;
 
-
-        //        }
-        //    long[] factions = new long[1];
-        //    factions.SetValue(fac.FactionId, 0);
-        //    Vector3D Position = Context.Player.GetPosition();
-        //    MyObjectBuilder_SafeZone objectBuilderSafeZone = new MyObjectBuilder_SafeZone();
-        //    objectBuilderSafeZone.PositionAndOrientation = new MyPositionAndOrientation?(new MyPositionAndOrientation(Position, Vector3.Forward, Vector3.Up));
-        //    objectBuilderSafeZone.PersistentFlags = MyPersistentEntityFlags2.InScene;
-        //    objectBuilderSafeZone.Shape = MySafeZoneShape.Sphere;
-        //    objectBuilderSafeZone.Radius = (float) 1000;
-        //    objectBuilderSafeZone.Enabled = true;
-        //    objectBuilderSafeZone.DisplayName = string.Format("A Safezone", (object)Position);
-        //    objectBuilderSafeZone.AccessTypeGrids = MySafeZoneAccess.Blacklist;
-        //    objectBuilderSafeZone.AccessTypeFloatingObjects = MySafeZoneAccess.Blacklist;
-        //    objectBuilderSafeZone.AccessTypeFactions = MySafeZoneAccess.Whitelist;
-        //    objectBuilderSafeZone.AccessTypePlayers = MySafeZoneAccess.Blacklist;
-        //    objectBuilderSafeZone.Factions = factions;
-        //    Sandbox.Game.Entities.MyEntities.CreateFromObjectBuilderAndAdd((MyObjectBuilder_EntityBase)objectBuilderSafeZone, true);
-
-
-
-
-        //}
 
         [Command("nofriendforyou", "make a faction declare war on everyone")]
         [Permission(MyPromoteLevel.Admin)]
@@ -2217,7 +2358,7 @@ namespace CrunchUtilities
                     else
                     {
                         foreach (VRage.Game.ModAPI.IMySlimBlock block in grid.GetBlocks())
-
+                         
                         {
                             if (block != null && block.BlockDefinition.Id.SubtypeName.Contains("Container"))
                             {

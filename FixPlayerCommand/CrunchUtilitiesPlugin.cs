@@ -40,11 +40,19 @@ using SpaceEngineers.Game.Entities.Blocks;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.Screens.Helpers;
 using Sandbox.Graphics.GUI;
+using VRage.Network;
+using Sandbox.ModAPI.Weapons;
 
 namespace CrunchUtilities
 {
+
+
     public class CrunchUtilitiesPlugin : TorchPluginBase
     {
+        public static Dictionary<long, long> moneyToPay = new Dictionary<long, long>();
+
+
+
         [PatchShim]
         public static class ProjectorPatch
         {
@@ -74,15 +82,15 @@ namespace CrunchUtilities
                 ctx.GetPattern(remove).Prefixes.Add(removePatch);
                 Log.Info("Patching Successful Crunch Projector!");
             }
-         
+
             public static void TestPatchMethod(MyProjectorBase __instance)
             {
                 if (file == null)
                 {
-                    
+
                     return;
                 }
-               if (!file.projectorPatch)
+                if (!file.projectorPatch)
                 {
                     return;
                 }
@@ -103,9 +111,9 @@ namespace CrunchUtilities
                     MyCubeGrid grid = __instance.CubeGrid;
                     //Log.Info("Removing? " + grid.BlocksPCU);
                     grid.BlocksPCU -= count;
-                   // Log.Info("Removing? " + grid.BlocksPCU);
+                    // Log.Info("Removing? " + grid.BlocksPCU);
                 }
-            
+
 
             }
             public static void removeM(MyProjectorBase __instance)
@@ -129,15 +137,15 @@ namespace CrunchUtilities
                     }
                     foreach (MyCubeGrid griid in grids2)
                     {
-                    
+
                         count += griid.CubeBlocks.Count;
-                      //  Log.Info("count " + count);
+                        //  Log.Info("count " + count);
                     }
-                   // Log.Info("count " + count);
+                    // Log.Info("count " + count);
                     MyCubeGrid grid = __instance.CubeGrid;
-                  //  Log.Info("Adding? " + grid.BlocksPCU);
+                    //  Log.Info("Adding? " + grid.BlocksPCU);
                     grid.BlocksPCU += count;
-                 //   Log.Info("Adding? " + grid.BlocksPCU);
+                    //   Log.Info("Adding? " + grid.BlocksPCU);
 
                 }
 
@@ -189,12 +197,12 @@ namespace CrunchUtilities
                     if (__instance.OutputInventory.Owner.GetBaseEntity() is MyShipDrill)
                     {
                         MyShipDrill drill = __instance.OutputInventory.Owner.GetBaseEntity() as MyShipDrill;
-                  
+
                         if (drill == null)
                         {
                             return true;
                         }
-                 
+
                         //     BoundingSphereD sphere = new BoundingSphereD(hitPosition, 400);
                         //    l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
                         //  foreach (IMyEntity e in l)
@@ -619,7 +627,7 @@ namespace CrunchUtilities
         //{
         //    if (file != null && file.SortGPSOnJoin)
         //    {
-            
+
         //        if (p == null)
         //        {
         //            return;
@@ -649,7 +657,7 @@ namespace CrunchUtilities
         //            Dictionary<int, IMyGps> someOrganisation = new Dictionary<int, IMyGps>();
         //            List<IMyGps> unsorted = new List<IMyGps>();
         //            int highest = 0;
-                   
+
         //            foreach (IMyGps gps in playergpsList)
         //            {
         //                if (gps != null && gps.Name != null && gps.Name.StartsWith("#"))
@@ -697,7 +705,7 @@ namespace CrunchUtilities
         //                MyAPIGateway.Session?.GPS.RemoveGps(id.IdentityId, g);
         //            }
         //            MyGpsCollection gpsCollection = (MyGpsCollection)MyAPIGateway.Session?.GPS;
-                 
+
         //            if (highest > 100)
         //            {
         //                highest = 100;
@@ -727,11 +735,118 @@ namespace CrunchUtilities
         //                    }
         //                }
         //            }
-              
-                 
+
+
         //        }
         //    }
         // }
+
+        public static Dictionary<long, long> attackers = new Dictionary<long, long>();
+        private void DamageCheck(object target, ref MyDamageInformation info)
+        {
+           
+            try
+            {
+
+                if (!(target is MySlimBlock block))
+                    return;
+
+                MyCubeBlock cubeBlock = block.FatBlock;
+
+                if (cubeBlock == null)
+                    return;
+
+                if (cubeBlock as MyTerminalBlock == null)
+                    return;
+
+                if (cubeBlock.EntityId == 0L)
+                    return;
+
+                if (GetAttacker(info.AttackerId) > 0L)
+                {
+                    attackers.Remove(cubeBlock.EntityId);
+                   attackers.Add(cubeBlock.EntityId, GetAttacker(info.AttackerId));
+                }
+                else
+                {
+                    return;
+                }
+              
+
+
+                } catch (Exception e) {
+                Log.Error(e, "Error on Checking Damage!");
+            }
+        }
+        public long GetAttacker(long attackerId)
+        {
+
+            var entity = MyAPIGateway.Entities.GetEntityById(attackerId);
+
+            if (entity == null)
+                return 0L;
+
+            if (entity is MyPlanet)
+            {
+
+                return 0L;
+            }
+
+            if (entity is MyCharacter character)
+            {
+
+                  return character.GetPlayerIdentityId();
+            }
+
+            if (entity is IMyEngineerToolBase toolbase)
+            {
+
+                      return toolbase.OwnerIdentityId;
+              
+            }
+
+            if (entity is MyLargeTurretBase turret)
+            {
+
+                return turret.OwnerId;
+
+            }
+
+            if (entity is MyShipToolBase shipTool)
+            {
+
+                return shipTool.OwnerId;
+            }
+
+            if (entity is IMyGunBaseUser gunUser)
+            {
+
+                return gunUser.OwnerId;
+
+            }
+
+       
+
+            if (entity is MyCubeGrid grid)
+            {
+
+                var gridOwnerList = grid.BigOwners;
+                var ownerCnt = gridOwnerList.Count;
+                var gridOwner = 0L;
+
+                if (ownerCnt > 0 && gridOwnerList[0] != 0)
+                    gridOwner = gridOwnerList[0];
+                else if (ownerCnt > 1)
+                    gridOwner = gridOwnerList[1];
+
+                return gridOwner;
+     
+            }
+
+            return 0L;
+        }
+
+ 
         public static ConfigFile LoadConfig()
         {
             FileUtils utils = new FileUtils();
@@ -866,8 +981,8 @@ namespace CrunchUtilities
             if (newState == TorchSessionState.Loaded)
             {
                 derp = TorchSessionState.Loaded;
-              //  session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
-      
+                //  session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
+               // MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
             }
 
         }
