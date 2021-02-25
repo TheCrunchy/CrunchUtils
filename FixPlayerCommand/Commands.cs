@@ -1011,9 +1011,97 @@ namespace CrunchUtilities
                 
                 CrunchUtilitiesPlugin.Log.Info(e.GetType().ToString());
                 }
-              
+
+        }
+        [Command("testingstore", "testing store stuff")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void insertOffer(int amount, int priceper, string subtype, string itemtype)
+        {
+            Context.Respond("1");
+            MyStoreBlock store = null;
+            itemtype = "MyObjectBuilder_" + itemtype;
+            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+            Context.Respond("2");
+            if (gridWithSubGrids.Count > 0)
+            {
+                Context.Respond("3");
+                foreach (var itemd in gridWithSubGrids)
+                {
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in itemd.Nodes)
+                    {
+                        MyCubeGrid grid = groupNodes.NodeData;
+                        var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+                        var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
+                        gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
+
+                        foreach (Sandbox.ModAPI.IMyStoreBlock s in blockList)
+                        {
+                            store = s as MyStoreBlock;
+                        }
+                    }
+                }
+            }
+            Context.Respond("4");
+            MyDefinitionId.TryParse(itemtype, subtype, out MyDefinitionId id);
+                if (id.ToString().Contains("null"))
+                {
+                    Context.Respond("Invalid item, try Ammo, Ore, Ingot, Component, PhysicalGunObject, PhysicalItem");
+                    return;
+                }
+            Context.Respond("5");
+            if (store == null)
+                {
+                    Context.Respond("No store");
+                    return;
+                }
+            Context.Respond("6");
+            SerializableDefinitionId itemId = new SerializableDefinitionId(id.TypeId, subtype);
+            
+            Context.Respond("7");
+            Context.Respond(itemId.SubtypeName);
+            MyStoreItemData item = new MyStoreItemData(itemId, amount, priceper, null, null);
+           
+            Context.Respond("8");
+           MyStoreInsertResults result = store.InsertOffer(item, out long newid);
+            Context.Respond(result.ToString());
+            Context.Respond(newid + "");
+            Context.Respond("9");
         }
 
+        private static Int64 priceWorth(MyDefinitionId id)
+        {
+            MyBlueprintDefinitionBase bpDef = MyDefinitionManager.Static.TryGetBlueprintDefinitionByResultId(id);
+            int p = 0;
+            float price = 0;
+            MyDefinitionManager.Static.TryGetComponentDefinition(id, out MyComponentDefinition component);
+            //calculate by the minimal price per unit for modded components, vanilla is aids
+        
+            if (component != null && component.MinimalPricePerUnit > 1)
+            {
+                Int64 amn = Math.Abs(component.MinimalPricePerUnit);
+                price = price + amn;
+            }
+            //if keen didnt give the fucker a minimal price calculate by the ores that make up the ingots, because fuck having an integer for an economy right?
+            else
+            {
+                for (p = 0; p < bpDef.Prerequisites.Length; p++)
+                {
+                    if (bpDef.Prerequisites[p].Id != null)
+                    {
+                        MyDefinitionBase oreDef = MyDefinitionManager.Static.GetDefinition(bpDef.Prerequisites[p].Id);
+                        if (oreDef != null)
+                        {
+                            MyPhysicalItemDefinition ore = oreDef as MyPhysicalItemDefinition;
+                            float amn = Math.Abs(ore.MinimalPricePerUnit);
+                            float count = (float)bpDef.Prerequisites[p].Amount;
+                            amn = (float)Math.Round(amn * count * 3);
+                            price = price + amn;
+                        }
+                    }
+                }
+            }
+            return Convert.ToInt64(price);
+        }
         [Command("zone", "edit safezone whitelist or blacklist")]
         [Permission(MyPromoteLevel.Admin)]
         public void editZone(string addOrRemove, string playerOrFac, string nameOrTag)
@@ -1064,6 +1152,10 @@ namespace CrunchUtilities
             
             switch (playerOrFac.ToLower())
             {
+
+
+      
+                    
                 case "player":
                     MyIdentity player = CrunchUtilitiesPlugin.GetIdentityByNameOrId(nameOrTag);
                     if (player == null)

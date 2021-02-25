@@ -9,6 +9,7 @@ namespace CrunchUtilities
 {
     public class ConfigFile : ViewModel
     {
+        public bool ScrapMetalPatch = false;
         public bool projectorPatch = false;
         public bool FixTradeStation = false;
         public bool SortGPSOnJoin = true;
