@@ -934,60 +934,58 @@ namespace CrunchUtilities
 
             }
         }
-        //[Command("fixtradestations", "fuck fuck fuck")]
-        //[Permission(MyPromoteLevel.Admin)]
-        //public void fixAllStations()
-        //{
-        //    foreach (KeyValuePair<long, MyFaction> keyValuePair in MySession.Static.Factions)
-        //    {
-        //        foreach (MyStation myStation in keyValuePair.Value.Stations)
-        //        {
-        //            List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
+        [Command("fixallstations", "fuck fuck fuck")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void fixAllStations()
+        {
+         //loop through every factions trade stations to check for duplicates
+            foreach (KeyValuePair<long, MyFaction> keyValuePair in MySession.Static.Factions)
+            {
+                foreach (MyStation myStation in keyValuePair.Value.Stations)
+                {
+                    //check the entities near these locations for duplicates
+                    List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
+                   
+                    BoundingSphereD sphere = new BoundingSphereD(myStation.Position, 250);
+                    l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
 
-        //            BoundingSphereD sphere = new BoundingSphereD(myStation.Position, 500);
-        //            l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
+                    List<VRage.Game.ModAPI.IMyCubeGrid> NPCGrids = new List<VRage.Game.ModAPI.IMyCubeGrid>();
+                    foreach (IMyEntity e in l)
+                    {
+                        if (e is VRage.Game.ModAPI.IMyCubeGrid grid) { 
+                     
+                            //dont want to delete any station that keen sees as a trade station
+                        if (grid != null && grid.EntityId != myStation.StationEntityId && FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3 && MySession.Static.Factions.GetStationByGridId(grid.EntityId) == null)
+                        {
+                                //If they have a store delete them
+                                var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+                            var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
+                            gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
+                            if (blockList.Count > 0)
+                            {
+                                NPCGrids.Add(grid);
+                            }
 
-        //            List<VRage.Game.ModAPI.IMyCubeGrid> NPCGrids = new List<VRage.Game.ModAPI.IMyCubeGrid>();
-        //            foreach (IMyEntity e in l)
-        //            {
-        //                VRage.Game.ModAPI.IMyCubeGrid grid = (e as VRage.Game.ModAPI.IMyCubeGrid);
+                            //disconnect the connectors so ships dont get deleted
+                            var blockList2 = new List<Sandbox.ModAPI.IMyShipConnector>();
+                            gts.GetBlocksOfType<Sandbox.ModAPI.IMyShipConnector > (blockList2);
+                                foreach (Sandbox.ModAPI.IMyShipConnector con in blockList2)
+                                {
+                                    con.Disconnect();
 
-        //                if (grid != null && FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3)
-        //                {
-        //                    var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-        //                    var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
-        //                    gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
-        //                    if (blockList.Count > 0)
-        //                    {
-        //                        NPCGrids.Add(grid);
-        //                    }
-        //                }
-        //            }
-        //            if (NPCGrids.Count > 1)
-        //            {
-        //                bool deleted = false;
-        //                foreach (VRage.Game.ModAPI.IMyCubeGrid grid in NPCGrids)
-        //                {
-        //                    if (FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3 && !deleted)
-        //                    {
-        //                        grid.Close();
-        //                        confirmations.Remove(Context.Player.Identity.IdentityId);
-        //                        Context.Respond("Deleting a grid.");
-        //                        deleted = true;
-        //                        break;
+                                }
+                            }
+                        }
+                    }
+                  foreach (MyCubeGrid grid in NPCGrids)
+                    {
+                       
+                        grid.Close();
+                    }
+                }
+            }
 
-
-        //                    }
-        //                }
-        //            }
-        //            else
-        //            {
-        //                Context.Respond("Cannot find a duplicate station.");
-        //            }
-        //        }
-        //    }
-
-        //}
+        }
         [Command("worldpcu", "output the worlds pcu")]
         [Permission(MyPromoteLevel.Admin)]
         public void worldpcu()
