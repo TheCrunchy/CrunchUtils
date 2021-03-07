@@ -141,6 +141,7 @@
     <Compile Include="CrunchUtilitiesPlugin.cs" />
     <Compile Include="FileUtils.cs" />
     <Compile Include="GridFinder.cs" />
+    <Compile Include="ProjectorPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScrapFloatingPatch.cs" />
   </ItemGroup>
