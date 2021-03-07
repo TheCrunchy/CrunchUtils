@@ -983,7 +983,7 @@ namespace CrunchUtilities
             {
                 derp = TorchSessionState.Loaded;
                 //  session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
-               // MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
+            //   MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
             }
 
         }

@@ -11,14 +11,15 @@ using System.Threading.Tasks;
 using Torch.Managers.PatchManager;
 using Torch.Utils;
 using VRage.Game;
+using VRage.Game.Components;
 using VRageMath;
 
-namespace CrunchUtilities
-{
+//namespace CrunchUtilities
+//{
 
-//    [PatchShim]
-//    public static class CubeGridPatch
-//    {
+  //  [PatchShim]
+  //  public static class CubeGridPatch
+  //  {
 //        private static Int64 priceWorth(MyCubeBlockDefinition.Component component)
 //        {
 //            MyBlueprintDefinitionBase bpDef = MyDefinitionManager.Static.TryGetBlueprintDefinitionByResultId(component.Definition.Id);
@@ -31,24 +32,24 @@ namespace CrunchUtilities
 //                price = price + amn;
 //            }
 //            //if keen didnt give the fucker a minimal price calculate by the ores that make up the ingots, because fuck having an integer for an economy right?
-//            else
-//            {
-//                for (p = 0; p < bpDef.Prerequisites.Length; p++)
-//                {
-//                    if (bpDef.Prerequisites[p].Id != null)
-//                    {
-//                        MyDefinitionBase oreDef = MyDefinitionManager.Static.GetDefinition(bpDef.Prerequisites[p].Id);
-//                        if (oreDef != null)
-//                        {
-//                            MyPhysicalItemDefinition ore = oreDef as MyPhysicalItemDefinition;
-//                            float amn = Math.Abs(ore.MinimalPricePerUnit);
-//                            float count = (float)bpDef.Prerequisites[p].Amount;
-//                            amn = (float)Math.Round(amn * count * 3);
-//                            price = price + amn;
-//                        }
-//                    }
-//                }
-//            }
+//            //else
+//            //{
+//            //    for (p = 0; p < bpDef.Prerequisites.Length; p++)
+//            //    {
+//            //        if (bpDef.Prerequisites[p].Id != null)
+//            //        {
+//            //            MyDefinitionBase oreDef = MyDefinitionManager.Static.GetDefinition(bpDef.Prerequisites[p].Id);
+//            //            if (oreDef != null)
+//            //            {
+//            //                MyPhysicalItemDefinition ore = oreDef as MyPhysicalItemDefinition;
+//            //                float amn = Math.Abs(ore.MinimalPricePerUnit);
+//            //                float count = (float)bpDef.Prerequisites[p].Amount;
+//            //                amn = (float)Math.Round(amn * count * 3);
+//            //                price = price + amn;
+//            //            }
+//            //        }
+//            //    }
+//            //}
 //            return Convert.ToInt64(price);
 //        }
 
@@ -65,39 +66,50 @@ namespace CrunchUtilities
 //        }
 //        public static void OnDestroyRequest(MyCubeBlock __instance)
 //        {
-//          // long cause = CrunchUtilitiesPlugin.Damager.Get(__instance.EntityId);
+//            // long cause = CrunchUtilitiesPlugin.Damager.Get(__instance.EntityId);
 //            MyCubeBlock block = __instance;
 //            long creditCosts = 0;
-//            var definition = block.BlockDefinition as MyCubeBlockDefinition;
-//            if (definition != null)
-//            {
-//                int n = 0;
-//                for (n = 0; n < definition.Components.Length; n++)
-//                {
-//                    if (definition.Components[n] != null)
-//                    {
+            
+//            var components = block.Components;
 
-                       
-//                            Int64 amn = priceWorth(definition.Components[n]);
-//                            Int64 count2 = definition.Components[n].Count;
-//                            creditCosts = creditCosts + (amn * count2);
-                        
-//                    }
-//                }
-//            }
+
+//            MyComponentList addToList = new MyComponentList();
+
+
+//                MyComponentStack.GetMountedComponents(addToList, block.GetObjectBuilderCubeBlock());
+
+        
+//           var definition = block.BlockDefinition as MyCubeBlockDefinition;
+          
+//            //if (definition != null)
+//            //{
+//            //    int n = 0;
+//            //    for (n = 0; n < definition.Components.Length; n++)
+//            //    {
+//            //        if (definition.Components[n] != null)
+//            //        {
+
+
+//            //            Int64 amn = priceWorth(definition.Components[n]);
+//            //            Int64 count2 = definition.Components[n].Count;
+//            //            creditCosts = creditCosts + (amn * count2);
+
+//            //        }
+//            //    }
+//            //}
 //            if (CrunchUtilitiesPlugin.attackers.TryGetValue(block.EntityId, out long Id))
 //            {
 //                CrunchUtilitiesPlugin.Log.Info("It existed?");
 //                MyIdentity id = MySession.Static.Players.TryGetIdentity(Id);
-                
-//                Commands.SendMessage("THE BANK", "You got paid " + String.Format("{0:n0}", creditCosts) + " for destroying that block.",Color.Cyan,(long) MySession.Static.Players.TryGetSteamId(id.IdentityId));
+
+//                Commands.SendMessage("THE BANK", "You got paid " + String.Format("{0:n0}", creditCosts) + " for destroying that block.", Color.Cyan, (long)MySession.Static.Players.TryGetSteamId(id.IdentityId));
 //            }
 //            else
 //            {
 //                CrunchUtilitiesPlugin.Log.Info("It didnt");
 //            }
-           
+
 
 //        }
-//    }
-}
+  //  }
+//}

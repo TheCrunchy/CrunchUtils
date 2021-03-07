@@ -309,15 +309,33 @@ namespace CrunchUtilities
                 Context.Respond("not enabled");
             }
         }
+
+        public bool isBlockedFaction(IMyPlayer player)
+        {
+            IMyFaction fac = FacUtils.GetPlayersFaction(player.IdentityId);
+           if (fac != null && fac.Name.ToLower().Contains("granny sweetums"))
+           {
+               return true;
+           }
+            return false;
+         }
+
         public static int totalcount = 0;
         [Command("stone", "Delete all stone in a grid")]
         [Permission(MyPromoteLevel.None)]
         public void DeleteStone(bool outputcount = false)
         {
-
+           
             if (CrunchUtilitiesPlugin.file.DeleteStone)
             {
-
+                //if (isBlockedFaction(Context.Player)){
+                //    Context.Respond("This faction lost the ability to use this command.");
+                //    return;
+                //}
+        
+                
+                
+                
                 CrunchUtilitiesPlugin plugin = (CrunchUtilitiesPlugin)Context.Plugin;
                 var currentCooldownMap = plugin.CurrentCooldownMap;
                 if (currentCooldownMap.TryGetValue(Context.Player.IdentityId, out CurrentCooldown currentCooldown))
@@ -979,8 +997,11 @@ namespace CrunchUtilities
                     }
                   foreach (MyCubeGrid grid in NPCGrids)
                     {
-                       
-                        grid.Close();
+                        if (!FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Equals("ACME") && !FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Equals("UNIN") && !FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Equals("FEDR") && !FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Equals("CONS"))
+                        {
+                            grid.Close();
+                        }
+
                     }
                 }
             }
@@ -992,6 +1013,25 @@ namespace CrunchUtilities
         {
             Context.Respond("Total world PCU : " + MySession.Static.TotalSessionPCU);
             
+        }
+        private MyGps CreateGps(Vector3D Position, Color gpsColor, int seconds, String Nation, String Reason)
+        {
+
+            MyGps gps = new MyGps
+            {
+                Coords = Position,
+                Name = Nation + " - ",
+                DisplayName = Nation + " - Position",
+                GPSColor = gpsColor,
+                IsContainerGPS = true,
+                ShowOnHud = true,
+                DiscardAt = new TimeSpan(0, 0, seconds, 0),
+                Description = "Nation Distress Signal \n" + Reason,
+            };
+            gps.UpdateHash();
+
+
+            return gps;
         }
         [Command("isthisasteroid", "fuck fuck fuck")]
         [Permission(MyPromoteLevel.None)]
@@ -1006,7 +1046,17 @@ namespace CrunchUtilities
             
                 foreach (IMyEntity e in l)
                 {
-                
+                if (e is MyCubeGrid grid)
+                {
+                  
+                    MyGps gps = CreateGps(grid.PositionComp.GetPosition(), Color.Green, 300, "", "");
+
+
+                    MyGpsCollection gpsCollection = (MyGpsCollection)MyAPIGateway.Session?.GPS;
+                    gps.SetEntityId(grid.EntityId);
+                    gpsCollection.AddPlayerGps(Context.Player.IdentityId, ref gps);
+
+                }
                 CrunchUtilitiesPlugin.Log.Info(e.GetType().ToString());
                 }
 
@@ -1264,7 +1314,10 @@ namespace CrunchUtilities
                 {
                     foreach (VRage.Game.ModAPI.IMyCubeGrid grid in NPCGrids)
                     {
-                        grid.Close();
+                        if (!FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Equals("ACME") && !FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Equals("UNIN") && !FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Equals("FEDR") && !FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Equals("CONS"))
+                        {
+                            grid.Close();
+                        }
                     }
                     Context.Respond("Deleted all of them.");
                     return;
@@ -1305,8 +1358,11 @@ namespace CrunchUtilities
 
 
 
-
-                                    grid.Close();
+                                    if (FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag != "ACME" && FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag != "UNIN" && FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag != "FEDR" && FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag != "CONS")
+                                    {
+                                        grid.Close();
+                                    }
+                                 
 
                                     confirmations.Remove(Context.Player.Identity.IdentityId);
                                     deletedGrids += grid.DisplayName + " ";
