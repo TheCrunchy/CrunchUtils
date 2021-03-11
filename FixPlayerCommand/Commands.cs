@@ -44,6 +44,7 @@ using VRage.ObjectBuilders;
 using Sandbox.Game.Entities.Blocks;
 using System.IO;
 using VRage.Network;
+using SpaceEngineers.Game.Entities.Blocks;
 
 namespace CrunchUtilities
 {
@@ -313,10 +314,26 @@ namespace CrunchUtilities
         public bool isBlockedFaction(IMyPlayer player)
         {
             IMyFaction fac = FacUtils.GetPlayersFaction(player.IdentityId);
-           if (fac != null && fac.Name.ToLower().Contains("granny sweetums"))
-           {
-               return true;
-           }
+           //if (fac != null && fac.Name.ToLower().Contains("henchsel"))
+           //{
+           //    return true;
+           //}
+           // if (fac != null && fac.Name.ToLower().Contains("innovation jump"))
+           // {
+           //     return true;
+           // }
+           // if (fac != null && fac.Name.ToLower().Contains("allied humans"))
+           // {
+           //     return true;
+           // }
+           // if (fac != null && fac.Name.ToLower().Contains("red matter"))
+           // {
+           //     return true;
+           // }
+           // if (fac != null && fac.Name.ToLower().Contains("extraplanetary alliance"))
+           // {
+           //     return true;
+           // }
             return false;
          }
 
@@ -328,10 +345,10 @@ namespace CrunchUtilities
            
             if (CrunchUtilitiesPlugin.file.DeleteStone)
             {
-                //if (isBlockedFaction(Context.Player)){
-                //    Context.Respond("This faction lost the ability to use this command.");
-                //    return;
-                //}
+                if (isBlockedFaction(Context.Player)){
+                    Context.Respond("This faction lost the ability to use this command.");
+                    return;
+                }
         
                 
                 
@@ -474,14 +491,13 @@ namespace CrunchUtilities
                     Context.Respond("Not in a faction.");
                     return;
                 }
-                if (fac.IsLeader(Context.Player.IdentityId) || fac.IsFounder(Context.Player.IdentityId))
+                if (CrunchUtilitiesPlugin.file.ClaimOnlyForLeaders)
                 {
-                    //do nothing im lazy
-                }
-                else
-                {
-                    Context.Respond("Not a founder or leader");
-                    return;
+                    if (!fac.IsLeader(Context.Player.IdentityId) && !fac.IsFounder(Context.Player.IdentityId))
+                    {
+                        Context.Respond("Not a founder or leader");
+                        return;
+                    }
                 }
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
                 if (gridWithSubGrids.Count > 0)
@@ -518,7 +534,11 @@ namespace CrunchUtilities
 
                                     if (block.FatBlock != null && block.FatBlock.OwnerId > 0)
                                     {
-                                        blockCount += 1;
+
+                                     //   if (block.FatBlock.BuiltBy != Context.Player.IdentityId)
+                                   //     {
+                                            blockCount += 1;
+                                    
 
                                         switch (block.FatBlock.GetUserRelationToOwner(Context.Player.IdentityId))
                                         {
@@ -535,6 +555,8 @@ namespace CrunchUtilities
                                             default:
                                                 break;
                                         }
+                                    //    }
+
                                     }
                                 }
                             }
@@ -542,7 +564,7 @@ namespace CrunchUtilities
 
                             double sharedPercent = (totalShared / blockCount) * 100;
 
-                            Context.Respond(CrunchUtilitiesPlugin.file.ClaimPercent.ToString());
+                            Context.Respond("Percent required : " + CrunchUtilitiesPlugin.file.ClaimPercent.ToString());
                             if (sharedPercent >= CrunchUtilitiesPlugin.file.ClaimPercent)
                             {
                                 grid.ChangeGridOwner(Context.Player.IdentityId, MyOwnershipShareModeEnum.None);
@@ -1265,6 +1287,7 @@ namespace CrunchUtilities
                     break;
             }
         }
+
 
 
 
@@ -3328,6 +3351,11 @@ namespace CrunchUtilities
             }
             if (CrunchUtilitiesPlugin.file.PlayerEcoPay)
             {
+                if (isBlockedFaction(Context.Player))
+                {
+                    Context.Respond("This faction lost the ability to use this command.");
+                    return;
+                }
                 Int64 amount;
                 inputAmount = inputAmount.Replace(",", "");
                 inputAmount = inputAmount.Replace(".", "");

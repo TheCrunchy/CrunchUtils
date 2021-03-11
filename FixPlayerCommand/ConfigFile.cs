@@ -11,6 +11,7 @@ namespace CrunchUtilities
     {
         public bool ScrapMetalPatch = false;
         public bool projectorPatch = false;
+        public bool projectorOwnershipPatch = false;
         public bool FixTradeStation = false;
         public bool SortGPSOnJoin = true;
         public bool PlayerMakeShip = false;
@@ -33,6 +34,7 @@ namespace CrunchUtilities
         private int respawncooldownInSeconds = 20 * 60;
         public bool IdentityUpdate = false;
         public bool Claim = false;
+        public bool ClaimOnlyForLeaders = true;
         public int ClaimPercent = 70;
         public int CooldownInSeconds { get => cooldownInSeconds; set => SetValue(ref cooldownInSeconds, value); }
         public int RespawnCooldownInSeconds { get => respawncooldownInSeconds; set => SetValue(ref respawncooldownInSeconds, value); }

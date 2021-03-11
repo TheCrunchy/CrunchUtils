@@ -1,5 +1,9 @@
 ﻿using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Blocks;
+using Sandbox.Game.Entities.Cube;
+using Sandbox.Game.World;
+using Sandbox.ModAPI;
+using SpaceEngineers.Game.Entities.Blocks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,14 +12,21 @@ using System.Text;
 using System.Threading.Tasks;
 using Torch.Managers.PatchManager;
 using VRage.Game;
+using VRage.Game.ModAPI.Ingame;
+using VRageMath;
 
 namespace CrunchUtilities
 {
     [PatchShim]
     public static class ProjectorPatch
     {
+        internal static readonly MethodInfo build =
+            typeof(MyProjectorBase).GetMethod("Build", BindingFlags.Instance | BindingFlags.Public) ??
+            throw new Exception("Failed to find patch method");
 
-      
+        internal static readonly MethodInfo buildPatch =
+                 typeof(ProjectorPatch).GetMethod(nameof(BuildPatch), BindingFlags.Static | BindingFlags.Public) ??
+                 throw new Exception("Failed to find patch method");
 
         internal static readonly MethodInfo update =
             typeof(MyProjectorBase).GetMethod("InitializeClipboard", BindingFlags.Instance | BindingFlags.NonPublic) ??
@@ -37,10 +48,66 @@ namespace CrunchUtilities
         {
 
             ctx.GetPattern(update).Suffixes.Add(updatePatch);
+            ctx.GetPattern(build).Prefixes.Add(buildPatch);
             ctx.GetPattern(remove).Prefixes.Add(removePatch);
             CrunchUtilitiesPlugin.Log.Info("Patching Successful Crunch Projector!");
         }
+        public static void BuildPatch(MyProjectorBase __instance, MySlimBlock cubeBlock,
+      long owner,
+      long builder,
+      bool requestInstant = true,
+      long builtBy = 0)
+        {
+            if (CrunchUtilitiesPlugin.file == null)
+            {
 
+                return;
+            }
+            if (!CrunchUtilitiesPlugin.file.projectorOwnershipPatch)
+            {
+                return;
+            }
+
+            if (__instance != null && owner == 0)
+            {
+
+                //List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
+
+                //BoundingSphereD sphere = new BoundingSphereD(__instance.PositionComp.GetPosition(), 500);
+                //l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
+             
+
+                //foreach (IMyEntity e in l)
+                //{
+                //    if (e is MyShipWelder z)
+                //    {
+                    
+                //        MyAPIGateway.Utilities.InvokeOnGameThread(() =>
+                //        {
+                //       //     z.ChangeOwner(__instance.OwnerId, MyOwnershipShareModeEnum.Faction);
+                //              z.CubeGrid.ChangeOwner(z, 0, __instance.OwnerId);
+                //        }); 
+                //    }
+                //}
+                if (cubeBlock.FatBlock != null)
+                {
+             
+                    MyCubeBlock block = cubeBlock.FatBlock;
+             
+
+                    block.CubeGrid.ChangeOwner(block, 0, __instance.OwnerId);
+                 //   block.ChangeBlockOwnerRequest(__instance.OwnerId, MyOwnershipShareModeEnum.None);
+                 //   CrunchUtilitiesPlugin.Log.Info(owner + " OWNER");
+                 //    CrunchUtilitiesPlugin.Log.Info(builder + " builder");
+                  //    CrunchUtilitiesPlugin.Log.Info(builtBy + " built by");
+                 //    CrunchUtilitiesPlugin.Log.Info(cubeBlock.BuiltBy + " blocks built by");
+                }
+
+           
+            }
+
+
+        }
         public static void TestPatchMethod(MyProjectorBase __instance)
         {
             if (CrunchUtilitiesPlugin.file == null)
