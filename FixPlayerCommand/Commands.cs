@@ -784,6 +784,45 @@ namespace CrunchUtilities
             Context.Respond(sb.ToString(), "PCU");
 
         }
+        [Command("fillhydro", "admin command, fill hydro tanks")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void fillTank(string percent = "100")
+        {
+
+            bool changed = false;
+            float fill = float.Parse(percent) / 100;
+            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+            foreach (var item in gridWithSubGrids)
+            {
+                foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                {
+                    MyCubeGrid grid = groupNodes.NodeData;
+
+                    var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+                                  VRage.Game.ObjectBuilders.Definitions.MyObjectBuilder_GasProperties gas = new VRage.Game.ObjectBuilders.Definitions.MyObjectBuilder_GasProperties { SubtypeName = "Hydrogen" };
+                                   var blockList = new List<Sandbox.ModAPI.IMyGasTank>();
+                                  gts.GetBlocksOfType<Sandbox.ModAPI.IMyGasTank>(blockList);
+                    changed = true;
+                  
+                    foreach (Sandbox.ModAPI.IMyGasTank tank in blockList)
+                    {
+                        MyGasTank tankk = tank as MyGasTank;
+                     
+                        tankk.ChangeFillRatioAmount(fill);
+                        
+                    }
+                    Context.Respond(blockList.Count + " Tanks filled");
+
+
+                }
+            }
+            if (!changed)
+            {
+                Context.Respond("Couldnt find that grid, are you looking at it?");
+            }
+
+
+        }
         [Command("admin rename", "admin command, rename a ship")]
         [Permission(MyPromoteLevel.Admin)]
         public void RenameGridAdmin(string gridname, string newname)
@@ -1288,7 +1327,7 @@ namespace CrunchUtilities
             }
         }
 
-
+       
 
 
         [Command("fixstation", "fuck fuck fuck")]
@@ -1317,20 +1356,22 @@ namespace CrunchUtilities
                 
                 foreach (IMyEntity e in l)
                 {
-                    VRage.Game.ModAPI.IMyCubeGrid grid = (e as VRage.Game.ModAPI.IMyCubeGrid);
-
-                    if (grid != null && FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3)
-                    {
-                        var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-                        var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
-                        gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
+                    if (e is MyCubeGrid grid) { 
         
-                            if (blockList.Count > 0)
+                    if (FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)) != null){
+                            if (grid != null && FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3)
                             {
-                                NPCGrids.Add(grid);
-                            
+                                var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+                                var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
+                                gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
+
+                                if (blockList.Count > 0)
+                                {
+                                    NPCGrids.Add(grid);
+
+                                }
                             }
-                        
+                        }
                     }
                 }
                     if (zone == null)
