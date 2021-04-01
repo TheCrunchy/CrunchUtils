@@ -9,6 +9,7 @@ namespace CrunchUtilities
 {
     public class ConfigFile : ViewModel
     {
+        public Boolean EcoChatMessages = true;
         public bool ScrapMetalPatch = false;
         public bool projectorPatch = false;
         public bool projectorOwnershipPatch = false;

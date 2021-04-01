@@ -1,4 +1,5 @@
-﻿using Sandbox.Game.Entities;
+﻿using Sandbox.Engine.Multiplayer;
+using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Blocks;
 using Sandbox.Game.Entities.Cube;
 using Sandbox.Game.World;
@@ -10,9 +11,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Torch.Managers;
 using Torch.Managers.PatchManager;
 using VRage.Game;
 using VRage.Game.ModAPI.Ingame;
+using VRage.Network;
 using VRageMath;
 
 namespace CrunchUtilities
@@ -44,14 +47,19 @@ namespace CrunchUtilities
         internal static readonly MethodInfo removePatch =
             typeof(ProjectorPatch).GetMethod(nameof(removeM), BindingFlags.Static | BindingFlags.Public) ??
             throw new Exception("Failed to find patch method");
+
+
         public static void Patch(PatchContext ctx)
         {
 
             ctx.GetPattern(update).Suffixes.Add(updatePatch);
             ctx.GetPattern(build).Prefixes.Add(buildPatch);
             ctx.GetPattern(remove).Prefixes.Add(removePatch);
+
             CrunchUtilitiesPlugin.Log.Info("Patching Successful Crunch Projector!");
         }
+
+
         public static void BuildPatch(MyProjectorBase __instance, MySlimBlock cubeBlock,
       long owner,
       long builder,
@@ -67,28 +75,11 @@ namespace CrunchUtilities
             {
                 return;
             }
-
+            
             if (__instance != null && owner == 0)
             {
 
-                //List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
 
-                //BoundingSphereD sphere = new BoundingSphereD(__instance.PositionComp.GetPosition(), 500);
-                //l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
-             
-
-                //foreach (IMyEntity e in l)
-                //{
-                //    if (e is MyShipWelder z)
-                //    {
-                    
-                //        MyAPIGateway.Utilities.InvokeOnGameThread(() =>
-                //        {
-                //       //     z.ChangeOwner(__instance.OwnerId, MyOwnershipShareModeEnum.Faction);
-                //              z.CubeGrid.ChangeOwner(z, 0, __instance.OwnerId);
-                //        }); 
-                //    }
-                //}
                 if (cubeBlock.FatBlock != null)
                 {
              
@@ -96,11 +87,7 @@ namespace CrunchUtilities
              
 
                     block.CubeGrid.ChangeOwner(block, 0, __instance.OwnerId);
-                 //   block.ChangeBlockOwnerRequest(__instance.OwnerId, MyOwnershipShareModeEnum.None);
-                 //   CrunchUtilitiesPlugin.Log.Info(owner + " OWNER");
-                 //    CrunchUtilitiesPlugin.Log.Info(builder + " builder");
-                  //    CrunchUtilitiesPlugin.Log.Info(builtBy + " built by");
-                 //    CrunchUtilitiesPlugin.Log.Info(cubeBlock.BuiltBy + " blocks built by");
+
                 }
 
            
@@ -135,7 +122,11 @@ namespace CrunchUtilities
                 }
                 MyCubeGrid grid = __instance.CubeGrid;
                 //Log.Info("Removing? " + grid.BlocksPCU);
-                grid.BlocksPCU -= count;
+             
+                    grid.BlocksPCU -= count;
+                
+           
+           
                 // Log.Info("Removing? " + grid.BlocksPCU);
             }
 
@@ -171,6 +162,8 @@ namespace CrunchUtilities
                 MyCubeGrid grid = __instance.CubeGrid;
                 //  Log.Info("Adding? " + grid.BlocksPCU);
                 grid.BlocksPCU += count;
+       
+               
                 //   Log.Info("Adding? " + grid.BlocksPCU);
 
             }

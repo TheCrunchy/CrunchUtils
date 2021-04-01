@@ -132,6 +132,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BankPatch.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="ConfigFile.cs" />
     <Compile Include="CubeGridPatch.cs" />

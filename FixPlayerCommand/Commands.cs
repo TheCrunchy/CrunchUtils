@@ -45,6 +45,8 @@ using Sandbox.Game.Entities.Blocks;
 using System.IO;
 using VRage.Network;
 using SpaceEngineers.Game.Entities.Blocks;
+using VRage.Voxels;
+using Sandbox.Engine.Voxels;
 
 namespace CrunchUtilities
 {
@@ -513,20 +515,10 @@ namespace CrunchUtilities
                             MyCubeGrid grid = groupNodes.NodeData;
 
                             var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-                            var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
-                            gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
-                            Boolean npc = false;
-                            foreach (long id in grid.BigOwners)
-                            {
-                                if (FacUtils.GetFactionTag(id).Length > 3)
-                                {
-                                    npc = true;
-                                }
-                            }
+             
                             //rewrite this shit eventually to not be trash
-                            if (blockList.Count == 0 && !npc)
+                            if (MySession.Static.Factions.GetStationByGridId(grid.EntityId) == null)
                             {
-
 
                                 foreach (MySlimBlock block in grid.GetBlocks())
                                 {
@@ -559,6 +551,10 @@ namespace CrunchUtilities
 
                                     }
                                 }
+                            }else
+                            {
+                                Context.Respond("Cannot claim economy stations!");
+                                return;
                             }
                             double totalShared = factionShared + sharedWithAll;
 
@@ -799,7 +795,7 @@ namespace CrunchUtilities
                     MyCubeGrid grid = groupNodes.NodeData;
 
                     var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-                                  VRage.Game.ObjectBuilders.Definitions.MyObjectBuilder_GasProperties gas = new VRage.Game.ObjectBuilders.Definitions.MyObjectBuilder_GasProperties { SubtypeName = "Hydrogen" };
+                               
                                    var blockList = new List<Sandbox.ModAPI.IMyGasTank>();
                                   gts.GetBlocksOfType<Sandbox.ModAPI.IMyGasTank>(blockList);
                     changed = true;
@@ -1008,7 +1004,7 @@ namespace CrunchUtilities
                 }
 
                 string name = MyMultiplayer.Static.GetMemberName(MySession.Static.Players.TryGetSteamId(id.IdentityId));
-                Context.Respond(name + " : " + id.DisplayName + MySession.Static.Players.TryGetSteamId(id.IdentityId).ToString());
+                Context.Respond("\n Steam Name " + name + "\n Display Name " + id.DisplayName+ "\n STEAM " + MySession.Static.Players.TryGetSteamId(id.IdentityId).ToString() + "\n IDENTITY " + id.IdentityId);
 
 
             }
@@ -1031,27 +1027,29 @@ namespace CrunchUtilities
                     List<VRage.Game.ModAPI.IMyCubeGrid> NPCGrids = new List<VRage.Game.ModAPI.IMyCubeGrid>();
                     foreach (IMyEntity e in l)
                     {
-                        if (e is VRage.Game.ModAPI.IMyCubeGrid grid) { 
-                     
+                        if (e is VRage.Game.ModAPI.IMyCubeGrid grid) {
+
                             //dont want to delete any station that keen sees as a trade station
-                        if (grid != null && grid.EntityId != myStation.StationEntityId && FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3 && MySession.Static.Factions.GetStationByGridId(grid.EntityId) == null)
-                        {
-                                //If they have a store delete them
-                                var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-                            var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
-                            gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
-                            if (blockList.Count > 0)
-                            {
-                                NPCGrids.Add(grid);
-                            }
-
-                            //disconnect the connectors so ships dont get deleted
-                            var blockList2 = new List<Sandbox.ModAPI.IMyShipConnector>();
-                            gts.GetBlocksOfType<Sandbox.ModAPI.IMyShipConnector > (blockList2);
-                                foreach (Sandbox.ModAPI.IMyShipConnector con in blockList2)
+                            if (FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)) != null){
+                                if (grid != null && grid.EntityId != myStation.StationEntityId && FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3 && MySession.Static.Factions.GetStationByGridId(grid.EntityId) == null)
                                 {
-                                    con.Disconnect();
+                                    //If they have a store delete them
+                                    var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+                                    var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
+                                    gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
+                                    if (blockList.Count > 0)
+                                    {
+                                        NPCGrids.Add(grid);
+                                    }
 
+                                    //disconnect the connectors so ships dont get deleted
+                                    var blockList2 = new List<Sandbox.ModAPI.IMyShipConnector>();
+                                    gts.GetBlocksOfType<Sandbox.ModAPI.IMyShipConnector>(blockList2);
+                                    foreach (Sandbox.ModAPI.IMyShipConnector con in blockList2)
+                                    {
+                                        con.Disconnect();
+
+                                    }
                                 }
                             }
                         }
@@ -3407,12 +3405,12 @@ namespace CrunchUtilities
                 }
                 catch (Exception)
                 {
-                    SendMessage("[CrunchEcon]", "Error parsing amount", Color.Red, (long)Context.Player.SteamUserId);
+                    SendMessage("CrunchEcon", "Error parsing amount", Color.Red, (long)Context.Player.SteamUserId);
                     return;
                 }
                 if (amount < 0 || amount == 0)
                 {
-                    SendMessage("[CrunchEcon]", "Must be a positive number", Color.Red, (long)Context.Player.SteamUserId);
+                    SendMessage("CrunchEcon", "Must be a positive number", Color.Red, (long)Context.Player.SteamUserId);
                     return;
                 }
                 type = type.ToLower();
@@ -3428,7 +3426,7 @@ namespace CrunchUtilities
                             IMyIdentity targetid = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
                             if (targetid == null)
                             {
-                                SendMessage("[CrunchEcon]", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
+                                SendMessage("CrunchEcon", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
                                 return;
                             }
                             if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
@@ -3437,23 +3435,23 @@ namespace CrunchUtilities
                                 EconUtils.addMoney(targetid.IdentityId, amount);
 
 
-                                //SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
-                                SendMessage("[CrunchEcon]", "You sent " + targetid.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                                //SendMessage("CrunchEcon", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                                SendMessage("CrunchEcon", "You sent " + targetid.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                             }
                             else
                             {
-                                SendMessage("[CrunchEcon]", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                                SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
                             }
                             return;
                         }
                         player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(recipient) as MyPlayer;
                         if (player == null)
                         {
-                            SendMessage("[CrunchEcon]", "They arent online, trying across instance", Color.Red, (long)Context.Player.SteamUserId);
+                            SendMessage("CrunchEcon", "They arent online, trying across instance", Color.Red, (long)Context.Player.SteamUserId);
                             IMyIdentity targetid = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
                             if (targetid == null)
                             {
-                                SendMessage("[CrunchEcon]", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
+                                SendMessage("CrunchEcon", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
                                 return;
                             }
                             if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
@@ -3462,13 +3460,13 @@ namespace CrunchUtilities
                                 EconUtils.addMoney(targetid.IdentityId, amount);
 
 
-                                //SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
-                                SendMessage("[CrunchEcon]", "You sent " + targetid.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                                //SendMessage("CrunchEcon", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                                SendMessage("CrunchEcon", "You sent " + targetid.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                                 return;
                             }
                             else
                             {
-                                SendMessage("[CrunchEcon]", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                                SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
                                 return;
                             }
                         }
@@ -3479,19 +3477,19 @@ namespace CrunchUtilities
                             EconUtils.addMoney(player.Identity.IdentityId, amount);
 
 
-                            SendMessage("[CrunchEcon]", MyMultiplayer.Static.GetMemberName(Context.Player.SteamUserId) + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
-                            SendMessage("[CrunchEcon]", "You sent " + MyMultiplayer.Static.GetMemberName(player.Id.SteamId) + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                            SendMessage("CrunchEcon", MyMultiplayer.Static.GetMemberName(Context.Player.SteamUserId) + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                            SendMessage("CrunchEcon", "You sent " + MyMultiplayer.Static.GetMemberName(player.Id.SteamId) + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                         }
                         else
                         {
-                            SendMessage("[CrunchEcon]", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                            SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
                         }
                         break;
                     case "faction":
                         IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(recipient);
                         if (fac == null)
                         {
-                            SendMessage("[CrunchEcon]", "Cant find that faction", Color.Red, (long)Context.Player.SteamUserId);
+                            SendMessage("CrunchEcon", "Cant find that faction", Color.Red, (long)Context.Player.SteamUserId);
                             return;
                         }
                         if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
@@ -3516,17 +3514,17 @@ namespace CrunchUtilities
                                 {
                                     break;
                                 }
-                                SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent : " + String.Format("{0:n0}", amount) + " SC to the faction bank.", Color.DarkGreen, (long)steamid);
+                                SendMessage("CrunchEcon", Context.Player.DisplayName + " Has sent : " + String.Format("{0:n0}", amount) + " SC to the faction bank.", Color.DarkGreen, (long)steamid);
                                 temp.Add(steamid);
 
                             }
 
 
-                            SendMessage("[CrunchEcon]", "You sent " + fac.Name + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                            SendMessage("CrunchEcon", "You sent " + fac.Name + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                         }
                         else
                         {
-                            SendMessage("[CrunchEcon]", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                            SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
                         }
                         break;
                     case "steam":
@@ -3534,7 +3532,7 @@ namespace CrunchUtilities
                         IMyIdentity id2 = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
                         if (id2 == null)
                         {
-                            SendMessage("[CrunchEcon]", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
+                            SendMessage("CrunchEcon", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
                             return;
                         }
                         if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
@@ -3543,25 +3541,27 @@ namespace CrunchUtilities
                             EconUtils.addMoney(id2.IdentityId, amount);
 
 
-                            //SendMessage("[CrunchEcon]", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
-                            SendMessage("[CrunchEcon]", "You sent " + id2.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                            //SendMessage("CrunchEcon", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                            SendMessage("CrunchEcon", "You sent " + id2.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                         }
                         else
                         {
-                            SendMessage("[CrunchEcon]", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                            SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
                         }
                         break;
                     default:
-                        SendMessage("[CrunchEcon]", "Incorrect usage, example - !eco pay player PlayerName amount or !eco pay faction tag amount", Color.Red, (long)Context.Player.SteamUserId);
+                        SendMessage("CrunchEcon", "Incorrect usage, example - !eco pay player PlayerName amount or !eco pay faction tag amount", Color.Red, (long)Context.Player.SteamUserId);
                         break;
 
                 }
             }
             else
             {
-                SendMessage("[CrunchEcon]", "Player pay not enabled", Color.Red, (long)Context.Player.SteamUserId);
+                SendMessage("CrunchEcon", "Player pay not enabled", Color.Red, (long)Context.Player.SteamUserId);
             }
         }
+
+
 
 
         [Command("whis", "Message another player")]
@@ -4013,9 +4013,10 @@ namespace CrunchUtilities
             IMyFaction fac2 = MySession.Static.Factions.TryGetFactionByTag(tag);
             if (player != null && fac2 != null)
             {
-                Context.Respond(player.DisplayName + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(Context.Player.IdentityId, fac2.FactionId));
-                MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(player.IdentityId, fac2.FactionId, int.Parse(amount.ToString()));
-                Context.Respond(player.DisplayName + " FACTION Reputation After Change : " + MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(Context.Player.IdentityId, fac2.FactionId));
+              //  Context.Respond(player.DisplayName + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(Context.Player.IdentityId, fac2.FactionId));
+                MySession.Static.Factions.AddFactionPlayerReputation(player.IdentityId, fac2.FactionId, 1500, true, true);
+                Context.Respond("Did it work?");
+               // Context.Respond(player.DisplayName + " FACTION Reputation After Change : " + MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(Context.Player.IdentityId, fac2.FactionId));
             }
             else
             {

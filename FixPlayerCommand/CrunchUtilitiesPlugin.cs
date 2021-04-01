@@ -42,6 +42,8 @@ using Sandbox.Game.Screens.Helpers;
 using Sandbox.Graphics.GUI;
 using VRage.Network;
 using Sandbox.ModAPI.Weapons;
+using Sandbox.Game.GameSystems;
+using Sandbox.Engine.Voxels;
 
 namespace CrunchUtilities
 {
@@ -57,7 +59,7 @@ namespace CrunchUtilities
         [PatchShim]
         public static class MyPatch
         {
-
+          
             public static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
             internal static readonly MethodInfo update =
@@ -75,9 +77,10 @@ namespace CrunchUtilities
                 Log.Info("Patching Successful CrunchDrill!");
             }
 
+
             public static bool TestPatchMethod(MyDrillBase __instance, MyVoxelMaterialDefinition material, Vector3 hitPosition)
             {
-
+             
                 if (file != null && !file.DeleteStoneAuto)
                 {
                     return true;
@@ -151,6 +154,7 @@ namespace CrunchUtilities
             return false;
         }
 
+ 
 
         public static List<long> ids = new List<long>();
         public static Logger Log = LogManager.GetCurrentClassLogger();
@@ -381,23 +385,47 @@ namespace CrunchUtilities
         }
         public static void UpdateNamesTask()
         {
-          
-            
-        //    if (derp == TorchSessionState.Loaded) {
+
+
+            //    if (derp == TorchSessionState.Loaded) {
+            try
+            {
                 Log.Info("Updating names");
-                foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+                if (MySession.Static.Players.GetOnlinePlayers().Count > 0)
                 {
-                    string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
-                    MyIdentity identity = GetIdentityByNameOrId(player.Id.SteamId.ToString());
-
-                    if (!player.DisplayName.Equals(name))
+                    foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
                     {
-                      
-                      
-                        identity.SetDisplayName(MyMultiplayer.Static.GetMemberName(player.Id.SteamId));
+                        if (player == null || player.Id == null)
+                        {
+                            break;
+                        }
+             
+                        string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
+                        if (name == null)
+                        {
+                            break;
+                        }
+                        MyIdentity identity = GetIdentityByNameOrId(player.Id.SteamId.ToString());
+                        if (identity == null)
+                        {
+                            break;
+                        }
+                        if (player.Character != null && player.Character.DisplayName != null && !player.DisplayName.Equals(name))
+                        {
 
+
+                            identity.SetDisplayName(MyMultiplayer.Static.GetMemberName(player.Id.SteamId));
+
+                        }
+                        // }
                     }
-               // }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Info("Error on updating names");
+                Log.Error(ex.ToString());
+                return;
             }
         }
         private void SessionChanged(ITorchSession session, TorchSessionState newState)
