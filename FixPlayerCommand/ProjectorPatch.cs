@@ -52,8 +52,8 @@ namespace CrunchUtilities
         public static void Patch(PatchContext ctx)
         {
 
-            ctx.GetPattern(update).Suffixes.Add(updatePatch);
-            ctx.GetPattern(build).Prefixes.Add(buildPatch);
+          //  ctx.GetPattern(update).Suffixes.Add(updatePatch);
+          //  ctx.GetPattern(build).Prefixes.Add(buildPatch);
             ctx.GetPattern(remove).Prefixes.Add(removePatch);
 
             CrunchUtilitiesPlugin.Log.Info("Patching Successful Crunch Projector!");
@@ -121,13 +121,13 @@ namespace CrunchUtilities
                     count += objectBuilderCubeGrid.CubeBlocks.Count;
                 }
                 MyCubeGrid grid = __instance.CubeGrid;
-                //Log.Info("Removing? " + grid.BlocksPCU);
+            //    CrunchUtilitiesPlugin.Log.Info("Removing? " + grid.BlocksPCU);
              
                     grid.BlocksPCU -= count;
-                
-           
-           
-                // Log.Info("Removing? " + grid.BlocksPCU);
+
+
+
+              //  CrunchUtilitiesPlugin.Log.Info("Removing? " + grid.BlocksPCU);
             }
 
 
@@ -158,13 +158,13 @@ namespace CrunchUtilities
                     count += griid.CubeBlocks.Count;
                     //  Log.Info("count " + count);
                 }
-                // Log.Info("count " + count);
+               //Log.Info("count " + count);
                 MyCubeGrid grid = __instance.CubeGrid;
-                //  Log.Info("Adding? " + grid.BlocksPCU);
+               // CrunchUtilitiesPlugin.Log.Info("Adding? " + grid.BlocksPCU);
                 grid.BlocksPCU += count;
-       
-               
-                //   Log.Info("Adding? " + grid.BlocksPCU);
+
+
+              //  CrunchUtilitiesPlugin.Log.Info("Adding? " + grid.BlocksPCU);
 
             }
 

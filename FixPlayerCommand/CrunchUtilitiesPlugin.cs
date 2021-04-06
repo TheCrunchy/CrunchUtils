@@ -391,7 +391,7 @@ namespace CrunchUtilities
             try
             {
                 Log.Info("Updating names");
-                if (MySession.Static.Players.GetOnlinePlayers().Count > 0)
+                if (derp == TorchSessionState.Loaded && MySession.Static.Players.GetOnlinePlayers().Count > 0)
                 {
                     foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
                     {

@@ -745,11 +745,36 @@ namespace CrunchUtilities
                 Context.Respond("PlayerMakeShip not enabled");
             }
         }
+
+        private long CountProjectionPCU(MyCubeGrid grid)
+        {
+
+            long pcu = 0;
+            /*loop over the projectors in the grid */
+            foreach (var projector in grid.GetFatBlocks().OfType<MyProjectorBase>())
+            {
+                /*if the projector isn't enabled, dont count its projected pcu*/
+
+                if (!projector.Enabled)
+                    continue;
+
+                List<MyCubeGrid> grids = projector.Clipboard.PreviewGrids;
+                /*count the blocks in the projected grid*/
+                foreach (MyCubeGrid CubeGrid in grids)
+                    pcu += CubeGrid.CubeBlocks.Count;
+
+            }
+
+            return pcu;
+        }
+
+
         [Command("pcucount", "Player command, count PCU of connected grids")]
         [Permission(MyPromoteLevel.None)]
         public void CountPCU()
         {
-            int totalPCU = 0;
+           long totalPCU = 0;
+            long projection = 0;
             StringBuilder sb = new StringBuilder();
             ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
             if (gridWithSubGrids.Count > 0)
@@ -765,9 +790,9 @@ namespace CrunchUtilities
 
                         sb.Append(grid.DisplayName + " : " + grid.BlocksPCU + ",");
                         totalPCU += grid.BlocksPCU;
-                        
 
-
+                        projection += CountProjectionPCU(grid);
+                        totalPCU -= CountProjectionPCU(grid);
                     }
                 }
             }
@@ -776,10 +801,19 @@ namespace CrunchUtilities
                 Context.Respond("Cant find a grid");
             }
             //sb.Append("Total : " + totalPCU);
-            Context.Respond(totalPCU.ToString(), "Total PCU");
             Context.Respond(sb.ToString(), "PCU");
-
+         
+            if (projection > 0 && CrunchUtilitiesPlugin.file.PcuCountShowProjPCU)
+            {
+                Context.Respond((totalPCU + projection).ToString(), "Grid and Projection PCU");
+            }
+            else
+            {
+                Context.Respond(totalPCU.ToString(), "Grid PCU");
+            }
         }
+
+
         [Command("fillhydro", "admin command, fill hydro tanks")]
         [Permission(MyPromoteLevel.Admin)]
         public void fillTank(string percent = "100")
@@ -2101,7 +2135,7 @@ namespace CrunchUtilities
             if (CrunchUtilitiesPlugin.file.facInfo)
             {
                 bool console = false;
-
+                
                 if (Context.Player == null)
                 {
                     console = true;
@@ -2410,40 +2444,53 @@ namespace CrunchUtilities
                 {
                     console = true;
                 }
+                IMyFaction fac = null;
+                try
+                {
+                    fac = MySession.Static.Factions.TryGetFactionById(long.Parse(tag));
+                }
+                catch (Exception)
+                {
 
-
-                IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
+                }
                 if (fac == null)
                 {
-                    MyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(tag) as MyPlayer;
-                    if (player == null)
-                    {
-                        IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(tag);
-                        if (id == null)
+
+                  fac = MySession.Static.Factions.TryGetFactionByTag(tag);
+                if (fac == null)
+                {
+           
+                        MyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(tag) as MyPlayer;
+                        if (player == null)
                         {
-                            Context.Respond("Cant find that faction or player.");
-                            return;
+                            IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(tag);
+                            if (id == null)
+                            {
+                                Context.Respond("Cant find that faction or player.");
+                                return;
+                            }
+                            else
+                            {
+                                fac = FacUtils.GetPlayersFaction(id.IdentityId);
+                                if (fac == null)
+                                {
+                                    Context.Respond("The player that was found does not have a faction.");
+                                    return;
+                                }
+                            }
                         }
                         else
                         {
-                            fac = FacUtils.GetPlayersFaction(id.IdentityId);
+
+                            fac = FacUtils.GetPlayersFaction(player.Identity.IdentityId);
                             if (fac == null)
                             {
                                 Context.Respond("The player that was found does not have a faction.");
                                 return;
+
                             }
                         }
                     }
-                    else
-                    {
-                        fac = FacUtils.GetPlayersFaction(player.Identity.IdentityId);
-                        if (fac == null)
-                        {
-                            Context.Respond("The player that was found does not have a faction.");
-                            return;
-                        }
-                    }
-
                 }
                 string warstatus = "Relationship : ";
                 if (Context.Player != null) { 
@@ -2510,18 +2557,18 @@ namespace CrunchUtilities
                     }
                     if (!console)
                     {
-                        DialogMessage m = new DialogMessage("Faction Info", fac.Name, "\nTag: " + fac.Tag + "\n" + warstatus + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count + "\n" + sb.ToString());
+                        DialogMessage m = new DialogMessage("Faction Info", fac.Name + " " + fac.FactionId, "\nTag: " + fac.Tag + "\n" + warstatus + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count + "\n" + sb.ToString());
                         ModCommunication.SendMessageTo(m, Context.Player.SteamUserId);
                     }
                     else
                     {
-                        Context.Respond("Name: " + fac.Name + "\nTag: " + fac.Tag + "\n" + warstatus + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count + "\n" + sb.ToString());
+                        Context.Respond("Name: " + fac.Name + " " + fac.FactionId + "\nTag: " + fac.Tag + "\n" + warstatus + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count + "\n" + sb.ToString());
                     }
                     return;
                 }
                 else
                 {
-                    Context.Respond("\nName: " + fac.Name + "\nTag: " + fac.Tag + "\n" + warstatus + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count);
+                    Context.Respond("\nName: " + fac.Name + " " + fac.FactionId + "\nTag: " + fac.Tag + "\n" + warstatus + "\nDescription: " + fac.Description + "\nMembers: " + fac.Members.Count);
 
                 }
             }
