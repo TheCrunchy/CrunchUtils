@@ -109,14 +109,14 @@ namespace CrunchUtilities
                             MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
                             if (newObject.SubtypeName.ToLower().Contains("stone"))
                             {
-                                if (file.UsingDraconisEliteDrills)
-                                {
-                                    if (!drill.BlockDefinition.BlockPairName.Equals("Drill8x"))
-                                    {
-                                        return true;
-                                    }
+                                //if (file.UsingDraconisEliteDrills)
+                                //{
+                                //    if (!drill.BlockDefinition.BlockPairName.Equals("Drill8x"))
+                                //    {
+                                //        return true;
+                                //    }
 
-                                }
+                                //}
                                 return false;
                             }
                         }
@@ -125,13 +125,13 @@ namespace CrunchUtilities
                             MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
                             if (newObject.SubtypeName.ToLower().Contains("stone"))
                             {
-                                if (file.UsingDraconisEliteDrills)
-                                {
-                                    if (!drill.BlockDefinition.BlockPairName.Equals("Drill8x"))
-                                    {
-                                        return true;
-                                    }
-                                }
+                                //if (file.UsingDraconisEliteDrills)
+                                //{
+                                //    if (!drill.BlockDefinition.BlockPairName.Equals("Drill8x"))
+                                //    {
+                                //        return true;
+                                //    }
+                                //}
                                 return false;
                             }
                         }
@@ -174,38 +174,63 @@ namespace CrunchUtilities
         public static Dictionary<long, long> attackers = new Dictionary<long, long>();
         private void DamageCheck(object target, ref MyDamageInformation info)
         {
-            
-            try
+            if (file != null && file.LogNeutralsDamagingEachOther)
             {
-
-                if (!(target is MySlimBlock block))
-                    return;
-
-                MyCubeBlock cubeBlock = block.FatBlock;
-
-                if (cubeBlock == null)
-                    return;
-
-                if (cubeBlock as MyTerminalBlock == null)
-                    return;
-
-                if (cubeBlock.EntityId == 0L)
-                    return;
-
-                if (GetAttacker(info.AttackerId) > 0L)
+                try
                 {
-                    attackers.Remove(cubeBlock.EntityId);
-                   attackers.Add(cubeBlock.EntityId, GetAttacker(info.AttackerId));
+
+                    if (!(target is MySlimBlock block))
+                        return;
+
+                    MyCubeBlock cubeBlock = block.FatBlock;
+                    if (cubeBlock == null)
+                        return;
+
+
+
+                    if (cubeBlock as MyTerminalBlock == null)
+                        return;
+
+                    if (cubeBlock.EntityId == 0L)
+                        return;
+
+                    if (GetAttacker(info.AttackerId) > 0L)
+                    {
+                        long attackerId = GetAttacker(info.AttackerId);
+                        MyIdentity id = MySession.Static.Players.TryGetIdentity(attackerId);
+                        if (FacUtils.GetPlayersFaction(id.IdentityId) != null)
+                        {
+
+                            IMyFaction attacker = FacUtils.GetPlayersFaction(id.IdentityId);
+                            IMyFaction defender = FacUtils.GetPlayersFaction(cubeBlock.OwnerId);
+                            if (attacker == null || defender == null)
+                            {
+                                return;
+                            }
+
+                            if (attacker == defender)
+                            {
+                                return;
+                            }
+                            if (MySession.Static.Factions.AreFactionsFriends(attacker.FactionId, defender.FactionId) || MySession.Static.Factions.AreFactionsNeutrals(attacker.FactionId, defender.FactionId))
+                            {
+                                CrunchUtilitiesPlugin.Log.Info("Attacking while not at war " + attackerId + " " + attacker.Tag + " " + attacker.FactionId + " against " + cubeBlock.CubeGrid.DisplayNameText + ", " + defender.Tag + " " + defender.FactionId);
+                            }
+                        }
+
+                    }
+                    else
+                    {
+                        return;
+                    }
+
+
+
                 }
-                else
+                catch (Exception e)
                 {
-                    return;
+                    Log.Error(e, "Error on Checking Damage!");
                 }
-              
-
-
-                } catch (Exception e) {
-                Log.Error(e, "Error on Checking Damage!");
             }
         }
         public long GetAttacker(long attackerId)
@@ -435,8 +460,10 @@ namespace CrunchUtilities
             if (newState == TorchSessionState.Loaded)
             {
                 derp = TorchSessionState.Loaded;
+                MySession.Static.Factions.FactionStateChanged += FactionLogging.StateChange;
+                MyBankingSystem.Static.OnAccountBalanceChanged += BankPatch.BalanceChangedMethod2;
                 //  session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
-            //   MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
+                MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
             }
 
         }

@@ -138,6 +138,7 @@
     <Compile Include="CubeGridPatch.cs" />
     <Compile Include="CurrentCooldown.cs" />
     <Compile Include="EconUtils.cs" />
+    <Compile Include="FactionLogging.cs" />
     <Compile Include="FacUtils.cs" />
     <Compile Include="CrunchUtilitiesPlugin.cs" />
     <Compile Include="FileUtils.cs" />
@@ -145,6 +146,7 @@
     <Compile Include="ProjectorPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScrapFloatingPatch.cs" />
+    <Compile Include="SlimBlockPatch.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

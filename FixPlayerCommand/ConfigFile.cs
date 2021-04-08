@@ -9,23 +9,23 @@ namespace CrunchUtilities
 {
     public class ConfigFile : ViewModel
     {
+        public Boolean LogFactionStuff = true;
+        public Boolean EconomyChangesInLog = true;
+        public Boolean LogNeutralsDamagingEachOther = false;
         public Boolean PcuCountShowProjPCU = true;
         public Boolean EcoChatMessages = true;
         public bool ScrapMetalPatch = false;
-        public bool projectorPatch = false;
         public bool projectorOwnershipPatch = false;
         public bool FixTradeStation = false;
-        public bool SortGPSOnJoin = true;
         public bool PlayerMakeShip = false;
         public bool PlayerFixMe = false;
         public bool DeleteStone = false;
-        public bool UsingDraconisEliteDrills = false;
-        public double Drill2xAmount = 0.8;
-        public double Drill4xAmount = 0.6;
-        public double Drill8xAmount = 0.2;
+       // public bool UsingDraconisEliteDrills = false;
+       /// public double Drill2xAmount = 0.8;
+       // public double Drill4xAmount = 0.6;
+      ///  public double Drill8xAmount = 0.2;
         public Int32 EcoWithdrawMax = Int32.MaxValue;
         public bool DeleteStoneAuto = false;
-        public int deletedStoneCount = 0;
         public bool Withdraw = false;
         public bool facInfo = true;
         public bool PlayerEcoPay = false;

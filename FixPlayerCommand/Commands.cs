@@ -520,11 +520,11 @@ namespace CrunchUtilities
                             if (MySession.Static.Factions.GetStationByGridId(grid.EntityId) == null)
                             {
 
-                                foreach (MySlimBlock block in grid.GetBlocks())
+                                foreach (MyCubeBlock block in grid.GetFatBlocks())
                                 {
 
 
-                                    if (block.FatBlock != null && block.FatBlock.OwnerId > 0)
+                                    if (block.OwnerId > 0)
                                     {
 
                                      //   if (block.FatBlock.BuiltBy != Context.Player.IdentityId)
@@ -532,7 +532,7 @@ namespace CrunchUtilities
                                             blockCount += 1;
                                     
 
-                                        switch (block.FatBlock.GetUserRelationToOwner(Context.Player.IdentityId))
+                                        switch (block.GetUserRelationToOwner(Context.Player.IdentityId))
                                         {
                                             case MyRelationsBetweenPlayerAndBlock.Owner:
 
@@ -551,7 +551,8 @@ namespace CrunchUtilities
 
                                     }
                                 }
-                            }else
+                            }
+                            else
                             {
                                 Context.Respond("Cannot claim economy stations!");
                                 return;
@@ -2421,6 +2422,79 @@ namespace CrunchUtilities
             }
 
         }
+        [Command("ac", "display a factions description")]
+        [Permission(MyPromoteLevel.None)]
+        public void ShowAdminTools()
+        {
+          if (MySession.Static.Players.GetOnlinePlayers().Count > 0)
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                foreach (MyPlayer p in MySession.Static.Players.GetOnlinePlayers())
+                {
+                    int count = 0;
+                    if (MySession.Static.RemoteAdminSettings.ContainsKey(p.Id.SteamId))
+                    {
+                        stringBuilder.AppendLine("");
+
+                        stringBuilder.AppendLine(p.DisplayName + " Steam ID: " + p.Id.SteamId);
+                        AdminSettingsEnum adminSetting = MySession.Static.RemoteAdminSettings[p.Id.SteamId];
+
+                        if (MySession.Static.CreativeToolsEnabled(p.Id.SteamId))
+                        {
+                            stringBuilder.AppendLine("CreativeTools: enabled");
+                            count++;
+                        }
+                        if (adminSetting.HasFlag(AdminSettingsEnum.IgnorePcu)) { 
+                            stringBuilder.AppendLine("IgnorePCU: enabled");
+                            count++;
+                        }
+
+                        if (adminSetting.HasFlag(AdminSettingsEnum.IgnoreSafeZones)) { 
+                            stringBuilder.AppendLine("IgnoreSafeZones: enabled");
+                            count++;
+                        }
+
+                        if (adminSetting.HasFlag(AdminSettingsEnum.Invulnerable)) { 
+                            stringBuilder.AppendLine("Invulnerable: enabled");
+                            count++;
+                        }
+
+                        if (adminSetting.HasFlag(AdminSettingsEnum.KeepOriginalOwnershipOnPaste)) { 
+                            stringBuilder.AppendLine("KeepOriginalOwnershipOnPaste: enabled");
+                            count++;
+                        }
+
+                        if (adminSetting.HasFlag(AdminSettingsEnum.ShowPlayers)) { 
+                            stringBuilder.AppendLine("ShowPlayers: enabled");
+                            count++;
+                        }
+
+                        if (adminSetting.HasFlag(AdminSettingsEnum.Untargetable)) { 
+                            stringBuilder.AppendLine("Untargetable: enabled");
+                            count++;
+                        }
+
+                        if (adminSetting.HasFlag(AdminSettingsEnum.UseTerminals)) { 
+                            stringBuilder.AppendLine("UseTerminals: enabled");
+                            count++;
+                        }
+
+                        if (count > 0)
+                            if (Context.Player == null)
+                            {
+                                Context.Respond(stringBuilder.ToString(), "Big Brother");
+                            }
+                        else
+                            {
+                                DialogMessage m = new DialogMessage("Admin tools enabled", "hi", stringBuilder.ToString());
+                                ModCommunication.SendMessageTo(m, Context.Player.SteamUserId);
+                            }
+                          
+                        
+                    }
+                }
+            }
+        }
 
         private static MethodInfo _factionChangeSuccessInfo = typeof(MyFactionCollection).GetMethod("FactionStateChangeSuccess", BindingFlags.NonPublic | BindingFlags.Static);
         [Command("fac info", "display a factions description")]
@@ -4058,6 +4132,7 @@ namespace CrunchUtilities
         {
             MyIdentity player = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
             IMyFaction fac2 = MySession.Static.Factions.TryGetFactionByTag(tag);
+            
             if (player != null && fac2 != null)
             {
               //  Context.Respond(player.DisplayName + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(Context.Player.IdentityId, fac2.FactionId));

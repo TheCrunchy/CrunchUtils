@@ -22,6 +22,7 @@ namespace CrunchUtilities
             
             if (MyBankingSystem.Static.TryGetAccountInfo(walletID, out info))
             {
+                
                 return info.Balance;
             }
             return 0L;
