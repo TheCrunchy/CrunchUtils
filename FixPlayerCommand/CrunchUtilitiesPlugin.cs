@@ -44,6 +44,11 @@ using VRage.Network;
 using Sandbox.ModAPI.Weapons;
 using Sandbox.Game.GameSystems;
 using Sandbox.Engine.Voxels;
+using Sandbox.Game.Weapons.Guns;
+using VRage.Utils;
+using Sandbox.Engine.Physics;
+using Sandbox.Definitions;
+using System.Linq;
 
 namespace CrunchUtilities
 {
@@ -51,6 +56,7 @@ namespace CrunchUtilities
 
     public class CrunchUtilitiesPlugin : TorchPluginBase
     {
+    
         public static Dictionary<long, long> moneyToPay = new Dictionary<long, long>();
 
 
@@ -61,7 +67,7 @@ namespace CrunchUtilities
         {
           
             public static readonly Logger Log = LogManager.GetCurrentClassLogger();
-
+            private static List<MyPhysics.HitInfo> m_castList = new List<MyPhysics.HitInfo>();
             internal static readonly MethodInfo update =
                 typeof(MyDrillBase).GetMethod("TryHarvestOreMaterial", BindingFlags.Instance | BindingFlags.NonPublic) ??
                 throw new Exception("Failed to find patch method");
@@ -70,15 +76,97 @@ namespace CrunchUtilities
                 typeof(MyPatch).GetMethod(nameof(TestPatchMethod), BindingFlags.Static | BindingFlags.Public) ??
                 throw new Exception("Failed to find patch method");
 
+
+    //        internal static readonly MethodInfo testUpdate =
+    //typeof(MyDrillBase).GetMethod("DrillVoxel", BindingFlags.Instance | BindingFlags.NonPublic) ??
+    //throw new Exception("Failed to find patch method");
+
+    //        internal static readonly MethodInfo testUpdatePatch =
+    //            typeof(MyPatch).GetMethod(nameof(TestPatchMethod2), BindingFlags.Static | BindingFlags.Public) ??
+    //            throw new Exception("Failed to find patch method");
+
             public static void Patch(PatchContext ctx)
             {
 
                 ctx.GetPattern(update).Prefixes.Add(updatePatch);
+              //  ctx.GetPattern(testUpdate).Prefixes.Add(testUpdatePatch);
                 Log.Info("Patching Successful CrunchDrill!");
             }
 
+      //      public static bool TestPatchMethod2(MyDrillBase __instance, MyDrillSensorBase.DetectionInfo entry,
+      //bool collectOre,
+      //bool performCutout,
+      //bool assignDamagedMaterial,
+      //ref MyStringHash targetMaterial)
+      //      {
+      //        //  return false;
+      //          if (__instance.OutputInventory.Owner.GetBaseEntity() is MyShipDrill drill)
+      //          {
+      //              MyVoxelBase entity = entry.Entity as MyVoxelBase;
+      //              Vector3D worldPosition = entry.DetectionPoint;
+      //              bool flag1 = false;
+      //              int count = 0;
+      //              CrunchUtilitiesPlugin.Log.Info(count + "");
+      //              count++;
+                 
 
-            public static bool TestPatchMethod(MyDrillBase __instance, MyVoxelMaterialDefinition material, Vector3 hitPosition)
+      //                  CrunchUtilitiesPlugin.Log.Info(count + "");
+      //                  count++;
+      //                  MyVoxelMaterialDefinition material = (MyVoxelMaterialDefinition)null;
+      //                  Vector3D center = __instance.CutOut.Sphere.Center;
+      //                  MatrixD worldMatrix = drill.WorldMatrix;
+      //                  Vector3D forward = worldMatrix.Forward;
+      //                  Vector3D from = center - forward;
+      //                  worldMatrix = drill.WorldMatrix;
+      //                  CrunchUtilitiesPlugin.Log.Info(count + "");
+      //                  count++;
+      //                  MyPhysics.CastRay(from, from + worldMatrix.Forward * (__instance.CutOut.Sphere.Center + 1.0), m_castList, 28);
+      //                  CrunchUtilitiesPlugin.Log.Info(count + "");
+      //                  count++;
+      //                  bool flag2 = false;
+      //                  CrunchUtilitiesPlugin.Log.Info(count + "");
+      //                  count++;
+      //                  foreach (MyPhysics.HitInfo cast in m_castList)
+      //                  {
+      //                      CrunchUtilitiesPlugin.Log.Info(count + "");
+      //                      count++;
+      //                      if (cast.HkHitInfo.GetHitEntity() is MyVoxelBase)
+      //                      {
+      //                          worldPosition = cast.Position;
+      //                      MyVoxelMaterialDefinition material2;
+                 
+      //                          material2 = entity.GetMaterialAt(ref worldPosition);
+      //                      if (material2 == null)
+      //                      {
+                                
+      //                      }
+      //                      MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material2.MinedOre);
+      //                      if (!newObject.SubtypeName.ToLower().Contains("stone"))
+      //                      {
+      //                          material = material2;
+      //                          flag2 = true;
+      //                          break;
+      //                      }
+      //                      }
+      //                  }
+      //                  if (material == null)
+      //              {
+      //                  return false;
+      //              }
+      //                  CrunchUtilitiesPlugin.Log.Info(count + "");
+      //                  count++;
+      //                  MyObjectBuilder_Ore newObject2 = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
+      //                  if (newObject2.SubtypeName.ToLower().Contains("stone"))
+      //                  {
+      //                      CrunchUtilitiesPlugin.Log.Info("It be stone");
+      //                      return false;
+      //                  }
+      //                  return true;
+                    
+      //          }
+      //          return true;
+      //      }
+                public static bool TestPatchMethod(MyDrillBase __instance, MyVoxelMaterialDefinition material, Vector3 hitPosition)
             {
              
                 if (file != null && !file.DeleteStoneAuto)
@@ -94,10 +182,9 @@ namespace CrunchUtilities
                 }
                 if (__instance.OutputInventory != null && __instance.OutputInventory.Owner != null)
                 {
-                    if (__instance.OutputInventory.Owner.GetBaseEntity() is MyShipDrill)
+                    if (__instance.OutputInventory.Owner.GetBaseEntity() is MyShipDrill drill)
                     {
-                        MyShipDrill drill = __instance.OutputInventory.Owner.GetBaseEntity() as MyShipDrill;
-
+     
                         if (drill == null)
                         {
                             return true;
@@ -214,7 +301,7 @@ namespace CrunchUtilities
                             }
                             if (MySession.Static.Factions.AreFactionsFriends(attacker.FactionId, defender.FactionId) || MySession.Static.Factions.AreFactionsNeutrals(attacker.FactionId, defender.FactionId))
                             {
-                                CrunchUtilitiesPlugin.Log.Info("Attacking while not at war " + attackerId + " " + attacker.Tag + " " + attacker.FactionId + " against " + cubeBlock.CubeGrid.DisplayNameText + ", " + defender.Tag + " " + defender.FactionId);
+                                CrunchUtilitiesPlugin.Log.Info("FACTIONLOG Attacking while not at war " + attackerId + " " + attacker.Tag + " " + attacker.FactionId + " against " + cubeBlock.CubeGrid.DisplayNameText + ", " + defender.Tag + " " + defender.FactionId);
                             }
                         }
 
@@ -382,7 +469,10 @@ namespace CrunchUtilities
                     ulong id = MySession.Static.Players.TryGetSteamId(identity.IdentityId);
                     if (id == steamId)
                         return identity;
+                    if (identity.IdentityId == (long) steamId)
+                        return identity;
                 }
+
             }
             return null;
         }
@@ -462,6 +552,7 @@ namespace CrunchUtilities
                 derp = TorchSessionState.Loaded;
                 MySession.Static.Factions.FactionStateChanged += FactionLogging.StateChange;
                 MyBankingSystem.Static.OnAccountBalanceChanged += BankPatch.BalanceChangedMethod2;
+                
                 //  session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
                 MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
             }

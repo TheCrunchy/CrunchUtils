@@ -39,7 +39,7 @@ namespace CrunchUtilities
             {
                 if (MySession.Static.Factions.TryGetFactionById(newAccountInfo.OwnerIdentifier) != null && newAccountInfo.Log.Count() > 0)
                 {
-                    CrunchUtilitiesPlugin.Log.Info("Faction balance change " + MySession.Static.Factions.TryGetFactionById(newAccountInfo.OwnerIdentifier).Tag + " " + newAccountInfo.OwnerIdentifier + " amount: " + String.Format("{0:n0}", newAccountInfo.Log.Last().Amount) + " SC. by " + newAccountInfo.Log.Last().ChangeIdentifier);
+                    CrunchUtilitiesPlugin.Log.Info("FACTIONLOG Faction balance change " + MySession.Static.Factions.TryGetFactionById(newAccountInfo.OwnerIdentifier).Tag + " " + newAccountInfo.OwnerIdentifier + " amount: " + String.Format("{0:n0}", newAccountInfo.Log.Last().Amount) + " SC. by " + newAccountInfo.Log.Last().ChangeIdentifier);
                 }
             }
         }
@@ -87,12 +87,12 @@ namespace CrunchUtilities
                         {
                             if (amount > 0)
                             {
-                                CrunchUtilitiesPlugin.Log.Info("Faction balance increase: " + String.Format("{0:n0}", amount) + " SC. " + MySession.Static.Factions.TryGetFactionById(identifierId).Tag + " " + MySession.Static.Factions.TryGetFactionById(identifierId).FactionId);
+                                CrunchUtilitiesPlugin.Log.Info("FACTIONLOG Faction balance increase: " + String.Format("{0:n0}", amount) + " SC. " + MySession.Static.Factions.TryGetFactionById(identifierId).Tag + " " + MySession.Static.Factions.TryGetFactionById(identifierId).FactionId);
 
                             }
                             else
                             {
-                                CrunchUtilitiesPlugin.Log.Info("Faction balance decrease: " + String.Format("{0:n0}", amount) + " SC. " + MySession.Static.Factions.TryGetFactionById(identifierId).Tag + " " + MySession.Static.Factions.TryGetFactionById(identifierId).FactionId);
+                                CrunchUtilitiesPlugin.Log.Info("FACTIONLOG Faction balance decrease: " + String.Format("{0:n0}", amount) + " SC. " + MySession.Static.Factions.TryGetFactionById(identifierId).Tag + " " + MySession.Static.Factions.TryGetFactionById(identifierId).FactionId);
 
                             }
                         }
