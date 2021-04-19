@@ -2128,6 +2128,10 @@ namespace CrunchUtilities
             {
                 Context.Respond(fac1.Name + " " + fac1.Tag + " are Neutral with " + fac2.Name + " " + fac2.Tag);
             }
+            if (MySession.Static.Factions.AreFactionsFriends(fac1.FactionId, fac2.FactionId))
+            {
+                Context.Respond(fac1.Name + " " + fac1.Tag + " are Friends with " + fac2.Name + " " + fac2.Tag);
+            }
             else
             {
                 Context.Respond(fac1.Name + " " + fac1.Tag + " are at war with " + fac2.Name + " " + fac2.Tag);
@@ -3189,7 +3193,7 @@ namespace CrunchUtilities
         public void PlayerWithdraw(string PlayerName, string type, string subtypeName, int amount, bool force = false)
         {
 
-            IMyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(PlayerName) as MyPlayer;
+            MyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(PlayerName) as MyPlayer;
             if (player == null)
             {
                 Context.Respond("Cant find that player");
@@ -3222,17 +3226,25 @@ namespace CrunchUtilities
                 return;
             }
 
-            VRage.Game.MyDefinitionId.TryParse(type, subtypeName, out VRage.Game.MyDefinitionId itemDefinition);
-
 
 
             if (!force)
             {
 
-                Sandbox.Game.MyVisualScriptLogicProvider.AddToPlayersInventory(player.IdentityId, itemDefinition, amount);
+                try
+                {
+                    Sandbox.Game.MyVisualScriptLogicProvider.AddToPlayersInventory(player.Identity.IdentityId, id, amount);
+                }
+                catch (Exception ex)
+                {
+                    Context.Respond("Error, item not given");
+                    CrunchUtilitiesPlugin.Log.Error(ex);
+                    return;
+                    
+                }
 
                 Context.Respond("Added the items");
-                SendMessage("[C]", "You were given " + amount + " " + subtypeName, Color.Green, (long)player.SteamUserId);
+                SendMessage("[C]", "You were given " + amount + " " + subtypeName, Color.Green, (long)player.Id.SteamId);
                 return;
 
             }
@@ -3282,7 +3294,7 @@ namespace CrunchUtilities
                 {VRage.MyFixedPoint.DeserializeString(amount.ToString()), item, new uint?(),-1});
                 //refresh this or buggy stuff happens
                 invent.Refresh();
-                SendMessage("[C]", "You were given " + amount + " " + subtypeName, Color.Green, (long)player.SteamUserId);
+                SendMessage("[C]", "You were given " + amount + " " + subtypeName, Color.Green, (long)player.Id.SteamId);
                 Context.Respond("items are added");
             }
 
