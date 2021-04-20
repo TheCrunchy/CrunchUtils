@@ -255,9 +255,27 @@ namespace CrunchUtilities
         public Dictionary<long, CurrentCooldown> CurrentCooldownMapFix { get; } = new Dictionary<long, CurrentCooldown>();
 
         private static Timer aTimer = new Timer();
-
-     
-
+        private static Dictionary<long, DateTime> blockCooldowns = new Dictionary<long, DateTime>();
+        private static int ticks = 0;
+        public static void Update()
+        {
+            ticks++;
+            List<long> idsToRemove = new List<long>();
+            if (ticks % 524 == 0)
+            {
+                foreach (KeyValuePair<long, DateTime> pair in blockCooldowns)
+                {
+                    if (DateTime.Now >= pair.Value)
+                    {
+                        idsToRemove.Add(pair.Key);
+                    }
+                }
+                foreach (long id in idsToRemove)
+                {
+                    blockCooldowns.Remove(id);
+                }
+            }
+        }
         public static Dictionary<long, long> attackers = new Dictionary<long, long>();
         private void DamageCheck(object target, ref MyDamageInformation info)
         {
@@ -280,7 +298,7 @@ namespace CrunchUtilities
 
                     if (cubeBlock.EntityId == 0L)
                         return;
-
+   
                     if (GetAttacker(info.AttackerId) > 0L)
                     {
                         long attackerId = GetAttacker(info.AttackerId);
@@ -299,20 +317,32 @@ namespace CrunchUtilities
                             {
                                 return;
                             }
+
                             if (MySession.Static.Factions.AreFactionsFriends(attacker.FactionId, defender.FactionId) || MySession.Static.Factions.AreFactionsNeutrals(attacker.FactionId, defender.FactionId))
                             {
-                                CrunchUtilitiesPlugin.Log.Info("FACTIONLOG Attacking while not at war " + attackerId + " " + attacker.Tag + " " + attacker.FactionId + " against " + cubeBlock.CubeGrid.DisplayNameText + ", " + defender.Tag + " " + defender.FactionId);
+                                if (blockCooldowns.TryGetValue(cubeBlock.EntityId, out DateTime time))
+                                {
+                                    if (DateTime.Now < time)
+                                    {
+                                        return;
+                                    }
+                                }
+
+                                blockCooldowns.Remove(cubeBlock.EntityId);
+                                blockCooldowns.Add(cubeBlock.EntityId, DateTime.Now.AddSeconds(10));
+                                CrunchUtilitiesPlugin.Log.Info("FACTIONLOG Attacking while not at war " + attackerId + " " + attacker.Tag + " " + attacker.FactionId + " against " + cubeBlock.CubeGrid.DisplayName + ", " + defender.Tag + " " + defender.FactionId);
                             }
+
+
+
+                        }
+                        else
+                        {
+                            return;
                         }
 
+
                     }
-                    else
-                    {
-                        return;
-                    }
-
-
-
                 }
                 catch (Exception e)
                 {

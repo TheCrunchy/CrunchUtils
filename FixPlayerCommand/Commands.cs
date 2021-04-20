@@ -3383,6 +3383,40 @@ namespace CrunchUtilities
             }
         }
 
+        [Command("fac kick", "Admin command to take money")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void KickMember(string tag, string target)
+        {
+            MyFaction faction = MySession.Static.Factions.TryGetFactionByTag(tag);
+            if (faction == null)
+            {
+                Context.Respond("Cant find that faction.");
+                return;
+            }
+            MyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(target);
+            if (id == null)
+            {
+                Context.Respond("Cant find that player.");
+                    return;
+            }
+            MyVisualScriptLogicProvider.KickPlayerFromFaction(id.IdentityId);
+           
+            Context.Respond("Kicked the player");
+        }
+        [Command("isnpc", "Admin command to see if an identity is an npc")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void IsThisAnNPC(string target)
+        {
+            MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(target);
+            if (identity == null)
+            {
+                Context.Respond("Couldnt find that identity");
+                return;
+            }
+            Context.Respond(MySession.Static.Players.IdentityIsNpc(identity.IdentityId) + "");
+        }
+
+
         [Command("eco take", "Admin command to take money")]
         [Permission(MyPromoteLevel.Admin)]
         public void TakeMoney(string type, string recipient, string inputAmount)
