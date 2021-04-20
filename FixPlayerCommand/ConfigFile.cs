@@ -9,6 +9,7 @@ namespace CrunchUtilities
 {
     public class ConfigFile : ViewModel
     {
+        public Boolean ShowFactionTagsOnDamageGrid = false;
         public Boolean LogFactionStuff = true;
         public Boolean EconomyChangesInLog = true;
         public Boolean LogNeutralsDamagingEachOther = false;

@@ -1567,6 +1567,11 @@ namespace CrunchUtilities
 
                             playerFac = FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId);
                         }
+                      if (playerFac == null)
+                        {
+                            Context.Respond("Make a faction. This command does not work without being in a faction.");
+                            return;
+                        }
                         if (MySession.Static.Factions.AreFactionsFriends(playerFac.FactionId, FacUtils.GetPlayersFaction(player.Identity.IdentityId).FactionId)) {
                             if (friends.ContainsKey(FacUtils.GetPlayersFaction(player.Identity.IdentityId).Tag))
                             {
