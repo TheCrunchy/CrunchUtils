@@ -276,6 +276,33 @@ namespace CrunchUtilities
                 }
             }
         }
+
+        public static void SendAttackNotification(IMyFaction attacker, IMyFaction defender, long attackerId, ulong playerSteamid)
+        {
+            if (defender != null)
+            {
+                if (attacker != null && !attacker.Equals(defender))
+                {
+                    if (blockCooldowns.TryGetValue(attackerId, out DateTime time))
+                    {
+                        if (DateTime.Now >= time)
+                        {
+                            ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red"), playerSteamid);
+                            blockCooldowns.Remove(attackerId);
+                            blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(5));
+                        }
+                    }
+                    else
+                    {
+                        blockCooldowns.Remove(attackerId);
+                        blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(5));
+                        ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red"), playerSteamid);
+                       
+                    }
+                }
+            }
+            return;
+        }
         public static Dictionary<long, long> attackers = new Dictionary<long, long>();
         private void DamageCheck(object target, ref MyDamageInformation info)
         {
@@ -284,9 +311,28 @@ namespace CrunchUtilities
                 if (file.LogNeutralsDamagingEachOther || file.ShowFactionTagsOnDamageGrid)
                     try
                     {
-
                         if (!(target is MySlimBlock block))
                             return;
+                        long attackerId = GetAttacker(info.AttackerId);
+                        MyIdentity id = MySession.Static.Players.TryGetIdentity(attackerId);
+                        if (id == null)
+                        {
+                            return;
+                        }
+                        IMyFaction defender = FacUtils.GetPlayersFaction(FacUtils.GetOwner(block.CubeGrid));
+                        IMyFaction attacker = FacUtils.GetPlayersFaction(id.IdentityId);
+                        if (file.ShowFactionTagsOnDamageGrid)
+                        {
+
+                            if (Sync.Players.TryGetPlayerId(id.IdentityId, out MyPlayer.PlayerId player))
+                            {
+                                if (MySession.Static.Players.GetPlayerById(player) != null)
+                                {
+                                    SendAttackNotification(attacker, defender, attackerId, player.SteamId);
+                                }
+                            }
+                        }
+                     
 
                         MyCubeBlock cubeBlock = block.FatBlock;
                         if (cubeBlock == null)
@@ -302,49 +348,14 @@ namespace CrunchUtilities
 
                         if (GetAttacker(info.AttackerId) > 0L)
                         {
-                            long attackerId = GetAttacker(info.AttackerId);
-                            MyIdentity id = MySession.Static.Players.TryGetIdentity(attackerId);
+                          
 
-                            IMyFaction defender = FacUtils.GetPlayersFaction(cubeBlock.OwnerId);
-                            if (file.ShowFactionTagsOnDamageGrid)
+                       
+                     
+                            //this is so messy 
+                            if (attacker != null && defender != null)
                             {
-                                if (Sync.Players.TryGetPlayerId(id.IdentityId, out MyPlayer.PlayerId player))
-                                {
-                                    if (MySession.Static.Players.GetPlayerById(player) != null)
-                                    {
-                                        if (defender != null)
-                                        {
-                                            if (blockCooldowns.TryGetValue(attackerId, out DateTime time))
-                                            {
-                                                if (DateTime.Now > time)
-                                                {
-                                                    ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red"), player.SteamId);
-                                                    blockCooldowns.Remove(attackerId);
-                                                    blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(5));
-                                                }
-                                            }
-                                            else
-                                            {
-                                                blockCooldowns.Remove(attackerId);
-                                                blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(5));
-                                                ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red"), player.SteamId);
-                                            }
-
-                                        }
-                                    }
-                                }
-                            }
-                            if (FacUtils.GetPlayersFaction(id.IdentityId) != null)
-                            {
-
-                                IMyFaction attacker = FacUtils.GetPlayersFaction(id.IdentityId);
-
-                                if (attacker == null || defender == null)
-                                {
-                                    return;
-                                }
-
-                                if (attacker == defender)
+                                if (attacker.Equals(defender))
                                 {
                                     return;
                                 }
@@ -365,16 +376,11 @@ namespace CrunchUtilities
                                         CrunchUtilitiesPlugin.Log.Info("FACTIONLOG Attacking while not at war " + attackerId + " " + attacker.Tag + " " + attacker.FactionId + " against " + cubeBlock.CubeGrid.DisplayName + ", " + defender.Tag + " " + defender.FactionId);
                                     }
                                 }
-
-
-
                             }
                             else
                             {
                                 return;
                             }
-
-
                         }
                     }
                     catch (Exception e)
