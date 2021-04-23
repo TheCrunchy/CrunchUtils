@@ -43,8 +43,9 @@
     <Reference Include="Sandbox.Common">
       <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\Sandbox.Common.dll</HintPath>
     </Reference>
-    <Reference Include="Sandbox.Game">
-      <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\Sandbox.Game.dll</HintPath>
+    <Reference Include="Sandbox.Game, Version=0.1.1.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\Sandbox.Game.dll</HintPath>
     </Reference>
     <Reference Include="Sandbox.Game.XmlSerializers">
       <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\Sandbox.Game.XmlSerializers.dll</HintPath>
