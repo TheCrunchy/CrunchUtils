@@ -2573,6 +2573,68 @@ namespace CrunchUtilities
             }
         }
 
+        [Command("resetnpcrep", "reset rep for all members")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void RepReset(string factiontag, string npctag)
+        {
+            IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(factiontag);
+            IMyFaction npcfac = MySession.Static.Factions.TryGetFactionByTag(npctag);
+            if (fac == null)
+            {
+                Context.Respond("Cant find faction.");
+                return;
+            }
+            if (npcfac == null)
+            {
+                Context.Respond("Cant find npc faction.");
+                return;
+            }
+            foreach (KeyValuePair<long, MyFactionMember> m in fac.Members)
+            {
+                System.Tuple<MyRelationsBetweenFactions, int> rep = MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(m.Value.PlayerId, npcfac.FactionId);
+                MySession.Static.Factions.SetReputationBetweenFactions(fac.FactionId, npcfac.FactionId, 0);
+                if (rep.Item2 < 0)
+                {
+                    MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(m.Value.PlayerId, npcfac.FactionId, 0);
+                
+                    MySession.Static.Factions.AddFactionPlayerReputation(m.Value.PlayerId, npcfac.FactionId, 0);
+                }
+            }
+            Context.Respond("Done!");
+
+        }
+        [Command("resetallrep", "reset rep for all players")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void RepResetAll(string npctag)
+        {
+            IMyFaction npcfac = MySession.Static.Factions.TryGetFactionByTag(npctag);
+
+            if (npcfac == null)
+            {
+                Context.Respond("Cant find npc faction.");
+                return;
+            }
+            foreach (MyIdentity id2 in MySession.Static.Players.GetAllIdentities())
+            {
+                if (MySession.Static.Players.IdentityIsNpc(id2.IdentityId))
+                    continue;
+
+                if (FacUtils.GetPlayersFaction(id2.IdentityId) != null)
+                {
+                    MySession.Static.Factions.SetReputationBetweenFactions(FacUtils.GetPlayersFaction(id2.IdentityId).FactionId, npcfac.FactionId, 0);
+                }
+                System.Tuple<MyRelationsBetweenFactions, int> rep = MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(id2.IdentityId, npcfac.FactionId);
+                if (rep.Item2 < 0)
+                {
+                    MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(id2.IdentityId, npcfac.FactionId, 0);
+                    MySession.Static.Factions.AddFactionPlayerReputation(id2.IdentityId, npcfac.FactionId, 0);
+                }
+            }
+
+
+            Context.Respond("Done!");
+
+        }
         private static MethodInfo _factionChangeSuccessInfo = typeof(MyFactionCollection).GetMethod("FactionStateChangeSuccess", BindingFlags.NonPublic | BindingFlags.Static);
         [Command("fac info", "display a factions description")]
         [Permission(MyPromoteLevel.None)]

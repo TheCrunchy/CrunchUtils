@@ -287,7 +287,7 @@ namespace CrunchUtilities
                     {
                         if (DateTime.Now >= time)
                         {
-                            ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red"), playerSteamid);
+                            ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 4500, "Red"), playerSteamid);
                             blockCooldowns.Remove(attackerId);
                             blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(5));
                         }
@@ -296,7 +296,7 @@ namespace CrunchUtilities
                     {
                         blockCooldowns.Remove(attackerId);
                         blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(5));
-                        ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red"), playerSteamid);
+                        ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 4500, "Red"), playerSteamid);
                        
                     }
                 }

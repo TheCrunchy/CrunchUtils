@@ -68,13 +68,13 @@ namespace CrunchUtilities
                         {
                             Commands.SendMessage("CrunchEcon", "Balance increased by: " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)pp.Id.SteamId);
                             if (CrunchUtilitiesPlugin.file.EconomyChangesInLog)
-                            CrunchUtilitiesPlugin.Log.Info("Player Balance increased by: " + String.Format("{0:n0}", amount) + " SC", + (long)pp.Id.SteamId);
+                            CrunchUtilitiesPlugin.Log.Info("Player Balance increased by: " + String.Format("{0:n0}", amount) + " SC. steam id: " + (long)pp.Id.SteamId + " identity id: " +pp.Identity.IdentityId);
                         }
                         else
                         {
                             Commands.SendMessage("CrunchEcon", "Balance decreased by: " + String.Format("{0:n0}", amount) + " SC", Color.Red, (long)pp.Id.SteamId);
                             if (CrunchUtilitiesPlugin.file.EconomyChangesInLog)
-                                CrunchUtilitiesPlugin.Log.Info("Player Balance decreased by: " + String.Format("{0:n0}", amount) + " SC", +(long)pp.Id.SteamId);
+                                CrunchUtilitiesPlugin.Log.Info("Player Balance decreased by: " + String.Format("{0:n0}", amount) + " SC. steam id: " +(long)pp.Id.SteamId + " identity id: " + pp.Identity.IdentityId);
                         }
 
                     }
