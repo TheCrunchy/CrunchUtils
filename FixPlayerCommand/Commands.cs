@@ -2057,10 +2057,8 @@ namespace CrunchUtilities
                         break;
                     }
                 }
-
-
-                File.WriteAllText(CrunchUtilitiesPlugin.path + "//eco.csv", data2.ToString());
-                File.WriteAllText(CrunchUtilitiesPlugin.path + "//eco-" + string.Format("{0:yyyy-MM-dd_HH-mm-ss-fff}", DateTime.Now) + ".csv", data2.ToString());
+                File.WriteAllText(CrunchUtilitiesPlugin.path.Replace("\\Instance", "\\Logs") + "//eco.csv", data2.ToString());
+                File.WriteAllText(CrunchUtilitiesPlugin.path.Replace("\\Instance", "\\Logs") + "//eco-" + string.Format("{0:yyyy-MM-dd_HH-mm-ss-fff}", DateTime.Now) + ".csv", data2.ToString());
                 if (Context.Player == null)
                 {
                     Context.Respond("Top " + limit + " player balances\n" + data.ToString());
@@ -2103,9 +2101,9 @@ namespace CrunchUtilities
                         break;
                     }
                 }
-                File.WriteAllText(CrunchUtilitiesPlugin.path + "//ecofac.csv", data2.ToString());
+                File.WriteAllText(CrunchUtilitiesPlugin.path.Replace("\\Instance", "\\Logs") + "//ecofac.csv", data2.ToString());
 
-                File.WriteAllText(CrunchUtilitiesPlugin.path + "//ecofac-" + string.Format("{0:yyyy-MM-dd_HH-mm-ss-fff}", DateTime.Now) + ".csv", data2.ToString());
+                File.WriteAllText(CrunchUtilitiesPlugin.path.Replace("\\Instance", "\\Logs") + "//ecofac-" + string.Format("{0:yyyy-MM-dd_HH-mm-ss-fff}", DateTime.Now) + ".csv", data2.ToString());
 
 
                 if (Context.Player == null)
