@@ -2057,6 +2057,8 @@ namespace CrunchUtilities
                         break;
                     }
                 }
+             //   MyReactor reactor;
+               // reactor.BlockDefinition.FuelProductionToCapacityMultiplier
                 File.WriteAllText(CrunchUtilitiesPlugin.path.Replace("\\Instance", "\\Logs") + "//eco.csv", data2.ToString());
                 File.WriteAllText(CrunchUtilitiesPlugin.path.Replace("\\Instance", "\\Logs") + "//eco-" + string.Format("{0:yyyy-MM-dd_HH-mm-ss-fff}", DateTime.Now) + ".csv", data2.ToString());
                 if (Context.Player == null)
@@ -2255,6 +2257,21 @@ namespace CrunchUtilities
                 {
                     Sandbox.Game.Multiplayer.MyFactionCollection.DeclareWar(playerFac.FactionId, fac.FactionId);
                     Context.Respond("War were declared.");
+                    if (fac.Tag.Length > 3)
+                    {
+                        foreach (KeyValuePair<long, MyFactionMember> m in playerFac.Members)
+                        {
+                        
+                                MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(m.Value.PlayerId, fac.FactionId, -3000);
+
+                                MySession.Static.Factions.AddFactionPlayerReputation(m.Value.PlayerId, fac.FactionId, 0);
+                            
+                        }
+                    }
+                    else
+                    {
+                        MySession.Static.Factions.SetReputationBetweenFactions(playerFac.FactionId, fac.FactionId, -3000);
+                    }
                 }
                 else
                 {
@@ -2471,7 +2488,21 @@ namespace CrunchUtilities
                     if (state == MyFactionPeaceRequestState.Pending)
                     {
                         Sandbox.Game.Multiplayer.MyFactionCollection.AcceptPeace(playerFac.FactionId, fac.FactionId);
+                        if (fac.Tag.Length > 3)
+                        {
+                            foreach (KeyValuePair<long, MyFactionMember> m in playerFac.Members)
+                            {
 
+                                MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(m.Value.PlayerId, fac.FactionId, 0);
+
+                                MySession.Static.Factions.AddFactionPlayerReputation(m.Value.PlayerId, fac.FactionId, 0);
+
+                            }
+                        }
+                        else
+                        {
+                            MySession.Static.Factions.SetReputationBetweenFactions(playerFac.FactionId, fac.FactionId, 0);
+                        }
 
                     }
                     Sandbox.Game.Multiplayer.MyFactionCollection.SendPeaceRequest(playerFac.FactionId, fac.FactionId);
