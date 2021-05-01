@@ -3443,8 +3443,7 @@ namespace CrunchUtilities
                 (ParameterModifier[])null);
                 if (method == null)
                     throw new Exception("reflection error");
-                method.Invoke(invent, new object[4]
-                {VRage.MyFixedPoint.DeserializeString(amount.ToString()), item, new uint?(),-1});
+                method.Invoke(invent, new object[4]{(MyFixedPoint) amount, item, new uint?(),-1});
                 //refresh this or buggy stuff happens
                 invent.Refresh();
                 SendMessage("[C]", "You were given " + amount + " " + subtypeName, Color.Green, (long)player.Id.SteamId);
