@@ -2057,8 +2057,8 @@ namespace CrunchUtilities
                         break;
                     }
                 }
-             //   MyReactor reactor;
-               // reactor.BlockDefinition.FuelProductionToCapacityMultiplier
+                //   MyReactor reactor;
+                // reactor.BlockDefinition.FuelProductionToCapacityMultiplier
                 File.WriteAllText(CrunchUtilitiesPlugin.path.Replace("\\Instance", "\\Logs") + "//eco.csv", data2.ToString());
                 File.WriteAllText(CrunchUtilitiesPlugin.path.Replace("\\Instance", "\\Logs") + "//eco-" + string.Format("{0:yyyy-MM-dd_HH-mm-ss-fff}", DateTime.Now) + ".csv", data2.ToString());
                 if (Context.Player == null)
@@ -2261,11 +2261,11 @@ namespace CrunchUtilities
                     {
                         foreach (KeyValuePair<long, MyFactionMember> m in playerFac.Members)
                         {
-                        
-                                MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(m.Value.PlayerId, fac.FactionId, -3000);
 
-                                MySession.Static.Factions.AddFactionPlayerReputation(m.Value.PlayerId, fac.FactionId, 0);
-                            
+                            MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(m.Value.PlayerId, fac.FactionId, -3000);
+
+                            MySession.Static.Factions.AddFactionPlayerReputation(m.Value.PlayerId, fac.FactionId, 0);
+
                         }
                     }
                     else
@@ -2625,7 +2625,7 @@ namespace CrunchUtilities
                 if (rep.Item2 < 0)
                 {
                     MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(m.Value.PlayerId, npcfac.FactionId, 0);
-                
+
                     MySession.Static.Factions.AddFactionPlayerReputation(m.Value.PlayerId, npcfac.FactionId, 0);
                 }
             }
@@ -3441,9 +3441,9 @@ namespace CrunchUtilities
              typeof (MyFixedPoint), typeof (MyObjectBuilder_PhysicalObject), typeof (uint?), typeof (int)
                 },
                 (ParameterModifier[])null);
-                if (method == (MethodInfo)null)
+                if (method == null)
                     throw new Exception("reflection error");
-                method.Invoke((object)invent, new object[4]
+                method.Invoke(invent, new object[4]
                 {VRage.MyFixedPoint.DeserializeString(amount.ToString()), item, new uint?(),-1});
                 //refresh this or buggy stuff happens
                 invent.Refresh();
