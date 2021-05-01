@@ -275,6 +275,44 @@ namespace CrunchUtilities
                     blockCooldowns.Remove(id);
                 }
             }
+            if (ticks % 10000 == 0 && file != null && file.IdentityUpdate)
+            {
+                try
+                {
+                    Log.Info("Updating names");
+                    if (derp == TorchSessionState.Loaded && MySession.Static.Players.GetOnlinePlayers().Count > 0)
+                    {
+                        foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+                        {
+                            if (player == null || player.Id == null)
+                                continue;
+
+                            string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
+                            if (name == null || string.IsNullOrEmpty(name))
+                                continue;
+
+                            MyIdentity identity = player.Identity;
+                            if (identity == null)
+                                continue;
+
+                            if (player.Character != null && player.Character.DisplayName != null && !player.DisplayName.Equals(name))
+                            {
+                                MyAPIGateway.Utilities.InvokeOnGameThread(() =>
+                                {
+                                    identity.SetDisplayName(name);
+                                });
+                            }
+                            // }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Info("Error on updating names");
+                    Log.Error(ex.ToString());
+                    return;
+                }
+            }
         }
 
         public static void SendAttackNotification(IMyFaction attacker, IMyFaction defender, long attackerId, ulong playerSteamid)
@@ -287,16 +325,18 @@ namespace CrunchUtilities
                     {
                         if (DateTime.Now >= time)
                         {
-                            ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 4500, "Red"), playerSteamid);
+                            //this is annoying, need to figure out how to check the exact world time so a duplicate message isnt possible
+                            ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red"), playerSteamid);
                             blockCooldowns.Remove(attackerId);
-                            blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(5));
+                            blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(11));
+                         
                         }
                     }
                     else
                     {
                         blockCooldowns.Remove(attackerId);
-                        blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(5));
-                        ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 4500, "Red"), playerSteamid);
+                        blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(11));
+                        ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red"), playerSteamid);
                        
                     }
                 }
@@ -308,6 +348,7 @@ namespace CrunchUtilities
         {
             if (file != null)
             {
+               
                 if (file.LogNeutralsDamagingEachOther || file.ShowFactionTagsOnDamageGrid)
                     try
                     {
@@ -462,14 +503,7 @@ namespace CrunchUtilities
         {
             FileUtils utils = new FileUtils();
             file = utils.ReadFromXmlFile<ConfigFile>(path + "\\CrunchUtils.xml");
-            if (file.IdentityUpdate)
-            {
-                aTimer.Enabled = false;
-                aTimer.Interval = 150000;
-                aTimer.Elapsed += OnTimedEventA;
-                aTimer.AutoReset = true;
-                aTimer.Enabled = true;
-            }
+
 
             return file;
         }
@@ -477,14 +511,7 @@ namespace CrunchUtilities
         {
             FileUtils utils = new FileUtils();
             utils.WriteToXmlFile<ConfigFile>(path + "\\CrunchUtils.xml", file);
-            if (file.IdentityUpdate)
-            {
-                aTimer.Enabled = false;
-                aTimer.Interval = 150000;
-                aTimer.Elapsed += OnTimedEventA;
-                aTimer.AutoReset = true;
-                aTimer.Enabled = true;
-            }
+
             return file;
         }
         public override void Init(ITorchBase torch)
@@ -517,14 +544,7 @@ namespace CrunchUtilities
                 file = new ConfigFile();
                 utils.WriteToXmlFile<ConfigFile>(StoragePath + "\\CrunchUtils.xml", file, false);
             }
-            if (file.IdentityUpdate)
-            {
-                aTimer.Enabled = false;
-                aTimer.Interval = 150000;
-                aTimer.Elapsed += OnTimedEventA;
-                aTimer.AutoReset = true;
-                aTimer.Enabled = true;
-            }
+
         }
 
         //method from lord tylus
@@ -547,13 +567,7 @@ namespace CrunchUtilities
             return null;
         }
 
-        private static void OnTimedEventA(Object source, System.Timers.ElapsedEventArgs e)
-        {
-            Task.Run(() =>
-            {
-                UpdateNamesTask();
-            });
-        }
+  
         private static void OnTimedEventB(Object source, System.Timers.ElapsedEventArgs e)
         {
             Task.Run(() =>
@@ -568,51 +582,7 @@ namespace CrunchUtilities
 
             }
         }
-        public static void UpdateNamesTask()
-        {
 
-
-            //    if (derp == TorchSessionState.Loaded) {
-            try
-            {
-                Log.Info("Updating names");
-                if (derp == TorchSessionState.Loaded && MySession.Static.Players.GetOnlinePlayers().Count > 0)
-                {
-                    foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
-                    {
-                        if (player == null || player.Id == null)
-                        {
-                            break;
-                        }
-
-                        string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
-                        if (name == null)
-                        {
-                            break;
-                        }
-                        MyIdentity identity = GetIdentityByNameOrId(player.Id.SteamId.ToString());
-                        if (identity == null)
-                        {
-                            break;
-                        }
-                        if (player.Character != null && player.Character.DisplayName != null && !player.DisplayName.Equals(name))
-                        {
-
-
-                            identity.SetDisplayName(MyMultiplayer.Static.GetMemberName(player.Id.SteamId));
-
-                        }
-                        // }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Info("Error on updating names");
-                Log.Error(ex.ToString());
-                return;
-            }
-        }
         private void SessionChanged(ITorchSession session, TorchSessionState newState)
         {
             //Do something here in the future
