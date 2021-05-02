@@ -257,6 +257,7 @@ namespace CrunchUtilities
         private static Timer aTimer = new Timer();
         private static Dictionary<long, DateTime> blockCooldowns = new Dictionary<long, DateTime>();
         private static int ticks = 0;
+        public static List<MyFunctionalBlock> blocksToTurnOff = new List<MyFunctionalBlock>();
         public override void Update()
         {
             ticks++;

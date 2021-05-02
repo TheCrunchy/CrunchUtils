@@ -4152,6 +4152,7 @@ namespace CrunchUtilities
                         {
                             b.FatBlock.GetInventory().Clear();
                             inventory++;
+                      
                         }
                     }
                 }

@@ -9,8 +9,7 @@ namespace CrunchUtilities
 {
     public class ConfigFile : ViewModel
     {
-        public Boolean SensorNobodyPatch = false;
-        public Boolean TimerNobodyPatch = false;
+        public Boolean NobodyPatch = false;
         public Boolean ShowFactionTagsOnDamageGrid = false;
         public Boolean LogFactionStuff = true;
         public Boolean EconomyChangesInLog = true;
