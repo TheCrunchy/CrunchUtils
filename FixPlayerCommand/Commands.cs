@@ -47,6 +47,8 @@ using VRage.Network;
 using SpaceEngineers.Game.Entities.Blocks;
 using VRage.Voxels;
 using Sandbox.Engine.Voxels;
+using VRage.Library.Utils;
+using VRage.Game.ObjectBuilders.Definitions;
 
 namespace CrunchUtilities
 {
@@ -2602,7 +2604,63 @@ namespace CrunchUtilities
                 }
             }
         }
+        private string GetRandomStationName(MyStationsListDefinition stationsListDef)
+        {
+            if (stationsListDef == null)
+                return "Economy_SpaceStation_1";
+            int index = MyRandom.Instance.Next(0, stationsListDef.StationNames.Count);
+            return stationsListDef.StationNames[index].ToString();
+        }
 
+        [Command("place station", "place an npc economy station")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void PlaceStation(string npctag, string type)
+        {
+            MyFaction npcfac = MySession.Static.Factions.TryGetFactionByTag(npctag) as MyFaction;
+            if (npcfac == null)
+            {
+                Context.Respond("Cant find faction.");
+                return;
+            }
+            //MyStationsListDefinition stationTypeDefinition = MyStationGenerator.GetStationTypeDefinition(MyStationTypeEnum.SpaceStation);
+            //Type generator = MySession.Static.GetType().Assembly.GetType("Sandbox.Game.World.Generator.MyStationGenerator");
+            //MethodInfo getStationTypeDefinition = generator?.GetMethod("SendFactionChange", BindingFlags.NonPublic | BindingFlags.Static);
+            //List<object[]> ReturnPlayers = new List<object[]>();
+            //object[] MethodInput = new object[] { change, target.FactionId, playerfac.FactionId, 0L };
+
+            //  sendChange?.Invoke(null, MethodInput);
+            MyDefinitionId subtypeId = new MyDefinitionId();
+            MyStationTypeEnum stationType;
+            switch (type.ToLower())
+            {
+                case "spacestations":
+                    subtypeId = new MyDefinitionId((MyObjectBuilderType)typeof(MyObjectBuilder_StationsListDefinition), "SpaceStations");
+                    stationType = MyStationTypeEnum.SpaceStation;
+                    break;
+                case "orbitalstations":
+                    subtypeId = new MyDefinitionId((MyObjectBuilderType)typeof(MyObjectBuilder_StationsListDefinition), "OrbitalStations");
+                    stationType = MyStationTypeEnum.OrbitalStation;
+                    break;
+                case "outposts":
+                    subtypeId = new MyDefinitionId((MyObjectBuilderType)typeof(MyObjectBuilder_StationsListDefinition), "Outposts");
+                    stationType = MyStationTypeEnum.Outpost;
+                    break;
+                case "miningstations":
+                    subtypeId = new MyDefinitionId((MyObjectBuilderType)typeof(MyObjectBuilder_StationsListDefinition), "MiningStations");
+                    stationType = MyStationTypeEnum.MiningStation;
+                    break;
+                default:
+                    Context.Respond("Cannot find that type, use SpaceStations, OrbitalStations, Outposts or OrbitalStations");
+                    return;
+            }
+         
+            MyStationsListDefinition stationDefinition = MyDefinitionManager.Static.GetDefinition<MyStationsListDefinition>(subtypeId);
+
+            Vector3 position = Context.Player.GetPosition();
+            MyStation station = new MyStation(MyEntityIdentifier.AllocateId(MyEntityIdentifier.ID_OBJECT_TYPE.STATION, MyEntityIdentifier.ID_ALLOCATION_METHOD.RANDOM), position , stationType, npcfac, GetRandomStationName(stationDefinition), stationDefinition.GeneratedItemsContainerType);
+          
+            npcfac.AddStation(station);
+        }
         [Command("resetnpcrep", "reset rep for all members")]
         [Permission(MyPromoteLevel.Admin)]
         public void RepReset(string factiontag, string npctag)
@@ -2614,6 +2672,7 @@ namespace CrunchUtilities
                 Context.Respond("Cant find faction.");
                 return;
             }
+            
             if (npcfac == null)
             {
                 Context.Respond("Cant find npc faction.");
