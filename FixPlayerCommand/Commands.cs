@@ -1047,7 +1047,7 @@ namespace CrunchUtilities
 
             }
         }
-        [Command("fixallstations", "fuck fuck fuck")]
+        [Command("fixallstations", "check every trade station for duplicates and delete the duplicates")]
         [Permission(MyPromoteLevel.Admin)]
         public void fixAllStations()
         {
@@ -1132,34 +1132,34 @@ namespace CrunchUtilities
 
             return gps;
         }
-        [Command("isthisasteroid", "fuck fuck fuck")]
-        [Permission(MyPromoteLevel.None)]
-        public void DoAsteroidStuff()
-        {
+        //[Command("isthisasteroid", "fuck fuck fuck")]
+        //[Permission(MyPromoteLevel.None)]
+        //public void DoAsteroidStuff()
+        //{
 
-            List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
+        //    List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
 
-            BoundingSphereD sphere = new BoundingSphereD(Context.Player.Character.PositionComp.GetPosition(), 500);
-            l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
-
-
-            foreach (IMyEntity e in l)
-            {
-                if (e is MyCubeGrid grid)
-                {
-
-                    MyGps gps = CreateGps(grid.PositionComp.GetPosition(), Color.Green, 300, "", "");
+        //    BoundingSphereD sphere = new BoundingSphereD(Context.Player.Character.PositionComp.GetPosition(), 500);
+        //    l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
 
 
-                    MyGpsCollection gpsCollection = (MyGpsCollection)MyAPIGateway.Session?.GPS;
-                    gps.SetEntityId(grid.EntityId);
-                    gpsCollection.AddPlayerGps(Context.Player.IdentityId, ref gps);
+        //    foreach (IMyEntity e in l)
+        //    {
+        //        if (e is MyCubeGrid grid)
+        //        {
 
-                }
-                CrunchUtilitiesPlugin.Log.Info(e.GetType().ToString());
-            }
+        //            MyGps gps = CreateGps(grid.PositionComp.GetPosition(), Color.Green, 300, "", "");
 
-        }
+
+        //            MyGpsCollection gpsCollection = (MyGpsCollection)MyAPIGateway.Session?.GPS;
+        //            gps.SetEntityId(grid.EntityId);
+        //            gpsCollection.AddPlayerGps(Context.Player.IdentityId, ref gps);
+
+        //        }
+        //        CrunchUtilitiesPlugin.Log.Info(e.GetType().ToString());
+        //    }
+
+        //}
         [Command("testingstore", "testing store stuff")]
         [Permission(MyPromoteLevel.Admin)]
         public void insertOffer(int amount, int priceper, string subtype, string itemtype)
@@ -1189,6 +1189,7 @@ namespace CrunchUtilities
                 }
             }
             Context.Respond("4");
+            
             MyDefinitionId.TryParse(itemtype, subtype, out MyDefinitionId id);
             if (id.ToString().Contains("null"))
             {
@@ -1368,7 +1369,7 @@ namespace CrunchUtilities
 
 
 
-        [Command("fixstation", "fuck fuck fuck")]
+        [Command("fixstation", "delete duplicate npc stations around player location")]
         [Permission(MyPromoteLevel.None)]
         public void fixNearbyStations()
         {
@@ -4161,120 +4162,120 @@ namespace CrunchUtilities
         }
 
 
-        [Command("deletenoworkingbeacon", "delete beacons if they arent working")]
-        [Permission(MyPromoteLevel.Admin)]
-        public void deleteTheseGrids()
-        {
+        //[Command("deletenoworkingbeacon", "delete beacons if they arent working")]
+        //[Permission(MyPromoteLevel.Admin)]
+        //public void deleteTheseGrids()
+        //{
 
-            foreach (var group in MyCubeGridGroups.Static.Logical.Groups)
-            {
-                bool NPC = false;
-                foreach (var item in group.Nodes)
-                {
-                    MyCubeGrid grid = item.NodeData;
-                    if (((int)grid.Flags & 4) != 0)
-                    {
-                        //concealed
-                        break;
-                    }
-                    if (item.NodeData.Projector != null)
-                    {
-                        //projection
-                        break;
-                    }
-                    IEnumerable<MyBeacon> beacons = grid.GetFatBlocks().OfType<MyBeacon>();
+        //    foreach (var group in MyCubeGridGroups.Static.Logical.Groups)
+        //    {
+        //        bool NPC = false;
+        //        foreach (var item in group.Nodes)
+        //        {
+        //            MyCubeGrid grid = item.NodeData;
+        //            if (((int)grid.Flags & 4) != 0)
+        //            {
+        //                //concealed
+        //                break;
+        //            }
+        //            if (item.NodeData.Projector != null)
+        //            {
+        //                //projection
+        //                break;
+        //            }
+        //            IEnumerable<MyBeacon> beacons = grid.GetFatBlocks().OfType<MyBeacon>();
 
-                    bool delete = true;
-                    foreach (long l in grid.BigOwners)
-                    {
-                        if (FacUtils.GetFactionTag(l) != null && FacUtils.GetFactionTag(l).Length > 3)
-                        {
-                            NPC = true;
-                        }
-                    }
+        //            bool delete = true;
+        //            foreach (long l in grid.BigOwners)
+        //            {
+        //                if (FacUtils.GetFactionTag(l) != null && FacUtils.GetFactionTag(l).Length > 3)
+        //                {
+        //                    NPC = true;
+        //                }
+        //            }
 
-                    if (NPC)
-                    {
-                        break;
-                    }
+        //            if (NPC)
+        //            {
+        //                break;
+        //            }
 
 
-                    foreach (MyBeacon b in beacons)
-                    {
+        //            foreach (MyBeacon b in beacons)
+        //            {
 
-                        List<Sandbox.ModAPI.Ingame.IMyPowerProducer> PowerProducers = new List<Sandbox.ModAPI.Ingame.IMyPowerProducer>();
-                        var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-                        float power = 0f;
-                        gts.GetBlocksOfType(PowerProducers);
-                        if (PowerProducers.Count != 0)
-                        {
-                            foreach (var powerProducer in PowerProducers)
-                            {
-                                power += powerProducer.CurrentOutput;
+        //                List<Sandbox.ModAPI.Ingame.IMyPowerProducer> PowerProducers = new List<Sandbox.ModAPI.Ingame.IMyPowerProducer>();
+        //                var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+        //                float power = 0f;
+        //                gts.GetBlocksOfType(PowerProducers);
+        //                if (PowerProducers.Count != 0)
+        //                {
+        //                    foreach (var powerProducer in PowerProducers)
+        //                    {
+        //                        power += powerProducer.CurrentOutput;
 
-                            }
-                        }
-                        if (b.IsFunctional && power > 0f)
-                        {
-                            delete = false;
-                        }
+        //                    }
+        //                }
+        //                if (b.IsFunctional && power > 0f)
+        //                {
+        //                    delete = false;
+        //                }
 
-                    }
+        //            }
 
-                    if (delete)
-                    {
-                        if (warnedGrids.ContainsKey(grid.EntityId))
-                        {
-                            warnedGrids.TryGetValue(grid.EntityId, out int temp);
-                            if (temp > 4)
-                            {
-                                var b = grid.GetFatBlocks<MyCockpit>();
-                                foreach (var c in b)
-                                {
-                                    c.RemovePilot();
-                                }
-                                grid.Close();
-                                foreach (long l in grid.BigOwners)
-                                {
-                                    SendMessage("Delete Notification", "The grid " + grid.DisplayName + " Was deleted for lacking a functional beacon and power", Color.DarkRed, (long)MySession.Static.Players.TryGetSteamId(l));
+        //            if (delete)
+        //            {
+        //                if (warnedGrids.ContainsKey(grid.EntityId))
+        //                {
+        //                    warnedGrids.TryGetValue(grid.EntityId, out int temp);
+        //                    if (temp > 4)
+        //                    {
+        //                        var b = grid.GetFatBlocks<MyCockpit>();
+        //                        foreach (var c in b)
+        //                        {
+        //                            c.RemovePilot();
+        //                        }
+        //                        grid.Close();
+        //                        foreach (long l in grid.BigOwners)
+        //                        {
+        //                            SendMessage("Delete Notification", "The grid " + grid.DisplayName + " Was deleted for lacking a functional beacon and power", Color.DarkRed, (long)MySession.Static.Players.TryGetSteamId(l));
 
-                                    CrunchUtilitiesPlugin.Log.Info("Deleting " + grid.DisplayName);
-                                }
-                            }
-                            else
-                            {
-                                warnedGrids.Remove(grid.EntityId);
-                                foreach (long l in grid.BigOwners)
-                                {
-                                    CrunchUtilitiesPlugin.Log.Info("Warning " + temp + " " + grid.DisplayName);
-                                    SendMessage("Delete Warning", "The grid " + grid.DisplayName + " Will be deleted in " + (5 - temp) + " minutes if a beacon is not functional and powered", Color.DarkRed, (long)MySession.Static.Players.TryGetSteamId(l));
+        //                            CrunchUtilitiesPlugin.Log.Info("Deleting " + grid.DisplayName);
+        //                        }
+        //                    }
+        //                    else
+        //                    {
+        //                        warnedGrids.Remove(grid.EntityId);
+        //                        foreach (long l in grid.BigOwners)
+        //                        {
+        //                            CrunchUtilitiesPlugin.Log.Info("Warning " + temp + " " + grid.DisplayName);
+        //                            SendMessage("Delete Warning", "The grid " + grid.DisplayName + " Will be deleted in " + (5 - temp) + " minutes if a beacon is not functional and powered", Color.DarkRed, (long)MySession.Static.Players.TryGetSteamId(l));
 
-                                }
+        //                        }
 
-                                warnedGrids.Add(grid.EntityId, temp += 1);
+        //                        warnedGrids.Add(grid.EntityId, temp += 1);
 
-                            }
+        //                    }
 
-                        }
-                        else
-                        {
-                            foreach (long l in grid.BigOwners)
-                            {
-                                CrunchUtilitiesPlugin.Log.Info("Warning " + grid.DisplayName);
-                                SendMessage("Delete Warning", "The grid " + grid.DisplayName + " Will be deleted in 5 minutes if a beacon is not functional and powered", Color.DarkRed, (long)MySession.Static.Players.TryGetSteamId(l));
+        //                }
+        //                else
+        //                {
+        //                    foreach (long l in grid.BigOwners)
+        //                    {
+        //                        CrunchUtilitiesPlugin.Log.Info("Warning " + grid.DisplayName);
+        //                        SendMessage("Delete Warning", "The grid " + grid.DisplayName + " Will be deleted in 5 minutes if a beacon is not functional and powered", Color.DarkRed, (long)MySession.Static.Players.TryGetSteamId(l));
 
-                            }
+        //                    }
 
-                            warnedGrids.Add(grid.EntityId, 1);
-                        }
+        //                    warnedGrids.Add(grid.EntityId, 1);
+        //                }
 
-                        //check if its had 5 warnings
-                        //grid.Close();
-                        //log it
-                    }
-                }
-            }
-        }
+        //                //check if its had 5 warnings
+        //                //grid.Close();
+        //                //log it
+        //            }
+        //        }
+        //    }
+        //}
         [Command("gridtype", "return if its a station or not")]
         [Permission(MyPromoteLevel.None)]
         public void GetStaticOrDynamic(string gridname = "")

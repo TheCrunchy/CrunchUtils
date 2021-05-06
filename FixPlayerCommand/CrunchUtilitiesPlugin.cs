@@ -65,8 +65,10 @@ namespace CrunchUtilities
         [PatchShim]
         public static class MyPatch
         {
-
+ 
             public static readonly Logger Log = LogManager.GetCurrentClassLogger();
+       
+
             private static List<MyPhysics.HitInfo> m_castList = new List<MyPhysics.HitInfo>();
             internal static readonly MethodInfo update =
                 typeof(MyDrillBase).GetMethod("TryHarvestOreMaterial", BindingFlags.Instance | BindingFlags.NonPublic) ??
@@ -91,6 +93,7 @@ namespace CrunchUtilities
                 ctx.GetPattern(update).Prefixes.Add(updatePatch);
                 //  ctx.GetPattern(testUpdate).Prefixes.Add(testUpdatePatch);
                 Log.Info("Patching Successful CrunchDrill!");
+        
             }
 
             //      public static bool TestPatchMethod2(MyDrillBase __instance, MyDrillSensorBase.DetectionInfo entry,
@@ -244,7 +247,10 @@ namespace CrunchUtilities
 
 
         public static List<long> ids = new List<long>();
+    //    public static Logger EconLog = LogManager.GetLogger("Econ");
         public static Logger Log = LogManager.GetCurrentClassLogger();
+ 
+
         public static ConfigFile file;
         public static string path;
         public Dictionary<long, CurrentCooldown> CurrentCooldownMap { get; } = new Dictionary<long, CurrentCooldown>();
@@ -529,7 +535,7 @@ namespace CrunchUtilities
             {
                 Log.Warn("No session manager loaded!");
             }
-
+           
         }
         private void SetupConfig()
         {
@@ -593,7 +599,7 @@ namespace CrunchUtilities
                 derp = TorchSessionState.Loaded;
                 MySession.Static.Factions.FactionStateChanged += FactionLogging.StateChange;
                 MyBankingSystem.Static.OnAccountBalanceChanged += BankPatch.BalanceChangedMethod2;
-
+                
                 //  session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
                 MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
             }

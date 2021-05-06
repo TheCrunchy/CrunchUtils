@@ -39,6 +39,24 @@ namespace CrunchUtilities
             typeof(NobodyPatchKEEEEEN).GetMethod(nameof(PatchTurningOn), BindingFlags.Static | BindingFlags.Public) ??
             throw new Exception("Failed to find patch method");
 
+     //   internal static readonly MethodInfo ownershipChange =
+     //typeof(MyCubeGrid).GetMethod("ChangeOwnerRequest", BindingFlags.Instance | BindingFlags.Public) ??
+     //throw new Exception("Failed to find patch method");
+
+     //   internal static readonly MethodInfo ownershipPatch =
+     //       typeof(NobodyPatchKEEEEEN).GetMethod(nameof(PatchOwnership), BindingFlags.Static | BindingFlags.Public) ??
+     //       throw new Exception("Failed to find patch method");
+
+
+        //public static void PatchOwnership(MyCubeGrid grid, MyCubeBlock block, long playerId, MyOwnershipShareModeEnum shareMode)
+        //{
+        //    if (block != null && block is MyFunctionalBlock fblock && playerId == 0)
+        //    {
+        //      //  fblock.Enabled = false;
+        //        IMyFunctionalBlock ffblock = fblock;
+        //        ffblock.Enabled = false;
+        //    }
+        //}
         public static bool PatchTurningOn(MyFunctionalBlock __instance)
         {
             if (CrunchUtilitiesPlugin.file != null && CrunchUtilitiesPlugin.file.NobodyPatch)
@@ -46,7 +64,7 @@ namespace CrunchUtilities
                 // Log.Info("Button");
                 if (__instance != null && __instance.OwnerId == 0)
                 {
-
+            
                     __instance.Enabled = false;
                     // Log.Info("Beacon button");
                     return false;
@@ -59,7 +77,7 @@ namespace CrunchUtilities
         public static void Patch(PatchContext ctx)
         {
             ctx.GetPattern(enabledUpdate).Prefixes.Add(functionalBlockPatch);
-
+         //   ctx.GetPattern(ownershipChange).Suffixes.Add(ownershipPatch);
         }
     }
 }
