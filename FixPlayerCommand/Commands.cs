@@ -2486,7 +2486,7 @@ namespace CrunchUtilities
                     if (state != MyFactionPeaceRequestState.Sent)
                     {
                         Sandbox.Game.Multiplayer.MyFactionCollection.SendPeaceRequest(playerFac.FactionId, fac.FactionId);
-
+                       
                     }
                     if (state == MyFactionPeaceRequestState.Pending)
                     {
@@ -2622,6 +2622,13 @@ namespace CrunchUtilities
                 Context.Respond("Cant find faction.");
                 return;
             }
+            if (MyGravityProviderSystem.IsPositionInNaturalGravity(Context.Player.GetPosition()))
+            {
+
+                Context.Respond("This doesnt work properly in gravity yet, avoid planets");
+                return;
+            }
+
             //MyStationsListDefinition stationTypeDefinition = MyStationGenerator.GetStationTypeDefinition(MyStationTypeEnum.SpaceStation);
             //Type generator = MySession.Static.GetType().Assembly.GetType("Sandbox.Game.World.Generator.MyStationGenerator");
             //MethodInfo getStationTypeDefinition = generator?.GetMethod("SendFactionChange", BindingFlags.NonPublic | BindingFlags.Static);
@@ -2655,7 +2662,8 @@ namespace CrunchUtilities
             }
          
             MyStationsListDefinition stationDefinition = MyDefinitionManager.Static.GetDefinition<MyStationsListDefinition>(subtypeId);
-
+            Vector3 up = Vector3.Zero;
+            Vector3 forward = Vector3.Zero;
             Vector3 position = Context.Player.GetPosition();
             MyStation station = new MyStation(MyEntityIdentifier.AllocateId(MyEntityIdentifier.ID_OBJECT_TYPE.STATION, MyEntityIdentifier.ID_ALLOCATION_METHOD.RANDOM), position , stationType, npcfac, GetRandomStationName(stationDefinition), stationDefinition.GeneratedItemsContainerType);
           

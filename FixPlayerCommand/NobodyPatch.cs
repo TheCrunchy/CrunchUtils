@@ -62,16 +62,19 @@ namespace CrunchUtilities
             if (CrunchUtilitiesPlugin.file != null && CrunchUtilitiesPlugin.file.NobodyPatch)
             {
                 // Log.Info("Button");
-                if (__instance != null && !__instance.BlockDefinition.Id.TypeId.ToString().ToLower().Contains("thruster") && !__instance.BlockDefinition.Id.TypeId.ToString().ToLower().Contains("light"))
+                MyFunctionalBlock block = __instance;
+                if (block.BlockDefinition?.ContainsComputer() == false)
                 {
-                    if (__instance != null && __instance.OwnerId == 0)
+                    return true;
+                }
+                if (block != null && block.OwnerId == 0)
                     {
 
-                        __instance.Enabled = false;
+                        block.Enabled = false;
                         // Log.Info("Beacon button");
                         return false;
                     }
-                }
+                
             }
             return true;
         }
