@@ -1,4 +1,6 @@
 ﻿using NLog;
+using NLog.Config;
+using NLog.Targets;
 using Sandbox.Game.GameSystems.BankingAndCurrency;
 using Sandbox.Game.Multiplayer;
 using Sandbox.Game.World;
@@ -17,6 +19,38 @@ namespace CrunchUtilities
     [PatchShim]
     public static class BankPatch
     {
+        public static Logger log = LogManager.GetLogger("Econ");
+        public static void ApplyLogging()
+        {
+
+            var rules = LogManager.Configuration.LoggingRules;
+
+            for (int i = rules.Count - 1; i >= 0; i--)
+            {
+
+                var rule = rules[i];
+
+                if (rule.LoggerNamePattern == "Econ")
+                    rules.RemoveAt(i);
+            }
+
+
+
+            var logTarget = new FileTarget
+            {
+                FileName = "Logs/Econ-" + DateTime.Now.Day + "-" + DateTime.Now.Month + "-"+ DateTime.Now.Year + ".txt",
+                Layout = "${var:logStamp} ${var:logContent}"
+            };
+
+            var logRule = new LoggingRule("Econ", LogLevel.Debug, logTarget)
+            {
+                Final = true
+            };
+
+            rules.Insert(0, logRule);
+
+            LogManager.Configuration.Reload();
+        }
         internal static readonly MethodInfo update =
          typeof(MyBankingSystem).GetMethod("ChangeBalance", BindingFlags.Static | BindingFlags.Public) ??
          throw new Exception("Failed to find patch method");
@@ -28,7 +62,7 @@ namespace CrunchUtilities
 
         public static void Patch(PatchContext ctx)
         {
-
+            ApplyLogging();
             ctx.GetPattern(update).Suffixes.Add(updatePatch);
 
         }
@@ -37,11 +71,12 @@ namespace CrunchUtilities
       MyAccountInfo oldAccountInfo,
       MyAccountInfo newAccountInfo)
         {
+           
             if (CrunchUtilitiesPlugin.file != null && CrunchUtilitiesPlugin.file.EconomyChangesInLog)
             {
                 if (MySession.Static.Factions.TryGetFactionById(newAccountInfo.OwnerIdentifier) != null && newAccountInfo.Log.Count() > 0)
                 {
-                    CrunchUtilitiesPlugin.Log.Info("FACTIONLOG Faction balance change " + MySession.Static.Factions.TryGetFactionById(newAccountInfo.OwnerIdentifier).Tag + " " + newAccountInfo.OwnerIdentifier + " amount: " + String.Format("{0:n0}", newAccountInfo.Log.Last().Amount) + " SC. by " + newAccountInfo.Log.Last().ChangeIdentifier);
+                    log.Info("FACTIONLOG Faction balance change " + MySession.Static.Factions.TryGetFactionById(newAccountInfo.OwnerIdentifier).Tag + " " + newAccountInfo.OwnerIdentifier + " amount: " + String.Format("{0:n0}", newAccountInfo.Log.Last().Amount) + " SC. by " + newAccountInfo.Log.Last().ChangeIdentifier);
                 }
                 else
                 {
@@ -51,12 +86,12 @@ namespace CrunchUtilities
                         if (oldAccountInfo.Balance > newAccountInfo.Balance)
                         {
                             change = oldAccountInfo.Balance - newAccountInfo.Balance;
-                            CrunchUtilitiesPlugin.Log.Info("Player Balance decreased by: "+ String.Format("{0:n0}", change) + " from " + String.Format("{0:n0}", oldAccountInfo.Balance) + " SC to " + String.Format("{0:n0}", newAccountInfo.Balance) + " SC. steam id: " + MySession.Static.Players.TryGetSteamId(oldAccountInfo.OwnerIdentifier) + " identity id: " + oldAccountInfo.OwnerIdentifier);
+                            log.Info("Player Balance decreased by: "+ String.Format("{0:n0}", change) + " from " + String.Format("{0:n0}", oldAccountInfo.Balance) + " SC to " + String.Format("{0:n0}", newAccountInfo.Balance) + " SC. steam id: " + MySession.Static.Players.TryGetSteamId(oldAccountInfo.OwnerIdentifier) + " identity id: " + oldAccountInfo.OwnerIdentifier);
                         }
                         else
                         {
                             change = newAccountInfo.Balance - oldAccountInfo.Balance;
-                            CrunchUtilitiesPlugin.Log.Info("Player Balance increased by: " + String.Format("{0:n0}", change) + " from " + String.Format("{0:n0}", oldAccountInfo.Balance) + " SC to " + String.Format("{0:n0}", newAccountInfo.Balance) + " SC. steam id: " + MySession.Static.Players.TryGetSteamId(oldAccountInfo.OwnerIdentifier) + " identity id: " + oldAccountInfo.OwnerIdentifier);
+                            log.Info("Player Balance increased by: " + String.Format("{0:n0}", change) + " from " + String.Format("{0:n0}", oldAccountInfo.Balance) + " SC to " + String.Format("{0:n0}", newAccountInfo.Balance) + " SC. steam id: " + MySession.Static.Players.TryGetSteamId(oldAccountInfo.OwnerIdentifier) + " identity id: " + oldAccountInfo.OwnerIdentifier);
                         }
                   
                     }

@@ -594,6 +594,168 @@ namespace CrunchUtilities
             }
 
         }
+        public static Dictionary<long, ShipOffer> saleOffers = new Dictionary<long, ShipOffer>(); 
+        [Command("sellgrid", "send an offer to sell a ship for a set price.")]
+        [Permission(MyPromoteLevel.None)]
+        public void SellShip(string amount)
+        {
+            if (!CrunchUtilitiesPlugin.file.ShipSaleCommands)
+            {
+                Context.Respond("Commands not enabled, enable ShipSaleCommands in config");
+                return;
+            }
+            long playerId = 0;
+            ulong playerSteamId = 0;
+            List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
+
+              BoundingSphereD sphere = new BoundingSphereD(Context.Player.Character.PositionComp.GetPosition(), 10);
+               l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
+            int players = 0;
+            foreach (VRage.ModAPI.IMyEntity entity in l)
+            {
+                if (entity is MyCharacter character)
+                {
+                    if (character.ControlSteamId.Equals(Context.Player.SteamUserId))
+                        continue;
+
+                    playerId = character.GetPlayerIdentityId();
+                    playerSteamId = character.ControlSteamId;
+                    players++;
+                }
+            }
+
+            if (players > 1)
+            {
+                Context.Respond("Too many players within 10m!");
+                return;
+            }
+            if (players == 0)
+            {
+                Context.Respond("No player within 10m to sell grid to.");
+                return;
+            }
+            
+            amount = amount.Replace(",", "");
+            amount = amount.Replace(".", "");
+            Int64.TryParse(amount, out Int64 price);
+            if (price < 0)
+            {
+                Context.Respond("No, the price cannot be below 0.");
+                return;
+            }
+            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+            bool found = false;
+          
+            ShipOffer offer = new ShipOffer();
+            if (gridWithSubGrids.Count > 0)
+            {
+
+                foreach (var item in gridWithSubGrids)
+                {
+                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                    {
+                        MyCubeGrid grid = groupNodes.NodeData;
+                
+                        if (FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, false))
+                        {
+                            offer.gridsInOffer.Add(grid.EntityId);
+                            found = true;
+                        }
+                    }
+                }
+            }
+            if (found)
+            {
+              
+                offer.SellerIdentityId = Context.Player.IdentityId;
+                offer.price = price;
+                offer.SellerSteamId = (long) Context.Player.SteamUserId;
+                if (!saleOffers.ContainsKey(playerId))
+                {
+                    saleOffers.Add(playerId, offer);
+                    SendMessage("The Government", Context.Player.Character.DisplayName + " wants to sell you this grid for " + String.Format("{0:n0}", price) + " SC. To accept use !acceptgrid within 30 seconds", Color.Cyan, (long)playerSteamId);
+                }
+                else
+                {
+                    Context.Respond("They already have an offer. Wait or have them use !denygrid");
+                }
+            }
+            else
+            {
+                Context.Respond("No grids found, are you looking at it?");
+                return;
+            }
+    
+        }
+        [Command("denygrid", "deny ownership of the grid")]
+        [Permission(MyPromoteLevel.None)]
+        public void DenyGridOffer()
+        {
+            if (!CrunchUtilitiesPlugin.file.ShipSaleCommands)
+            {
+                Context.Respond("Commands not enabled, enable ShipSaleCommands in config");
+                return;
+            }
+            if (saleOffers.TryGetValue(Context.Player.IdentityId, out ShipOffer offer))
+            {
+                saleOffers.Remove(Context.Player.IdentityId);
+                Context.Respond("Denied the offer");
+
+                SendMessage("The Government", "Player denied your offer to sell grid.", Color.Red, offer.SellerSteamId);
+            }
+            else
+            {
+                Context.Respond("You have no offers available to deny");
+            }
+        }
+        [Command("acceptgrid", "accept ownership of the grid")]
+        [Permission(MyPromoteLevel.None)]
+        public void AcceptGridOffer()
+        {
+            if (!CrunchUtilitiesPlugin.file.ShipSaleCommands)
+            {
+                Context.Respond("Commands not enabled, enable ShipSaleCommands in config");
+                return;
+            }
+            if (saleOffers.TryGetValue(Context.Player.IdentityId, out ShipOffer offer))
+            {
+                saleOffers.Remove(Context.Player.IdentityId);
+                Context.Respond("Accepting the offer if the grids exist.");
+                List<MyCubeGrid> grids = new List<MyCubeGrid>();
+                if (EconUtils.getBalance(Context.Player.IdentityId) >= offer.price)
+                {
+                    foreach (long l in offer.gridsInOffer)
+                    {
+                        MyCubeGrid grid = MyAPIGateway.Entities.GetEntityById(l) as MyCubeGrid;
+                        if (grid != null)
+                        {
+                            grids.Add(grid);
+                        }
+                        else
+                        {
+                            Context.Respond("One of the grids does not exist, cancelling purchase.");
+                            saleOffers.Remove(Context.Player.IdentityId);
+                        }
+                    }
+                    foreach (MyCubeGrid grid in grids)
+                    {
+                        grid.ChangeGridOwnership(Context.Player.IdentityId, MyOwnershipShareModeEnum.Faction);
+                    }
+                    EconUtils.takeMoney(Context.Player.IdentityId, offer.price);
+                    EconUtils.addMoney(offer.SellerIdentityId, offer.price);
+                    SendMessage("The Government", "Player accepted your offer to sell grid.", Color.Red, offer.SellerSteamId);
+                }
+                else
+                {
+                    Context.Respond("You cannot afford to accept this grid.");
+                }
+            }
+            else
+            {
+                Context.Respond("You have no offers available to accept");
+            }
+        }
+
         [Command("fixrespawn", "remove the respawnship status")]
         [Permission(MyPromoteLevel.None)]
         public void norespawn()
@@ -616,28 +778,30 @@ namespace CrunchUtilities
                 currentCooldown = CreateNewCooldown(currentCooldownMap, Context.Player.IdentityId, plugin.CooldownRespawn);
                 currentCooldown.StartCooldown(null);
             }
-            else
-            {
-                currentCooldown = CreateNewCooldown(currentCooldownMap, Context.Player.IdentityId, plugin.CooldownRespawn);
-                currentCooldown.StartCooldown(null);
-            }
             ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+            bool found = false;
             if (gridWithSubGrids.Count > 0)
             {
-
+                
                 foreach (var item in gridWithSubGrids)
                 {
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                     {
                         MyCubeGrid grid = groupNodes.NodeData;
                         grid.IsRespawnGrid = false;
-
-
+                        found = true;
+                    
+                        CrunchUtilitiesPlugin.Log.Info("Removing respawn status of grid " + grid.EntityId + " " + grid.DisplayNameText);
                         Context.Respond("Ship wont get deleted by Keen. Try not to die.");
                     }
                 }
 
 
+            }
+            if (found)
+            {
+                currentCooldown = CreateNewCooldown(currentCooldownMap, Context.Player.IdentityId, plugin.CooldownRespawn);
+                currentCooldown.StartCooldown(null);
             }
         }
         [Command("prediction", "remove the prediction shit")]

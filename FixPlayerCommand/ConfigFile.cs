@@ -9,6 +9,7 @@ namespace CrunchUtilities
 {
     public class ConfigFile : ViewModel
     {
+        public Boolean ShipSaleCommands = false;
         public Boolean NobodyPatch = false;
         public Boolean ShowFactionTagsOnDamageGrid = false;
         public Boolean LogFactionStuff = true;

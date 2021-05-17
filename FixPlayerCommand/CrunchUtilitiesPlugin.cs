@@ -267,9 +267,10 @@ namespace CrunchUtilities
         public override void Update()
         {
             ticks++;
-            List<long> idsToRemove = new List<long>();
+          
             if (ticks % 524 == 0)
             {
+                List<long> idsToRemove = new List<long>();
                 foreach (KeyValuePair<long, DateTime> pair in blockCooldowns)
                 {
                     if (DateTime.Now >= pair.Value)
@@ -280,6 +281,18 @@ namespace CrunchUtilities
                 foreach (long id in idsToRemove)
                 {
                     blockCooldowns.Remove(id);
+                }
+                List<long> expiredOffers = new List<long>();
+                foreach (KeyValuePair<long, ShipOffer> offers in Commands.saleOffers)
+                {
+                    if (DateTime.Now >= offers.Value.TimeOfOffer)
+                    {
+                        expiredOffers.Add(offers.Key);
+                    }
+                }
+                foreach (long id in expiredOffers)
+                {
+                    Commands.saleOffers.Remove(id);
                 }
             }
             if (ticks % 10000 == 0 && file != null && file.IdentityUpdate)
