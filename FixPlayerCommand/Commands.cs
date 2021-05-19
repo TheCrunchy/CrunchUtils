@@ -49,6 +49,7 @@ using VRage.Voxels;
 using Sandbox.Engine.Voxels;
 using VRage.Library.Utils;
 using VRage.Game.ObjectBuilders.Definitions;
+using VRage.Game.ObjectBuilders.ComponentSystem;
 
 namespace CrunchUtilities
 {
@@ -594,7 +595,7 @@ namespace CrunchUtilities
             }
 
         }
-        public static Dictionary<long, ShipOffer> saleOffers = new Dictionary<long, ShipOffer>(); 
+        public static Dictionary<long, ShipOffer> saleOffers = new Dictionary<long, ShipOffer>();
         [Command("sellgrid", "send an offer to sell a ship for a set price.")]
         [Permission(MyPromoteLevel.None)]
         public void SellShip(string amount)
@@ -608,8 +609,8 @@ namespace CrunchUtilities
             ulong playerSteamId = 0;
             List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
 
-              BoundingSphereD sphere = new BoundingSphereD(Context.Player.Character.PositionComp.GetPosition(), 10);
-               l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
+            BoundingSphereD sphere = new BoundingSphereD(Context.Player.Character.PositionComp.GetPosition(), 10);
+            l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
             int players = 0;
             foreach (VRage.ModAPI.IMyEntity entity in l)
             {
@@ -634,7 +635,7 @@ namespace CrunchUtilities
                 Context.Respond("No player within 10m to sell grid to.");
                 return;
             }
-            
+
             amount = amount.Replace(",", "");
             amount = amount.Replace(".", "");
             Int64.TryParse(amount, out Int64 price);
@@ -645,7 +646,7 @@ namespace CrunchUtilities
             }
             ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
             bool found = false;
-          
+
             ShipOffer offer = new ShipOffer();
             if (gridWithSubGrids.Count > 0)
             {
@@ -655,7 +656,7 @@ namespace CrunchUtilities
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                     {
                         MyCubeGrid grid = groupNodes.NodeData;
-                
+
                         if (FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, false))
                         {
                             offer.gridsInOffer.Add(grid.EntityId);
@@ -666,10 +667,10 @@ namespace CrunchUtilities
             }
             if (found)
             {
-              
+
                 offer.SellerIdentityId = Context.Player.IdentityId;
                 offer.price = price;
-                offer.SellerSteamId = (long) Context.Player.SteamUserId;
+                offer.SellerSteamId = (long)Context.Player.SteamUserId;
                 if (!saleOffers.ContainsKey(playerId))
                 {
                     saleOffers.Add(playerId, offer);
@@ -685,7 +686,7 @@ namespace CrunchUtilities
                 Context.Respond("No grids found, are you looking at it?");
                 return;
             }
-    
+
         }
         [Command("denygrid", "deny ownership of the grid")]
         [Permission(MyPromoteLevel.None)]
@@ -782,7 +783,7 @@ namespace CrunchUtilities
             bool found = false;
             if (gridWithSubGrids.Count > 0)
             {
-                
+
                 foreach (var item in gridWithSubGrids)
                 {
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
@@ -790,7 +791,7 @@ namespace CrunchUtilities
                         MyCubeGrid grid = groupNodes.NodeData;
                         grid.IsRespawnGrid = false;
                         found = true;
-                    
+
                         CrunchUtilitiesPlugin.Log.Info("Removing respawn status of grid " + grid.EntityId + " " + grid.DisplayNameText);
                         Context.Respond("Ship wont get deleted by Keen. Try not to die.");
                     }
@@ -1355,7 +1356,7 @@ namespace CrunchUtilities
                 }
             }
             Context.Respond("4");
-            
+
             MyDefinitionId.TryParse(itemtype, subtype, out MyDefinitionId id);
             if (id.ToString().Contains("null"))
             {
@@ -2650,7 +2651,7 @@ namespace CrunchUtilities
                     if (state != MyFactionPeaceRequestState.Sent)
                     {
                         Sandbox.Game.Multiplayer.MyFactionCollection.SendPeaceRequest(playerFac.FactionId, fac.FactionId);
-                       
+
                     }
                     if (state == MyFactionPeaceRequestState.Pending)
                     {
@@ -2824,13 +2825,13 @@ namespace CrunchUtilities
                     Context.Respond("Cannot find that type, use SpaceStations, OrbitalStations, Outposts or OrbitalStations");
                     return;
             }
-         
+
             MyStationsListDefinition stationDefinition = MyDefinitionManager.Static.GetDefinition<MyStationsListDefinition>(subtypeId);
             Vector3 up = Vector3.Zero;
             Vector3 forward = Vector3.Zero;
             Vector3 position = Context.Player.GetPosition();
-            MyStation station = new MyStation(MyEntityIdentifier.AllocateId(MyEntityIdentifier.ID_OBJECT_TYPE.STATION, MyEntityIdentifier.ID_ALLOCATION_METHOD.RANDOM), position , stationType, npcfac, GetRandomStationName(stationDefinition), stationDefinition.GeneratedItemsContainerType);
-          
+            MyStation station = new MyStation(MyEntityIdentifier.AllocateId(MyEntityIdentifier.ID_OBJECT_TYPE.STATION, MyEntityIdentifier.ID_ALLOCATION_METHOD.RANDOM), position, stationType, npcfac, GetRandomStationName(stationDefinition), stationDefinition.GeneratedItemsContainerType);
+
             npcfac.AddStation(station);
         }
         [Command("resetnpcrep", "reset rep for all members")]
@@ -2844,7 +2845,7 @@ namespace CrunchUtilities
                 Context.Respond("Cant find faction.");
                 return;
             }
-            
+
             if (npcfac == null)
             {
                 Context.Respond("Cant find npc faction.");
@@ -3675,7 +3676,7 @@ namespace CrunchUtilities
                 (ParameterModifier[])null);
                 if (method == null)
                     throw new Exception("reflection error");
-                method.Invoke(invent, new object[4]{(MyFixedPoint) amount, item, new uint?(),-1});
+                method.Invoke(invent, new object[4] { (MyFixedPoint)amount, item, new uint?(), -1 });
                 //refresh this or buggy stuff happens
                 invent.Refresh();
                 SendMessage("[C]", "You were given " + amount + " " + subtypeName, Color.Green, (long)player.Id.SteamId);
@@ -4134,6 +4135,7 @@ namespace CrunchUtilities
                         }
                         break;
                     case "faction":
+
                         IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(recipient);
                         if (fac == null)
                         {
@@ -4146,6 +4148,7 @@ namespace CrunchUtilities
                             //EconUtils.takeMoney(Context.Player.IdentityId, amount);
                             // EconUtils.addMoney(fac.FactionId, amount);
                             EconUtils.TransferToFactionAccount(Context.Player.IdentityId, fac.FactionId, amount);
+                        
                             //I can add to the activity log with this but its not a great idea, it sets the balances to insane values
                             // EconUtils.TransferToFactionAccount(Context.Player.IdentityId, fac.FactionId, amount);
                             List<ulong> temp = new List<ulong>();
@@ -4210,6 +4213,188 @@ namespace CrunchUtilities
         }
 
 
+        [Command("kontupay", "Transfer money from one player to another")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void PayPlayer2(string type, string recipient, string inputAmount, bool acrossInstances = false)
+        {
+            if (Context.Player == null)
+            {
+                Context.Respond("Only players can use this command");
+                return;
+            }
+            if (CrunchUtilitiesPlugin.file.PlayerEcoPay)
+            {
+                if (isBlockedFaction(Context.Player))
+                {
+                    Context.Respond("This faction lost the ability to use this command.");
+                    return;
+                }
+                Int64 amount;
+                inputAmount = inputAmount.Replace(",", "");
+                inputAmount = inputAmount.Replace(".", "");
+                inputAmount = inputAmount.Replace(" ", "");
+                try
+                {
+                    amount = Int64.Parse(inputAmount);
+                }
+                catch (Exception)
+                {
+                    SendMessage("CrunchEcon", "Error parsing amount", Color.Red, (long)Context.Player.SteamUserId);
+                    return;
+                }
+                if (amount < 0 || amount == 0)
+                {
+                    SendMessage("CrunchEcon", "Must be a positive number", Color.Red, (long)Context.Player.SteamUserId);
+                    return;
+                }
+                type = type.ToLower();
+                switch (type)
+                {
+                    case "player":
+                        //Context.Respond("Error Player not online");
+                        MyPlayer player = null;
+                        bool found = false;
+
+                        if (acrossInstances)
+                        {
+                            IMyIdentity targetid = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
+                            if (targetid == null)
+                            {
+                                SendMessage("CrunchEcon", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
+                                return;
+                            }
+                            if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
+                            {
+                                EconUtils.takeMoney(Context.Player.IdentityId, amount);
+                                EconUtils.addMoney(targetid.IdentityId, amount);
+
+
+                                //SendMessage("CrunchEcon", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                                SendMessage("CrunchEcon", "You sent " + targetid.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                            }
+                            else
+                            {
+                                SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                            }
+                            return;
+                        }
+                        player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(recipient) as MyPlayer;
+                        if (player == null)
+                        {
+                            SendMessage("CrunchEcon", "They arent online, trying across instance", Color.Red, (long)Context.Player.SteamUserId);
+                            IMyIdentity targetid = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
+                            if (targetid == null)
+                            {
+                                SendMessage("CrunchEcon", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
+                                return;
+                            }
+                            if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
+                            {
+                                EconUtils.takeMoney(Context.Player.IdentityId, amount);
+                                EconUtils.addMoney(targetid.IdentityId, amount);
+
+
+                                //SendMessage("CrunchEcon", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                                SendMessage("CrunchEcon", "You sent " + targetid.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                                return;
+                            }
+                            else
+                            {
+                                SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                                return;
+                            }
+                        }
+
+                        if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
+                        {
+                            EconUtils.takeMoney(Context.Player.IdentityId, amount);
+                            EconUtils.addMoney(player.Identity.IdentityId, amount);
+
+
+                            SendMessage("CrunchEcon", MyMultiplayer.Static.GetMemberName(Context.Player.SteamUserId) + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                            SendMessage("CrunchEcon", "You sent " + MyMultiplayer.Static.GetMemberName(player.Id.SteamId) + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                        }
+                        else
+                        {
+                            SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                        }
+                        break;
+                    case "faction":
+                        IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(recipient);
+                        if (fac == null)
+                        {
+                            SendMessage("CrunchEcon", "Cant find that faction", Color.Red, (long)Context.Player.SteamUserId);
+                            return;
+                        }
+                        if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
+                        {
+                            //Probablty need to do some reflection/patching shit to add the transfer to the activity log
+                            //EconUtils.takeMoney(Context.Player.IdentityId, amount);
+                            // EconUtils.addMoney(fac.FactionId, amount);
+                            EconUtils.TransferToFactionAccount(Context.Player.IdentityId, fac.FactionId, amount);
+                         
+                            //I can add to the activity log with this but its not a great idea, it sets the balances to insane values
+                            // EconUtils.TransferToFactionAccount(Context.Player.IdentityId, fac.FactionId, amount);
+                            List<ulong> temp = new List<ulong>();
+                            foreach (MyFactionMember mb in fac.Members.Values)
+                            {
+
+
+                                ulong steamid = MySession.Static.Players.TryGetSteamId(mb.PlayerId);
+                                if (temp.Contains(steamid))
+                                {
+                                    break;
+                                }
+                                if (steamid == 0)
+                                {
+                                    break;
+                                }
+                                SendMessage("CrunchEcon", Context.Player.DisplayName + " Has sent : " + String.Format("{0:n0}", amount) + " SC to the faction bank.", Color.DarkGreen, (long)steamid);
+                                temp.Add(steamid);
+
+                            }
+
+
+                            SendMessage("CrunchEcon", "You sent " + fac.Name + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                        }
+                        else
+                        {
+                            SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                        }
+                        break;
+                    case "steam":
+                        //Context.Respond("Error Player not online");
+                        IMyIdentity id2 = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
+                        if (id2 == null)
+                        {
+                            SendMessage("CrunchEcon", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
+                            return;
+                        }
+                        if (EconUtils.getBalance(Context.Player.IdentityId) >= amount)
+                        {
+                            EconUtils.takeMoney(Context.Player.IdentityId, amount);
+                            EconUtils.addMoney(id2.IdentityId, amount);
+
+
+                            //SendMessage("CrunchEcon", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                            SendMessage("CrunchEcon", "You sent " + id2.DisplayName + " : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                        }
+                        else
+                        {
+                            SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                        }
+                        break;
+                    default:
+                        SendMessage("CrunchEcon", "Incorrect usage, example - !eco pay player PlayerName amount or !eco pay faction tag amount", Color.Red, (long)Context.Player.SteamUserId);
+                        break;
+
+                }
+            }
+            else
+            {
+                SendMessage("CrunchEcon", "Player pay not enabled", Color.Red, (long)Context.Player.SteamUserId);
+            }
+        }
 
 
         [Command("whis", "Message another player")]
@@ -4378,20 +4563,92 @@ namespace CrunchUtilities
                 {
                     MyCubeGrid grid = groupNodes.NodeData;
 
-                    foreach (MySlimBlock b in grid.GetBlocks())
+                    //foreach (MySlimBlock b in grid.GetBlocks())
+                    //{
+                    //    if (b.FatBlock != null && b.FatBlock.HasInventory)
+                    //    {
+                    //        b.FatBlock.GetInventory().Clear();
+                    //        inventory++;
+
+                    //    }
+                    //}
+                    BoundingSphereD sphere = new BoundingSphereD(grid.PositionComp.GetPosition(), 10000);
+                    foreach (MyEntity ent in MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere))
                     {
-                        if (b.FatBlock != null && b.FatBlock.HasInventory)
+                        if (ent.Parent != null && ent.Parent.EntityId.Equals(grid.EntityId))
                         {
-                            b.FatBlock.GetInventory().Clear();
-                            inventory++;
-                      
+                            if (ent.HasInventory)
+                            {
+                                ent.GetInventory().Clear();
+                                inventory++;
+                            }
                         }
                     }
                 }
             }
             Context.Respond("Cleared " + inventory + " inventories");
         }
+        [Command("dirkclear", "clear a grids inventory")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void dorlcleargrid(string gridName)
+        {
+            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindGridGroup(gridName);
+            int inventory = 0;
+            int uran = 0;
+            int ice = 0;
+            int ammo = 0;
+            foreach (var item in gridWithSubGrids)
+            {
+                foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                {
+                    MyCubeGrid grid = groupNodes.NodeData;
+                    BoundingSphereD sphere = new BoundingSphereD(grid.PositionComp.GetPosition(), 10000);
+                    //   l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
+             
+                    foreach (MyEntity ent in MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere))
+                    {
+            
+                        if (ent.Parent != null && ent.Parent.EntityId.Equals(grid.EntityId))
+                        {
+                            List<uint> deleteThese = new List<uint>();
+                            if (ent.HasInventory)
+                            {
+                                foreach (MyPhysicalInventoryItem invitem in ent.GetInventory().GetItems())
+                                {
+                                    bool delete = true;
+                                   if (invitem.Content.TypeId.ToString().Contains("Ingot") && invitem.Content.SubtypeName.Equals("Uranium"))
+                                    {
+                                        delete = false ;
+                                        uran += invitem.Amount.ToIntSafe();
+                                    }
+                                    if (invitem.Content.TypeId.ToString().Contains("AmmoMagazine"))
+                                    {
+                                        delete = false;
+                                        ammo += invitem.Amount.ToIntSafe();
+                                    }
 
+                                    if (invitem.Content.TypeId.ToString().Contains("Ore") && invitem.Content.SubtypeName.Equals("Ice"))
+                                    {
+                                        delete = false;
+                                        ice += invitem.Amount.ToIntSafe();
+                                    }
+                                    if (delete)
+                                    {
+                                        deleteThese.Add(invitem.ItemId);
+                                        inventory++;
+                                    }
+                                }
+                                foreach (uint id in deleteThese) {
+                                    ent.GetInventory().RemoveItems(id);
+                                        }
+                            }
+                        }
+                    }
+                }
+            }
+            Context.Respond("Cleared " + inventory + " inventories");
+            Context.Respond("Uran " + uran + " Ice " + ice + " Ammo " + ammo);
+        }
 
         //[Command("deletenoworkingbeacon", "delete beacons if they arent working")]
         //[Permission(MyPromoteLevel.Admin)]

@@ -38,7 +38,7 @@ namespace CrunchUtilities
 
             var logTarget = new FileTarget
             {
-                FileName = "Logs/Econ-" + DateTime.Now.Day + "-" + DateTime.Now.Month + "-"+ DateTime.Now.Year + ".txt",
+                FileName = "Logs/Econ-" + DateTime.Now.Day + "-" + DateTime.Now.Month + "-"+ DateTime.Now.Year + ".log",
                 Layout = "${var:logStamp} ${var:logContent}"
             };
 
@@ -52,7 +52,7 @@ namespace CrunchUtilities
             LogManager.Configuration.Reload();
         }
         internal static readonly MethodInfo update =
-         typeof(MyBankingSystem).GetMethod("ChangeBalance", BindingFlags.Static | BindingFlags.Public) ??
+         typeof(MyBankingSystem).GetMethod("ChangeBalanceInternal", BindingFlags.Instance | BindingFlags.NonPublic) ??
          throw new Exception("Failed to find patch method");
         internal static readonly MethodInfo updatePatch =
                 typeof(BankPatch).GetMethod(nameof(BalanceChangedMethod), BindingFlags.Static | BindingFlags.Public) ??
@@ -63,7 +63,7 @@ namespace CrunchUtilities
         public static void Patch(PatchContext ctx)
         {
             ApplyLogging();
-            ctx.GetPattern(update).Suffixes.Add(updatePatch);
+          //  ctx.GetPattern(update).Suffixes.Add(updatePatch);
 
         }
 
@@ -76,7 +76,18 @@ namespace CrunchUtilities
             {
                 if (MySession.Static.Factions.TryGetFactionById(newAccountInfo.OwnerIdentifier) != null && newAccountInfo.Log.Count() > 0)
                 {
-                    log.Info("FACTIONLOG Faction balance change " + MySession.Static.Factions.TryGetFactionById(newAccountInfo.OwnerIdentifier).Tag + " " + newAccountInfo.OwnerIdentifier + " amount: " + String.Format("{0:n0}", newAccountInfo.Log.Last().Amount) + " SC. by " + newAccountInfo.Log.Last().ChangeIdentifier);
+                    
+                    long change;
+                    if (oldAccountInfo.Balance > newAccountInfo.Balance)
+                    {
+                        change = oldAccountInfo.Balance - newAccountInfo.Balance;
+                        log.Info("FACTIONLOG Faction balance decreased by " + MySession.Static.Factions.TryGetFactionById(newAccountInfo.OwnerIdentifier).Tag + " " + newAccountInfo.OwnerIdentifier + " amount: " + String.Format("{0:n0}", newAccountInfo.Log.Last().Amount) + " SC. by " + newAccountInfo.Log.Last().ChangeIdentifier +  " New Total " + String.Format("{0:n0}", newAccountInfo.Balance));
+                    }
+                    else
+                    {
+                        change = newAccountInfo.Balance - oldAccountInfo.Balance;
+                        log.Info("FACTIONLOG Faction balance increased by " + MySession.Static.Factions.TryGetFactionById(newAccountInfo.OwnerIdentifier).Tag + " " + newAccountInfo.OwnerIdentifier + " amount: " + String.Format("{0:n0}", newAccountInfo.Log.Last().Amount) + " SC. by " + newAccountInfo.Log.Last().ChangeIdentifier + " New Total " + String.Format("{0:n0}", newAccountInfo.Balance));
+                    }
                 }
                 else
                 {
@@ -94,6 +105,34 @@ namespace CrunchUtilities
                             log.Info("Player Balance increased by: " + String.Format("{0:n0}", change) + " from " + String.Format("{0:n0}", oldAccountInfo.Balance) + " SC to " + String.Format("{0:n0}", newAccountInfo.Balance) + " SC. steam id: " + MySession.Static.Players.TryGetSteamId(oldAccountInfo.OwnerIdentifier) + " identity id: " + oldAccountInfo.OwnerIdentifier);
                         }
                   
+                    }
+                }
+            }
+            if (CrunchUtilitiesPlugin.file != null && CrunchUtilitiesPlugin.file.EcoChatMessages)
+            {
+                if (Sync.Players.TryGetPlayerId(newAccountInfo.OwnerIdentifier, out MyPlayer.PlayerId player))
+                {
+                    if (MySession.Static.Players.TryGetPlayerById(player, out MyPlayer pp))
+                    {
+
+                        MySession.Static.Players.TryGetSteamId(newAccountInfo.OwnerIdentifier);
+                        //  foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+                        //    {
+                        //     if (player.Identity.IdentityId == identifierId)
+                        //    {
+                        long change;
+                        if (oldAccountInfo.Balance > newAccountInfo.Balance)
+                        {
+                            change = oldAccountInfo.Balance - newAccountInfo.Balance;
+                            Commands.SendMessage("CrunchEcon", "Balance decreased by: " + String.Format("{0:n0}", change) + " SC", Color.Red, (long)pp.Id.SteamId);
+
+                        }
+                        else
+                        {
+                            change = newAccountInfo.Balance - oldAccountInfo.Balance;
+                            Commands.SendMessage("CrunchEcon", "Balance increased by: " + String.Format("{0:n0}", change) + " SC", Color.Cyan, (long)pp.Id.SteamId);
+                        }
+
                     }
                 }
             }
@@ -115,7 +154,7 @@ namespace CrunchUtilities
                     if (MySession.Static.Players.TryGetPlayerById(player, out MyPlayer pp))
                     {
 
-
+                        MySession.Static.Players.TryGetSteamId(identifierId);
                         //  foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
                         //    {
                         //     if (player.Identity.IdentityId == identifierId)
