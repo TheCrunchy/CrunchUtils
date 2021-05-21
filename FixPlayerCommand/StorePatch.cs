@@ -420,9 +420,10 @@ namespace CrunchUtilities
                         {
                             Log.Info("Filling 2");
                             tank2.ChangeFillRatioAmount(tank2.FilledRatio + (amountToUse / tank2.Capacity));
-                            gasToRemove += num;
+                            double newNum = num - amountToUse;
+                            gasToRemove += newNum;
                             price += (long)(amountToUse / 1000) * storeItem.PricePerUnit;
-                            amountToUse -= num;
+                            amountToUse -= newNum;
                         }
                     }
 
@@ -433,19 +434,21 @@ namespace CrunchUtilities
                     {
                         MyGasTank tank = gas2 as MyGasTank;
 
-                        double num = (1.0 - tank.FilledRatio) * (double)tank.Capacity;
+                        double num = (tank.FilledRatio) * (double)tank.Capacity;
 
                         if (gasToRemove >= num)
                         {
                             Log.Info("Taking 1");
-                            tank.ChangeFillRatioAmount(tank.FilledRatio - (num / tank.Capacity));
+                            tank.ChangeFillRatioAmount(0);
                             gasToRemove -= num;
+                            
                         }
                         else
                         {
                             Log.Info("Taking 2");
-                            tank.ChangeFillRatioAmount(tank.FilledRatio - (gasToRemove / tank.Capacity));
-                            gasToRemove -= num;
+                            double newAmount = num - gasToRemove;
+                            tank.ChangeFillRatioAmount(tank.FilledRatio - (newAmount / tank.Capacity));
+                            gasToRemove -= newAmount;
                         }
                     }
                     
