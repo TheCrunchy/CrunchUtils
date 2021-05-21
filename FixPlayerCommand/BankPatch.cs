@@ -51,12 +51,12 @@ namespace CrunchUtilities
 
             LogManager.Configuration.Reload();
         }
-        internal static readonly MethodInfo update =
-         typeof(MyBankingSystem).GetMethod("ChangeBalanceInternal", BindingFlags.Instance | BindingFlags.NonPublic) ??
-         throw new Exception("Failed to find patch method");
-        internal static readonly MethodInfo updatePatch =
-                typeof(BankPatch).GetMethod(nameof(BalanceChangedMethod), BindingFlags.Static | BindingFlags.Public) ??
-                throw new Exception("Failed to find patch method");
+        //internal static readonly MethodInfo update =
+        // typeof(MyBankingSystem).GetMethod("ChangeBalanceInternal", BindingFlags.Instance | BindingFlags.NonPublic) ??
+        // throw new Exception("Failed to find patch method");
+        //internal static readonly MethodInfo updatePatch =
+        //        typeof(BankPatch).GetMethod(nameof(BalanceChangedMethod), BindingFlags.Static | BindingFlags.Public) ??
+        //        throw new Exception("Failed to find patch method");
 
 
 
@@ -139,41 +139,41 @@ namespace CrunchUtilities
         }
 
 
-        public static void BalanceChangedMethod(long identifierId, long amount)
-        {
-            if (amount == 0)
-            {
+        //public static void BalanceChangedMethod(long identifierId, long amount)
+        //{
+        //    if (amount == 0)
+        //    {
 
-                return;
-            }
+        //        return;
+        //    }
 
-            if (CrunchUtilitiesPlugin.file != null && CrunchUtilitiesPlugin.file.EcoChatMessages)
-            {
-                if (Sync.Players.TryGetPlayerId(identifierId, out MyPlayer.PlayerId player))
-                {
-                    if (MySession.Static.Players.TryGetPlayerById(player, out MyPlayer pp))
-                    {
+        //    if (CrunchUtilitiesPlugin.file != null && CrunchUtilitiesPlugin.file.EcoChatMessages)
+        //    {
+        //        if (Sync.Players.TryGetPlayerId(identifierId, out MyPlayer.PlayerId player))
+        //        {
+        //            if (MySession.Static.Players.TryGetPlayerById(player, out MyPlayer pp))
+        //            {
 
-                        MySession.Static.Players.TryGetSteamId(identifierId);
-                        //  foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
-                        //    {
-                        //     if (player.Identity.IdentityId == identifierId)
-                        //    {
-                        if (amount > 0)
-                        {
-                            Commands.SendMessage("CrunchEcon", "Balance increased by: " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)pp.Id.SteamId);
+        //                MySession.Static.Players.TryGetSteamId(identifierId);
+        //                //  foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+        //                //    {
+        //                //     if (player.Identity.IdentityId == identifierId)
+        //                //    {
+        //                if (amount > 0)
+        //                {
+        //                    Commands.SendMessage("CrunchEcon", "Balance increased by: " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)pp.Id.SteamId);
 
-                        }
-                        else
-                        {
-                            Commands.SendMessage("CrunchEcon", "Balance decreased by: " + String.Format("{0:n0}", amount) + " SC", Color.Red, (long)pp.Id.SteamId);
-                        }
+        //                }
+        //                else
+        //                {
+        //                    Commands.SendMessage("CrunchEcon", "Balance decreased by: " + String.Format("{0:n0}", amount) + " SC", Color.Red, (long)pp.Id.SteamId);
+        //                }
 
-                    }
-                }
-            }
-            //     }
-            //   }
-        }
+        //            }
+        //        }
+        //    }
+        //    //     }
+        //    //   }
+        //}
     }
 }

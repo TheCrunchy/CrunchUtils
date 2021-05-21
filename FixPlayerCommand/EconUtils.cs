@@ -55,10 +55,6 @@ namespace CrunchUtilities
             //    {
                //     CrunchUtilitiesPlugin.Log.Info(e.Amount);
               //  }
-            long factionBalance = EconUtils.getBalance(factionID) + amount;
-            long playerBalance = EconUtils.getBalance(id) - amount;
-            CrunchUtilitiesPlugin.Log.Info("Ignore this error");
-           MyBankingSystem.RequestTransfer_BroadcastToClients(id, factionID, amount, EconUtils.getBalance(id), EconUtils.getBalance(factionID));
             EconUtils.addMoney(factionID, amount);
             EconUtils.takeMoney(id, amount);
             //MyBankingSystem.ChangeBalance(factionID, factionBalance);

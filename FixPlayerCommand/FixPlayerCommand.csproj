@@ -151,6 +151,7 @@
     <Compile Include="ShipOffer.cs" />
     <Compile Include="SlimBlockPatch.cs" />
     <Compile Include="NobodyPatch.cs" />
+    <Compile Include="StorePatch.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
