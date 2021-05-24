@@ -506,7 +506,8 @@ namespace CrunchUtilities
                         return;
                     }
                 }
-                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+                ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroupMechanical(Context.Player.Character);
+             
                 if (gridWithSubGrids.Count > 0)
                 {
 
@@ -514,11 +515,21 @@ namespace CrunchUtilities
                     {
                         bool isStatic = false;
                         bool isDynamic = false;
-                        foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                        foreach (MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Node groupNodes in item.Nodes)
                         {
 
                             MyCubeGrid grid = groupNodes.NodeData;
+                            if (!grid.Editable)
+                            {
+                                SendMessage("Server", Context.Player.DisplayName + " is trying to claim an admin protected grid.", Color.Red, 0L);
+                                return;
+                            }
 
+                            if (!grid.DestructibleBlocks)
+                            {
+                                SendMessage("Server", Context.Player.DisplayName + " is trying to claim an admin protected grid.", Color.Red, 0L);
+                                return;
+                            }
                             var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
 
                             //rewrite this shit eventually to not be trash
@@ -793,7 +804,7 @@ namespace CrunchUtilities
                         grid.IsRespawnGrid = false;
                         found = true;
 
-                        CrunchUtilitiesPlugin.Log.Info("Removing respawn status of grid " + grid.EntityId + " " + grid.DisplayNameText);
+                        CrunchUtilitiesPlugin.Log.Info("Removing respawn status of grid " + grid.EntityId + " " + grid.DisplayName);
                         Context.Respond("Ship wont get deleted by Keen. Try not to die.");
                     }
                 }

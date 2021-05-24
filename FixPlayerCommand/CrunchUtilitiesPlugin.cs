@@ -49,6 +49,7 @@ using VRage.Utils;
 using Sandbox.Engine.Physics;
 using Sandbox.Definitions;
 using System.Linq;
+using Sandbox.Game;
 
 namespace CrunchUtilities
 {
@@ -335,6 +336,7 @@ namespace CrunchUtilities
             }
         }
 
+        public static Dictionary<long, NotificationMessage> attackMessages = new Dictionary<long, NotificationMessage>();
         public static void SendAttackNotification(IMyFaction attacker, IMyFaction defender, long attackerId, ulong playerSteamid)
         {
             if (defender != null)
@@ -345,18 +347,24 @@ namespace CrunchUtilities
                     {
                         if (DateTime.Now >= time)
                         {
+                            NotificationMessage message;
+        
+                                message = new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red");
                             //this is annoying, need to figure out how to check the exact world time so a duplicate message isnt possible
-                            ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red"), playerSteamid);
-                            blockCooldowns.Remove(attackerId);
-                            blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(11));
-                         
+                            ModCommunication.SendMessageTo(message, playerSteamid);
+                          blockCooldowns.Remove(attackerId);
+                         blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(11));
+                            
                         }
                     }
                     else
                     {
+
+                        
+
                         blockCooldowns.Remove(attackerId);
-                        blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(11));
-                        ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red"), playerSteamid);
+                   blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(11));
+                    ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red"), playerSteamid);
                        
                     }
                 }
