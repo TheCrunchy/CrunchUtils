@@ -51,6 +51,7 @@ using VRage.Library.Utils;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRage.Game.ObjectBuilders.ComponentSystem;
 using Sandbox.Game.Entities.Character.Components;
+using System.Media;
 
 namespace CrunchUtilities
 {
@@ -507,7 +508,7 @@ namespace CrunchUtilities
                     }
                 }
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroupMechanical(Context.Player.Character);
-             
+
                 if (gridWithSubGrids.Count > 0)
                 {
 
@@ -620,7 +621,7 @@ namespace CrunchUtilities
             long playerId = 0;
             ulong playerSteamId = 0;
             List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
-
+            string name = "";
             BoundingSphereD sphere = new BoundingSphereD(Context.Player.Character.PositionComp.GetPosition(), 10);
             l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
             int players = 0;
@@ -631,6 +632,7 @@ namespace CrunchUtilities
                     if (character.ControlSteamId.Equals(Context.Player.SteamUserId))
                         continue;
 
+                    name = character.DisplayName;
                     playerId = character.GetPlayerIdentityId();
                     playerSteamId = character.ControlSteamId;
                     players++;
@@ -656,7 +658,7 @@ namespace CrunchUtilities
                 Context.Respond("No, the price cannot be below 0.");
                 return;
             }
-            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+            ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroupMechanical(Context.Player.Character);
             bool found = false;
 
             ShipOffer offer = new ShipOffer();
@@ -665,7 +667,7 @@ namespace CrunchUtilities
 
                 foreach (var item in gridWithSubGrids)
                 {
-                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                    foreach (MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Node groupNodes in item.Nodes)
                     {
                         MyCubeGrid grid = groupNodes.NodeData;
 
@@ -686,6 +688,7 @@ namespace CrunchUtilities
                 if (!saleOffers.ContainsKey(playerId))
                 {
                     saleOffers.Add(playerId, offer);
+                    Context.Respond("Offer to sell grid sent to " + name + " For " + String.Format("{0:n0}", price) + " SC. Offer is active for 30 seconds.");
                     SendMessage("The Government", Context.Player.Character.DisplayName + " wants to sell you this grid for " + String.Format("{0:n0}", price) + " SC. To accept use !acceptgrid within 30 seconds", Color.Cyan, (long)playerSteamId);
                 }
                 else
@@ -695,7 +698,7 @@ namespace CrunchUtilities
             }
             else
             {
-                Context.Respond("No grids found, are you looking at it?");
+                Context.Respond("No grids found, are you looking at it and own it?");
                 return;
             }
 
@@ -753,6 +756,11 @@ namespace CrunchUtilities
                     foreach (MyCubeGrid grid in grids)
                     {
                         grid.ChangeGridOwnership(Context.Player.IdentityId, MyOwnershipShareModeEnum.Faction);
+                       foreach (MySlimBlock block in grid.GetBlocks())
+                        {
+                            
+                            MyMultiplayer.RaiseEvent(grid, x => new Action<long, long>(x.TransferBlocksBuiltByID), block.BuiltBy, Context.Player.IdentityId, new EndpointId());
+                        }
                     }
                     EconUtils.takeMoney(Context.Player.IdentityId, offer.price);
                     EconUtils.addMoney(offer.SellerIdentityId, offer.price);
@@ -841,6 +849,54 @@ namespace CrunchUtilities
 
             }
         }
+
+
+        //[Command("paint", "recolorblocks")]
+        //[Permission(MyPromoteLevel.None)]
+        //public void RepaintTargetGridColor(string oldColourHex, string newColourHex)
+        //{
+
+
+        //    if (MyGravityProviderSystem.IsPositionInNaturalGravity(Context.Player.GetPosition()) && !CrunchUtilitiesPlugin.file.convertInGravity)
+        //    {
+
+        //        Context.Respond("You cannot use this command in natural gravity!");
+        //        return;
+        //    }
+          
+        //    var col = ColorExtensions.HexToColor(oldColourHex);
+        //    var newcol = ColorExtensions.HexToColor(newColourHex);
+            
+
+        //    ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroupMechanical(Context.Player.Character);
+        //    if (gridWithSubGrids.Count > 0)
+        //    {
+
+        //        foreach (var item in gridWithSubGrids)
+        //        {
+        //            foreach (MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Node groupNodes in item.Nodes)
+        //            {
+
+        //                MyCubeGrid grid = groupNodes.NodeData;
+        //                if (FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
+        //                {
+        //                    foreach (MySlimBlock block in grid.GetBlocks())
+        //                    {
+                               
+        //                        CrunchUtilitiesPlugin.Log.Info(block.ColorMaskHSV + " " + col + " " + ColorExtensions.ColorToHSVDX11(col));
+        //                        if (block.ColorMaskHSV.X == ColorExtensions.ColorToHSV(col).X)
+        //                        {
+                                    
+        //                            block.CubeGrid.ColorBlocks(block.Min, block.Max, newcol, true, false);
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //}
+
+
 
         [Command("convert", "Player command, Turn a ship and connected grids into a station")]
         [Permission(MyPromoteLevel.None)]
@@ -1386,7 +1442,7 @@ namespace CrunchUtilities
             }
             Context.Respond("1");
             MyStoreBlock store = null;
-          //  itemtype = "MyObjectBuilder_" + itemtype;
+            //  itemtype = "MyObjectBuilder_" + itemtype;
             ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
             Context.Respond("2");
             if (gridWithSubGrids.Count > 0)
@@ -1412,13 +1468,13 @@ namespace CrunchUtilities
             //store.PlayerItems
             //loop through these for a station with the hydrogen
             Context.Respond("4");
-            
-         //   MyDefinitionId.TryParse(itemtype, subtype, out MyDefinitionId id);
-           // if (id.ToString().Contains("null"))
-          //  {
-           //     Context.Respond("Invalid item, try Ammo, Ore, Ingot, Component, PhysicalGunObject, PhysicalItem");
-           //     return;
-        //    }
+
+            //   MyDefinitionId.TryParse(itemtype, subtype, out MyDefinitionId id);
+            // if (id.ToString().Contains("null"))
+            //  {
+            //     Context.Respond("Invalid item, try Ammo, Ore, Ingot, Component, PhysicalGunObject, PhysicalItem");
+            //     return;
+            //    }
             Context.Respond("5");
             if (store == null)
             {
@@ -1426,14 +1482,14 @@ namespace CrunchUtilities
                 return;
             }
             Context.Respond("6");
-         //   SerializableDefinitionId itemId = new SerializableDefinitionId(id.TypeId, subtype);
+            //   SerializableDefinitionId itemId = new SerializableDefinitionId(id.TypeId, subtype);
 
             Context.Respond("7");
-       //     Context.Respond(itemId.SubtypeName);
+            //     Context.Respond(itemId.SubtypeName);
             MyStoreItemData item = new MyStoreItemData(MyCharacterOxygenComponent.HydrogenId, amount, priceper, null, null);
             MyStoreItem d;
             //d.
-       
+
             //     MyStoreItem myStoreItem = new MyStoreItem(id, amount, pricePerUnit, StoreItemTypes.Offer, ItemTypes.Hydrogen);
 
             Context.Respond("8");

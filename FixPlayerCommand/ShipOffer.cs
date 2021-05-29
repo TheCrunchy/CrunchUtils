@@ -11,7 +11,7 @@ namespace CrunchUtilities
         public Int64 price;
         public long SellerIdentityId;
         public long SellerSteamId;
-        public List<long> gridsInOffer;
+        public List<long> gridsInOffer = new List<long>();
         public DateTime TimeOfOffer = DateTime.Now.AddSeconds(30);
     }
 }

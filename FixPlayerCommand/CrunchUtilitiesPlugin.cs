@@ -337,7 +337,7 @@ namespace CrunchUtilities
         }
 
         public static Dictionary<long, NotificationMessage> attackMessages = new Dictionary<long, NotificationMessage>();
-        public static void SendAttackNotification(IMyFaction attacker, IMyFaction defender, long attackerId, ulong playerSteamid)
+        public static void SendAttackNotification(IMyFaction attacker, IMyFaction defender, long attackerId, ulong playerSteamid, Vector3 position)
         {
             if (defender != null)
             {
@@ -347,6 +347,15 @@ namespace CrunchUtilities
                     {
                         if (DateTime.Now >= time)
                         {
+                            if (MySession.Static.Players.TryGetPlayerBySteamId(playerSteamid) != null)
+                            {
+                                Vector3 playerPos = MySession.Static.Players.TryGetPlayerBySteamId(playerSteamid).GetPosition();
+                                float distance = Vector3.Distance(playerPos, position);
+                                if (distance > 3000)
+                                {
+                                    return;
+                                }
+                            }
                             NotificationMessage message;
         
                                 message = new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red");
@@ -360,7 +369,15 @@ namespace CrunchUtilities
                     else
                     {
 
-                        
+                        if (MySession.Static.Players.TryGetPlayerBySteamId(playerSteamid) != null)
+                        {
+                            Vector3 playerPos = MySession.Static.Players.TryGetPlayerBySteamId(playerSteamid).GetPosition();
+                            float distance = Vector3.Distance(playerPos, position);
+                            if (distance > 3000)
+                            {
+                                return;
+                            }
+                        }
 
                         blockCooldowns.Remove(attackerId);
                    blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(11));
@@ -397,7 +414,7 @@ namespace CrunchUtilities
                             {
                                 if (MySession.Static.Players.GetPlayerById(player) != null)
                                 {
-                                    SendAttackNotification(attacker, defender, attackerId, player.SteamId);
+                                    SendAttackNotification(attacker, defender, attackerId, player.SteamId, block.CubeGrid.PositionComp.GetPosition());
                                 }
                             }
                         }
