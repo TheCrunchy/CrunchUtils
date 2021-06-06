@@ -351,7 +351,7 @@ namespace CrunchUtilities
                             {
                                 Vector3 playerPos = MySession.Static.Players.TryGetPlayerBySteamId(playerSteamid).GetPosition();
                                 float distance = Vector3.Distance(playerPos, position);
-                                if (distance > 3000)
+                                if (distance > 10000)
                                 {
                                     return;
                                 }
@@ -373,7 +373,7 @@ namespace CrunchUtilities
                         {
                             Vector3 playerPos = MySession.Static.Players.TryGetPlayerBySteamId(playerSteamid).GetPosition();
                             float distance = Vector3.Distance(playerPos, position);
-                            if (distance > 3000)
+                            if (distance > 10000)
                             {
                                 return;
                             }

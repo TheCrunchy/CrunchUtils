@@ -959,6 +959,9 @@ namespace CrunchUtilities
                                         {
                                             break;
                                         }
+                                        if (grid.Physics.IsMoving)
+                                            continue;
+
                                         grid.Physics.ClearSpeed();
                                         grid.OnConvertedToStationRequest();
 
