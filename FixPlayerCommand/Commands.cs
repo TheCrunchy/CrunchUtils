@@ -938,7 +938,7 @@ namespace CrunchUtilities
                                 {
                                     if (isDynamic)
                                     {
-                                        break;
+                                        continue;
                                     }
                                     Action m_convertToShipResult = null;
                                     grid.RequestConversionToShip(m_convertToShipResult);
@@ -950,7 +950,7 @@ namespace CrunchUtilities
                                 {
                                     if (isStatic)
                                     {
-                                        break;
+                                        continue;
                                     }
                                     try
                                     {
@@ -959,9 +959,14 @@ namespace CrunchUtilities
                                         {
                                             break;
                                         }
-                                        if (grid.Physics.IsMoving)
-                                            continue;
 
+                                        if (grid.Physics.Speed > 10)
+                                        {
+                                            Context.Respond(grid.DisplayName + " Moving too fast to convert.");
+                                            continue;
+                                        }
+
+                                        grid.Physics.Clear();
                                         grid.Physics.ClearSpeed();
                                         grid.OnConvertedToStationRequest();
 
@@ -1272,16 +1277,18 @@ namespace CrunchUtilities
             }
             else
             {
-                IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(target);
-                if (id == null)
+                List<IMyIdentity> identities = CrunchUtilitiesPlugin.GetAllIdentitiesByNameOrId(target);
+                if (identities == null || identities.Count == 0)
                 {
-                    Context.Respond("Cant find that player.");
+                    Context.Respond("Couldnt find that player.");
                     return;
                 }
 
-                string name = MyMultiplayer.Static.GetMemberName(MySession.Static.Players.TryGetSteamId(id.IdentityId));
-                Context.Respond("\n Steam Name " + name + "\n Display Name " + id.DisplayName + "\n STEAM " + MySession.Static.Players.TryGetSteamId(id.IdentityId).ToString() + "\n IDENTITY " + id.IdentityId);
-
+                foreach (var id in identities)
+                {
+                    string name = MyMultiplayer.Static.GetMemberName(MySession.Static.Players.TryGetSteamId(id.IdentityId));
+                    Context.Respond("\n Steam Name " + name + "\n Display Name " + id.DisplayName + "\n STEAM " + MySession.Static.Players.TryGetSteamId(id.IdentityId).ToString() + "\n IDENTITY " + id.IdentityId);
+                }
 
             }
         }
@@ -1653,7 +1660,67 @@ namespace CrunchUtilities
         }
 
 
+        [Command("isecon", "output if the target station is an economy")]
+        [Permission(MyPromoteLevel.None)]
+        public void findNearbyStations()
+        {
+            if (CrunchUtilitiesPlugin.file.FixTradeStation)
+            {
 
+                List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
+
+                BoundingSphereD sphere = new BoundingSphereD(Context.Player.Character.PositionComp.GetPosition(), 500);
+                l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
+                MySafeZone zone = null;
+                List<VRage.Game.ModAPI.IMyCubeGrid> NPCGrids = new List<VRage.Game.ModAPI.IMyCubeGrid>();
+                List<VRage.Game.ModAPI.IMyCubeGrid> GridsOutsideZone = new List<VRage.Game.ModAPI.IMyCubeGrid>();
+                foreach (IMyEntity e in l)
+                {
+                    if (e is MySafeZone z)
+                    {
+                        zone = z;
+                        // CrunchUtilitiesPlugin.Log.Info("Zone");
+                        break;
+                    }
+                }
+
+                foreach (IMyEntity e in l)
+                {
+                    if (e is MyCubeGrid grid)
+                    {
+
+                        if (FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)) != null)
+                        {
+                            if (grid != null && FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid as MyCubeGrid)).Tag.Length > 3)
+                            {
+                                var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+                                var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
+                                gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
+
+                                if (blockList.Count > 0)
+                                {
+                                    NPCGrids.Add(grid);
+
+                                }
+                            }
+                        }
+                    }
+                }
+
+                foreach (VRage.Game.ModAPI.IMyCubeGrid grid in NPCGrids)
+                {
+
+                    if (MySession.Static.Factions.GetStationByGridId(grid.EntityId) != null)
+                    {
+                        Context.Respond("Yes this is an economy station");
+                    }
+                    else
+                    {
+                        Context.Respond("No this isnt an economy station");
+                    }
+                }
+            }
+        }
 
         [Command("fixstation", "delete duplicate npc stations around player location")]
         [Permission(MyPromoteLevel.None)]

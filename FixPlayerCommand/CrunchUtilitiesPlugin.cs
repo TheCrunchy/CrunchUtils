@@ -66,9 +66,9 @@ namespace CrunchUtilities
         [PatchShim]
         public static class MyPatch
         {
- 
+
             public static readonly Logger Log = LogManager.GetCurrentClassLogger();
-       
+
 
             private static List<MyPhysics.HitInfo> m_castList = new List<MyPhysics.HitInfo>();
             internal static readonly MethodInfo update =
@@ -94,7 +94,7 @@ namespace CrunchUtilities
                 ctx.GetPattern(update).Prefixes.Add(updatePatch);
                 //  ctx.GetPattern(testUpdate).Prefixes.Add(testUpdatePatch);
                 Log.Info("Patching Successful CrunchDrill!");
-        
+
             }
 
             //      public static bool TestPatchMethod2(MyDrillBase __instance, MyDrillSensorBase.DetectionInfo entry,
@@ -248,9 +248,9 @@ namespace CrunchUtilities
 
 
         public static List<long> ids = new List<long>();
-    //    public static Logger EconLog = LogManager.GetLogger("Econ");
+        //    public static Logger EconLog = LogManager.GetLogger("Econ");
         public static Logger Log = LogManager.GetCurrentClassLogger();
- 
+
 
         public static ConfigFile file;
         public static string path;
@@ -265,76 +265,112 @@ namespace CrunchUtilities
         private static Dictionary<long, DateTime> blockCooldowns = new Dictionary<long, DateTime>();
         private static int ticks = 0;
         public static List<MyFunctionalBlock> blocksToTurnOff = new List<MyFunctionalBlock>();
+
+        private static DateTime UpdateTime = DateTime.Now;
+        private static DateTime PlayerAlertNext = DateTime.Now;
         public override void Update()
+
         {
-            ticks++;
-          
-            if (ticks % 524 == 0)
+            try
             {
-                List<long> idsToRemove = new List<long>();
-                foreach (KeyValuePair<long, DateTime> pair in blockCooldowns)
+                if (DateTime.Now >= PlayerAlertNext && file != null && file.PlayerAlertEnabled)
                 {
-                    if (DateTime.Now >= pair.Value)
+                    PlayerAlertNext = DateTime.Now.AddSeconds(file.SecondsBetweenPlayerAlert);
+                    foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
                     {
-                        idsToRemove.Add(pair.Key);
+                        int count = 0;
+                        foreach (MyPlayer player2 in MySession.Static.Players.GetOnlinePlayers())
+                        {
+                            if (player2.GetPosition() == null || player.GetPosition() == null)
+                                continue;
+
+                            if (Vector3.Distance(player.GetPosition(), player2.GetPosition()) <= MyMultiplayer.Static.SyncDistance)
+                            {
+                                count++;
+                            }
+                            if (count > 1)
+                            {
+                                NotificationMessage message = new NotificationMessage(count + " Life Signs within " + String.Format("{0:n0}", MyMultiplayer.Static.SyncDistance), 5000, "Red");
+                                //this is annoying, need to figure out how to check the exact world time so a duplicate message isnt possible
+                                ModCommunication.SendMessageTo(message, player.Id.SteamId);
+                            }
+                        }
+
                     }
-                }
-                foreach (long id in idsToRemove)
-                {
-                    blockCooldowns.Remove(id);
-                }
-                List<long> expiredOffers = new List<long>();
-                foreach (KeyValuePair<long, ShipOffer> offers in Commands.saleOffers)
-                {
-                    if (DateTime.Now >= offers.Value.TimeOfOffer)
-                    {
-                        expiredOffers.Add(offers.Key);
-                    }
-                }
-                foreach (long id in expiredOffers)
-                {
-                    Commands.saleOffers.Remove(id);
                 }
             }
-            if (ticks % 10000 == 0 && file != null && file.IdentityUpdate)
+            catch (Exception ex)
             {
-                try
+                Log.Error(ex);
+            }
+            ticks++;
+
+                if (ticks % 524 == 0)
                 {
-                
-                    if (derp == TorchSessionState.Loaded && MySession.Static.Players.GetOnlinePlayers().Count > 0)
+                    List<long> idsToRemove = new List<long>();
+                    foreach (KeyValuePair<long, DateTime> pair in blockCooldowns)
                     {
-                        foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+                        if (DateTime.Now >= pair.Value)
                         {
-                            if (player == null || player.Id == null)
-                                continue;
-
-                            string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
-                            if (name == null || string.IsNullOrEmpty(name))
-                                continue;
-
-                            MyIdentity identity = player.Identity;
-                            if (identity == null)
-                                continue;
-
-                            if (player.Character != null && player.Character.DisplayName != null && !player.DisplayName.Equals(name))
-                            {
-                                MyAPIGateway.Utilities.InvokeOnGameThread(() =>
-                                {
-                                    identity.SetDisplayName(name);
-                                });
-                            }
-                            // }
+                            idsToRemove.Add(pair.Key);
                         }
                     }
+                    foreach (long id in idsToRemove)
+                    {
+                        blockCooldowns.Remove(id);
+                    }
+                    List<long> expiredOffers = new List<long>();
+                    foreach (KeyValuePair<long, ShipOffer> offers in Commands.saleOffers)
+                    {
+                        if (DateTime.Now >= offers.Value.TimeOfOffer)
+                        {
+                            expiredOffers.Add(offers.Key);
+                        }
+                    }
+                    foreach (long id in expiredOffers)
+                    {
+                        Commands.saleOffers.Remove(id);
+                    }
                 }
-                catch (Exception ex)
+                if (ticks % 10000 == 0 && file != null && file.IdentityUpdate)
                 {
-                    Log.Info("Error on updating names");
-                    Log.Error(ex.ToString());
-                    return;
+                    try
+                    {
+
+                        if (derp == TorchSessionState.Loaded && MySession.Static.Players.GetOnlinePlayers().Count > 0)
+                        {
+                            foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+                            {
+                                if (player == null || player.Id == null)
+                                    continue;
+
+                                string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
+                                if (name == null || string.IsNullOrEmpty(name))
+                                    continue;
+
+                                MyIdentity identity = player.Identity;
+                                if (identity == null)
+                                    continue;
+
+                                if (player.Character != null && player.Character.DisplayName != null && !player.DisplayName.Equals(name))
+                                {
+                                    MyAPIGateway.Utilities.InvokeOnGameThread(() =>
+                                    {
+                                        identity.SetDisplayName(name);
+                                    });
+                                }
+                                // }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Info("Error on updating names");
+                        Log.Error(ex.ToString());
+                        return;
+                    }
                 }
             }
-        }
 
         public static Dictionary<long, NotificationMessage> attackMessages = new Dictionary<long, NotificationMessage>();
         public static void SendAttackNotification(IMyFaction attacker, IMyFaction defender, long attackerId, ulong playerSteamid, Vector3 position)
@@ -357,13 +393,13 @@ namespace CrunchUtilities
                                 }
                             }
                             NotificationMessage message;
-        
-                                message = new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red");
+
+                            message = new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red");
                             //this is annoying, need to figure out how to check the exact world time so a duplicate message isnt possible
                             ModCommunication.SendMessageTo(message, playerSteamid);
-                          blockCooldowns.Remove(attackerId);
-                         blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(11));
-                            
+                            blockCooldowns.Remove(attackerId);
+                            blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(11));
+
                         }
                     }
                     else
@@ -380,9 +416,9 @@ namespace CrunchUtilities
                         }
 
                         blockCooldowns.Remove(attackerId);
-                   blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(11));
-                    ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red"), playerSteamid);
-                       
+                        blockCooldowns.Add(attackerId, DateTime.Now.AddSeconds(11));
+                        ModCommunication.SendMessageTo(new NotificationMessage("You are attacking " + defender.Tag, 5000, "Red"), playerSteamid);
+
                     }
                 }
             }
@@ -393,7 +429,7 @@ namespace CrunchUtilities
         {
             if (file != null)
             {
-               
+
                 if (file.LogNeutralsDamagingEachOther || file.ShowFactionTagsOnDamageGrid)
                     try
                     {
@@ -418,7 +454,7 @@ namespace CrunchUtilities
                                 }
                             }
                         }
-                     
+
 
                         MyCubeBlock cubeBlock = block.FatBlock;
                         if (cubeBlock == null)
@@ -434,10 +470,10 @@ namespace CrunchUtilities
 
                         if (GetAttacker(info.AttackerId) > 0L)
                         {
-                          
 
-                       
-                     
+
+
+
                             //this is so messy 
                             if (attacker != null && defender != null)
                             {
@@ -573,7 +609,7 @@ namespace CrunchUtilities
             {
                 Log.Warn("No session manager loaded!");
             }
-           
+
         }
         private void SetupConfig()
         {
@@ -612,7 +648,41 @@ namespace CrunchUtilities
             return null;
         }
 
-  
+        public static List<IMyIdentity> GetAllIdentitiesByNameOrId(string playerNameOrSteamId)
+        {
+            List<IMyIdentity> ids = new List<IMyIdentity>();
+            foreach (var identity in MySession.Static.Players.GetAllIdentities())
+            {
+                if (identity.DisplayName == playerNameOrSteamId)
+                {
+                    if (!ids.Contains(identity))
+                    {
+                        ids.Add(identity);
+                    }
+                }
+                if (ulong.TryParse(playerNameOrSteamId, out ulong steamId))
+                {
+                    ulong id = MySession.Static.Players.TryGetSteamId(identity.IdentityId);
+                    if (id == steamId)
+                    {
+                        if (!ids.Contains(identity))
+                        {
+                            ids.Add(identity);
+                        }
+                     
+                    }
+                    if (identity.IdentityId == (long)steamId)
+                    {
+                        if (!ids.Contains(identity))
+                        {
+                            ids.Add(identity);
+                        }
+                    }
+                }
+
+            }
+            return ids;
+        }
         private static void OnTimedEventB(Object source, System.Timers.ElapsedEventArgs e)
         {
             Task.Run(() =>
@@ -637,7 +707,7 @@ namespace CrunchUtilities
                 derp = TorchSessionState.Loaded;
                 MySession.Static.Factions.FactionStateChanged += FactionLogging.StateChange;
                 MyBankingSystem.Static.OnAccountBalanceChanged += BankPatch.BalanceChangedMethod2;
-                
+
                 //  session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
                 MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
             }
