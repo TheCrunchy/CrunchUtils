@@ -271,38 +271,38 @@ namespace CrunchUtilities
         public override void Update()
 
         {
-            try
-            {
-                if (DateTime.Now >= PlayerAlertNext && file != null && file.PlayerAlertEnabled)
-                {
-                    PlayerAlertNext = DateTime.Now.AddSeconds(file.SecondsBetweenPlayerAlert);
-                    foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
-                    {
-                        int count = 0;
-                        foreach (MyPlayer player2 in MySession.Static.Players.GetOnlinePlayers())
-                        {
-                            if (player2.GetPosition() == null || player.GetPosition() == null)
-                                continue;
+            //try
+            //{
+            //    if (DateTime.Now >= PlayerAlertNext && file != null && file.PlayerAlertEnabled)
+            //    {
+            //        PlayerAlertNext = DateTime.Now.AddSeconds(file.SecondsBetweenPlayerAlert);
+            //        foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+            //        {
+            //            int count = 0;
+            //            foreach (MyPlayer player2 in MySession.Static.Players.GetOnlinePlayers())
+            //            {
+            //                if (player2.GetPosition() == null || player.GetPosition() == null)
+            //                    continue;
 
-                            if (Vector3.Distance(player.GetPosition(), player2.GetPosition()) <= MyMultiplayer.Static.SyncDistance)
-                            {
-                                count++;
-                            }
-                            if (count > 1)
-                            {
-                                NotificationMessage message = new NotificationMessage(count + " Life Signs within " + String.Format("{0:n0}", MyMultiplayer.Static.SyncDistance), 5000, "Red");
-                                //this is annoying, need to figure out how to check the exact world time so a duplicate message isnt possible
-                                ModCommunication.SendMessageTo(message, player.Id.SteamId);
-                            }
-                        }
+            //                if (Vector3.Distance(player.GetPosition(), player2.GetPosition()) <= MyMultiplayer.Static.SyncDistance)
+            //                {
+            //                    count++;
+            //                }
+            //                if (count > 1)
+            //                {
+            //                    NotificationMessage message = new NotificationMessage(count + " Life Signs within " + String.Format("{0:n0}", MyMultiplayer.Static.SyncDistance), 5000, "Red");
+            //                    //this is annoying, need to figure out how to check the exact world time so a duplicate message isnt possible
+            //                    ModCommunication.SendMessageTo(message, player.Id.SteamId);
+            //                }
+            //            }
 
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Error(ex);
-            }
+            //        }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    Log.Error(ex);
+            //}
             ticks++;
 
                 if (ticks % 524 == 0)
