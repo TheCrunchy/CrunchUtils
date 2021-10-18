@@ -97,7 +97,9 @@ namespace CrunchUtilities
                         if (oldAccountInfo.Balance > newAccountInfo.Balance)
                         {
                             change = oldAccountInfo.Balance - newAccountInfo.Balance;
+                         
                             log.Info("Player Balance decreased by: "+ String.Format("{0:n0}", change) + " from " + String.Format("{0:n0}", oldAccountInfo.Balance) + " SC to " + String.Format("{0:n0}", newAccountInfo.Balance) + " SC. steam id: " + MySession.Static.Players.TryGetSteamId(oldAccountInfo.OwnerIdentifier) + " identity id: " + oldAccountInfo.OwnerIdentifier);
+                                
                         }
                         else
                         {
@@ -124,8 +126,10 @@ namespace CrunchUtilities
                         if (oldAccountInfo.Balance > newAccountInfo.Balance)
                         {
                             change = oldAccountInfo.Balance - newAccountInfo.Balance;
-                            Commands.SendMessage("CrunchEcon", "Balance decreased by: " + String.Format("{0:n0}", change) + " SC", Color.Red, (long)pp.Id.SteamId);
-
+                            if (!CrunchUtilitiesPlugin.AlliancesInstalled)
+                            {
+                                Commands.SendMessage("CrunchEcon", "Balance decreased by: " + String.Format("{0:n0}", change) + " SC", Color.Red, (long)pp.Id.SteamId);
+                            }
                         }
                         else
                         {

@@ -50,6 +50,8 @@ using Sandbox.Engine.Physics;
 using Sandbox.Definitions;
 using System.Linq;
 using Sandbox.Game;
+using Torch.Managers;
+using Torch.API.Plugins;
 
 namespace CrunchUtilities
 {
@@ -268,6 +270,7 @@ namespace CrunchUtilities
 
         private static DateTime UpdateTime = DateTime.Now;
         private static DateTime PlayerAlertNext = DateTime.Now;
+        public static Boolean AlliancesInstalled = false;
         public override void Update()
 
         {
@@ -354,10 +357,9 @@ namespace CrunchUtilities
 
                                 if (player.Character != null && player.Character.DisplayName != null && !player.DisplayName.Equals(name))
                                 {
-                                    MyAPIGateway.Utilities.InvokeOnGameThread(() =>
-                                    {
+                               
                                         identity.SetDisplayName(name);
-                                    });
+                                    
                                 }
                                 // }
                             }
@@ -707,9 +709,12 @@ namespace CrunchUtilities
                 derp = TorchSessionState.Loaded;
                 MySession.Static.Factions.FactionStateChanged += FactionLogging.StateChange;
                 MyBankingSystem.Static.OnAccountBalanceChanged += BankPatch.BalanceChangedMethod2;
-
-                //  session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
-                MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
+                if (Torch.Managers.GetManager<PluginManager>().Plugins.TryGetValue(Guid.Parse("74796707-646f-4ebd-8700-d077a5f47af3"), out ITorchPlugin Alliances))
+                {
+                    AlliancesInstalled = true;
+                }
+                    //  session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
+                    MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
             }
 
         }

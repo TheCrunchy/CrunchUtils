@@ -841,8 +841,9 @@ namespace CrunchUtilities
                     foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                     {
                         MyCubeGrid grid = groupNodes.NodeData;
-                        grid.ForceDisablePrediction = !grid.ForceDisablePrediction;
-                        Context.Respond("Prediction set to " + grid.ForceDisablePrediction);
+                        grid.AllowPrediction = !grid.AllowPrediction;
+                     //   grid.ForceDisablePrediction = !grid.ForceDisablePrediction;
+                        Context.Respond("Prediction set to " + grid.AllowPrediction);
                     }
                 }
 
@@ -1439,75 +1440,6 @@ namespace CrunchUtilities
                 }
             }
         }
-        [Command("testingstore", "testing store stuff")]
-        [Permission(MyPromoteLevel.Admin)]
-        public void insertOffer(int amount, int priceper)
-        {
-            foreach (MyDefinitionBase def in MyDefinitionManager.Static.GetAllDefinitions())
-            {
-                if (def.Id.ToString().Contains("Hydrogen"))
-                {
-                    CrunchUtilitiesPlugin.Log.Info(def.Id.ToString());
-                }
-            }
-            Context.Respond("1");
-            MyStoreBlock store = null;
-            //  itemtype = "MyObjectBuilder_" + itemtype;
-            ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
-            Context.Respond("2");
-            if (gridWithSubGrids.Count > 0)
-            {
-                Context.Respond("3");
-                foreach (var itemd in gridWithSubGrids)
-                {
-                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in itemd.Nodes)
-                    {
-                        MyCubeGrid grid = groupNodes.NodeData;
-                        var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-                        var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
-                        gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
-
-                        foreach (Sandbox.ModAPI.IMyStoreBlock s in blockList)
-                        {
-                            store = s as MyStoreBlock;
-                        }
-                    }
-                }
-            }
-
-            //store.PlayerItems
-            //loop through these for a station with the hydrogen
-            Context.Respond("4");
-
-            //   MyDefinitionId.TryParse(itemtype, subtype, out MyDefinitionId id);
-            // if (id.ToString().Contains("null"))
-            //  {
-            //     Context.Respond("Invalid item, try Ammo, Ore, Ingot, Component, PhysicalGunObject, PhysicalItem");
-            //     return;
-            //    }
-            Context.Respond("5");
-            if (store == null)
-            {
-                Context.Respond("No store");
-                return;
-            }
-            Context.Respond("6");
-            //   SerializableDefinitionId itemId = new SerializableDefinitionId(id.TypeId, subtype);
-
-            Context.Respond("7");
-            //     Context.Respond(itemId.SubtypeName);
-            MyStoreItemData item = new MyStoreItemData(MyCharacterOxygenComponent.HydrogenId, amount, priceper, null, null);
-            MyStoreItem d;
-            //d.
-
-            //     MyStoreItem myStoreItem = new MyStoreItem(id, amount, pricePerUnit, StoreItemTypes.Offer, ItemTypes.Hydrogen);
-
-            Context.Respond("8");
-            MyStoreInsertResults result = store.InsertOffer(item, out long newid);
-            Context.Respond(result.ToString());
-            Context.Respond(newid + "");
-            Context.Respond("9");
-        }
 
         private static Int64 priceWorth(MyDefinitionId id)
         {
@@ -1572,7 +1504,7 @@ namespace CrunchUtilities
             List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
             l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
             MySafeZone zone = null;
-
+           
             foreach (IMyEntity e in l)
             {
                 if (e is MySafeZone z)
@@ -2291,7 +2223,7 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.Admin)]
         public void UpdateIdentities(String playerNameOrId, String newName)
         {
-
+            
 
             MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
 
@@ -2392,8 +2324,14 @@ namespace CrunchUtilities
                 foreach (var p in MySession.Static.Players.GetAllPlayers())
                 {
                     long IdentityID = MySession.Static.Players.TryGetIdentityId(p.SteamId);
-
-                    moneys.Add(p.SteamId, EconUtils.getBalance(IdentityID));
+                    if (!moneys.ContainsKey(p.SteamId))
+                    {
+                        moneys.Add(p.SteamId, EconUtils.getBalance(IdentityID));
+                    }
+                    else
+                    {
+                        moneys[p.SteamId] += EconUtils.getBalance(IdentityID);
+                    }
                 }
                 var sortedmoneys = moneys.OrderByDescending(x => x.Value).ThenBy(x => x.Key);
 
@@ -2965,7 +2903,7 @@ namespace CrunchUtilities
 
         [Command("place station", "place an npc economy station")]
         [Permission(MyPromoteLevel.Admin)]
-        public void PlaceStation(string npctag, string type)
+        public void PlaceStation(string npctag, string type, int x, int y, int z)
         {
             MyFaction npcfac = MySession.Static.Factions.TryGetFactionByTag(npctag) as MyFaction;
             if (npcfac == null)
@@ -2973,7 +2911,7 @@ namespace CrunchUtilities
                 Context.Respond("Cant find faction.");
                 return;
             }
-            if (MyGravityProviderSystem.IsPositionInNaturalGravity(Context.Player.GetPosition()))
+            if (MyGravityProviderSystem.IsPositionInNaturalGravity(new Vector3D(x, y, z)))
             {
 
                 Context.Respond("This doesnt work properly in gravity yet, avoid planets");
@@ -3015,7 +2953,7 @@ namespace CrunchUtilities
             MyStationsListDefinition stationDefinition = MyDefinitionManager.Static.GetDefinition<MyStationsListDefinition>(subtypeId);
             Vector3 up = Vector3.Zero;
             Vector3 forward = Vector3.Zero;
-            Vector3 position = Context.Player.GetPosition();
+            Vector3 position = new Vector3D(x, y, z);
             MyStation station = new MyStation(MyEntityIdentifier.AllocateId(MyEntityIdentifier.ID_OBJECT_TYPE.STATION, MyEntityIdentifier.ID_ALLOCATION_METHOD.RANDOM), position, stationType, npcfac, GetRandomStationName(stationDefinition), stationDefinition.GeneratedItemsContainerType);
 
             npcfac.AddStation(station);
@@ -3269,7 +3207,7 @@ namespace CrunchUtilities
                 foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                 {
                     MyCubeGrid grid = groupNodes.NodeData;
-
+                    
                     if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
                         continue;
                     else

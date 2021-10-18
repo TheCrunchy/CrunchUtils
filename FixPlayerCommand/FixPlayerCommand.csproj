@@ -84,8 +84,9 @@
     <Reference Include="Torch.Server">
       <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\Torch.Server.exe</HintPath>
     </Reference>
-    <Reference Include="VRage">
-      <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\VRage.dll</HintPath>
+    <Reference Include="VRage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\VRage.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Ansel">
       <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\VRage.Ansel.dll</HintPath>
@@ -93,8 +94,9 @@
     <Reference Include="VRage.Dedicated">
       <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\VRage.Dedicated.dll</HintPath>
     </Reference>
-    <Reference Include="VRage.Game">
-      <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\VRage.Game.dll</HintPath>
+    <Reference Include="VRage.Game, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\VRage.Game.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Game.XmlSerializers">
       <HintPath>..\..\Money\MoneyPlugin\MoneyPlugin\bin\Debug\VRage.Game.XmlSerializers.dll</HintPath>
