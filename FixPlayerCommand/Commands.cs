@@ -344,6 +344,47 @@ namespace CrunchUtilities
             return false;
         }
 
+        public int DeleteStone(List<MyCubeGrid> gridsToSearch)
+        {
+            int count = 0;
+            foreach (MyCubeGrid grid in gridsToSearch)
+            {
+                var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+
+
+                var blockList = new List<Sandbox.ModAPI.IMyTerminalBlock>();
+                gts.GetBlocksOfType<Sandbox.ModAPI.IMyTerminalBlock>(blockList);
+                if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
+                {
+                    Context.Respond("You dont own this");
+                    continue;
+                }
+                else
+                {
+                    foreach (var block in blockList)
+                    {
+
+                        //MyVisualScriptLogicProvider.SendChatMessage("blocks blocklist");
+                        if (block != null && block.HasInventory)
+                        {
+
+                            var items = block.GetInventory().GetItems();
+                            for (int i = 0; i < items.Count; i++)
+                            {
+
+                                if (items[i].Content.SubtypeId.ToString().Contains("Stone") && items[i].Content.TypeId.ToString().Contains("Ore"))
+                                {
+                                    count += items[i].Amount.ToIntSafe();
+                                    block.GetInventory().RemoveItems(items[i].ItemId);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return count;
+        }
+
         public static int totalcount = 0;
         [Command("stone", "Delete all stone in a grid")]
         [Permission(MyPromoteLevel.None)]
@@ -352,14 +393,10 @@ namespace CrunchUtilities
 
             if (CrunchUtilitiesPlugin.file.DeleteStone)
             {
-                if (isBlockedFaction(Context.Player))
+                if (CrunchUtilitiesPlugin.file.DeleteStoneAuto)
                 {
-                    Context.Respond("This faction lost the ability to use this command.");
-                    return;
+                    Context.Respond("Never want to mine stone? Put !stone in the drill name or use !togglestone");
                 }
-
-
-
 
                 CrunchUtilitiesPlugin plugin = (CrunchUtilitiesPlugin)Context.Plugin;
                 var currentCooldownMap = plugin.CurrentCooldownMap;
@@ -383,52 +420,28 @@ namespace CrunchUtilities
                     currentCooldown = CreateNewCooldown(currentCooldownMap, Context.Player.IdentityId, plugin.Cooldown);
                     currentCooldown.StartCooldown(null);
                 }
-                ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+               
                 int count = 0;
-
-                foreach (var item in gridWithSubGrids)
+                List<MyCubeGrid> tempList = new List<MyCubeGrid>();
+                if (Context.Player.Character != null && Context.Player?.Controller.ControlledEntity is MyCockpit controller)
                 {
-                    foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
-                    {
-                        //     MyObjectBuilder_PhysicalObject stone = new MyObjectBuilder_PhysicalObject("MyObjectBuilder_Ore/Stone");
-                        MyCubeGrid grid = groupNodes.NodeData;
-                        var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-
-
-                        var blockList = new List<Sandbox.ModAPI.IMyTerminalBlock>();
-                        gts.GetBlocksOfType<Sandbox.ModAPI.IMyTerminalBlock>(blockList);
-                        if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
-                        {
-                            Context.Respond("You dont own this");
-                            continue;
-                        }
-                        else
-                        {
-                            foreach (var block in blockList)
-                            {
-
-                                //MyVisualScriptLogicProvider.SendChatMessage("blocks blocklist");
-                                if (block != null && block.HasInventory)
-                                {
-
-                                    var items = block.GetInventory().GetItems();
-                                    for (int i = 0; i < items.Count; i++)
-                                    {
-
-                                        if (items[i].Content.SubtypeId.ToString().Contains("Stone") && items[i].Content.TypeId.ToString().Contains("Ore"))
-                                        {
-                                            count += items[i].Amount.ToIntSafe();
-                                            block.GetInventory().RemoveItems(items[i].ItemId);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-
-                    }
-
+                    tempList.Add(controller.CubeGrid);
                 }
+                else
+                {
+                    ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+                    foreach (var item in gridWithSubGrids)
+                    {
+                        foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                        {
+                            //     MyObjectBuilder_PhysicalObject stone = new MyObjectBuilder_PhysicalObject("MyObjectBuilder_Ore/Stone");
+                            MyCubeGrid grid = groupNodes.NodeData;
+                            tempList.Add(grid);
+                        }
+                    }
+                }
+
+                count = DeleteStone(tempList);
                 if (count == 0)
                 {
                     currentCooldownMap.Remove(Context.Player.IdentityId);
@@ -447,42 +460,7 @@ namespace CrunchUtilities
             }
 
         }
-        //[Command("addgas", "add gas offers to look at grid")]
-        //[Permission(MyPromoteLevel.None)]
-        //public void gasOffer(int price)
-        //{
-        //    ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
-        //    if (gridWithSubGrids.Count > 0)
-        //    {
-        //        foreach (var item in gridWithSubGrids)
-        //        {
 
-        //            foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
-        //            {
-        //                MyCubeGrid grid = groupNodes.NodeData;
-        //                var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-        //                var blockList = new List<Sandbox.ModAPI.IMyStoreBlock>();
-        //                gts.GetBlocksOfType<Sandbox.ModAPI.IMyStoreBlock>(blockList);
-        //                foreach (Sandbox.ModAPI.IMyStoreBlock store in blockList)
-        //                {
-
-        //                    SerializableDefinitionId itemId = new SerializableDefinitionId();
-        //                    itemId.SubtypeId = "Hydrogen";
-        //                    itemId.TypeIdString = "MyObjectBuilder_GasProperties";
-
-        //                    MyStoreItemData data = new MyStoreItemData(itemId, 1, 1000, (Action<int, int, long, long, long>)null, (Action)null);
-        //                    store.InsertOffer(data, out long IdentityId);
-        //                    //  store.InsertOffer
-        //                }
-        //            }
-        //        }
-        //    }
-        //    else
-        //    {
-        //        Context.Respond("Cant find a grid");
-        //    }
-
-        //}
         [Command("claim", "Player command, claim a shared grid")]
         [Permission(MyPromoteLevel.None)]
         public void ClaimCommand()
@@ -756,9 +734,9 @@ namespace CrunchUtilities
                     foreach (MyCubeGrid grid in grids)
                     {
                         grid.ChangeGridOwnership(Context.Player.IdentityId, MyOwnershipShareModeEnum.Faction);
-                       foreach (MySlimBlock block in grid.GetBlocks())
+                        foreach (MySlimBlock block in grid.GetBlocks())
                         {
-                            
+
                             MyMultiplayer.RaiseEvent(grid, x => new Action<long, long>(x.TransferBlocksBuiltByID), block.BuiltBy, Context.Player.IdentityId, new EndpointId());
                         }
                     }
@@ -842,7 +820,7 @@ namespace CrunchUtilities
                     {
                         MyCubeGrid grid = groupNodes.NodeData;
                         grid.AllowPrediction = !grid.AllowPrediction;
-                     //   grid.ForceDisablePrediction = !grid.ForceDisablePrediction;
+                        //   grid.ForceDisablePrediction = !grid.ForceDisablePrediction;
                         Context.Respond("Prediction set to " + grid.AllowPrediction);
                     }
                 }
@@ -850,6 +828,7 @@ namespace CrunchUtilities
 
             }
         }
+
 
 
         //[Command("paint", "recolorblocks")]
@@ -864,10 +843,10 @@ namespace CrunchUtilities
         //        Context.Respond("You cannot use this command in natural gravity!");
         //        return;
         //    }
-          
+
         //    var col = ColorExtensions.HexToColor(oldColourHex);
         //    var newcol = ColorExtensions.HexToColor(newColourHex);
-            
+
 
         //    ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroupMechanical(Context.Player.Character);
         //    if (gridWithSubGrids.Count > 0)
@@ -883,11 +862,11 @@ namespace CrunchUtilities
         //                {
         //                    foreach (MySlimBlock block in grid.GetBlocks())
         //                    {
-                               
+
         //                        CrunchUtilitiesPlugin.Log.Info(block.ColorMaskHSV + " " + col + " " + ColorExtensions.ColorToHSVDX11(col));
         //                        if (block.ColorMaskHSV.X == ColorExtensions.ColorToHSV(col).X)
         //                        {
-                                    
+
         //                            block.CubeGrid.ColorBlocks(block.Min, block.Max, newcol, true, false);
         //                        }
         //                    }
@@ -1302,6 +1281,7 @@ namespace CrunchUtilities
             {
                 foreach (MyStation myStation in keyValuePair.Value.Stations)
                 {
+
                     //check the entities near these locations for duplicates
                     List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
 
@@ -1504,7 +1484,7 @@ namespace CrunchUtilities
             List<VRage.ModAPI.IMyEntity> l = new List<VRage.ModAPI.IMyEntity>();
             l = MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere);
             MySafeZone zone = null;
-           
+
             foreach (IMyEntity e in l)
             {
                 if (e is MySafeZone z)
@@ -1585,7 +1565,9 @@ namespace CrunchUtilities
                     }
 
                     zone.Factions = factions;
-                    MySessionComponentSafeZones.UpdateSafeZone((MyObjectBuilder_SafeZone)zone.GetObjectBuilder(), true);
+                    // MyMultiplayer.RaiseStaticEvent<MyObjectBuilder_SafeZone>((Func<IMyEventOwner, Action<MyObjectBuilder_SafeZone>>)(x => new Action<MyObjectBuilder_SafeZone>(MySessionComponentSafeZones.UpdateSafeZone_Broadcast)), zone, new EndpointId(), new Vector3D?());
+                    //  MySessionComponentSafeZones.UpdateSafeZone((MyObjectBuilder_SafeZone)zone.GetObjectBuilder(), true);
+                    MySessionComponentSafeZones.RequestUpdateSafeZone((MyObjectBuilder_SafeZone)zone.GetObjectBuilder());
 
                     break;
             }
@@ -2223,7 +2205,7 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.Admin)]
         public void UpdateIdentities(String playerNameOrId, String newName)
         {
-            
+
 
             MyIdentity identity = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
 
@@ -3207,7 +3189,7 @@ namespace CrunchUtilities
                 foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
                 {
                     MyCubeGrid grid = groupNodes.NodeData;
-                    
+
                     if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
                         continue;
                     else
@@ -3706,8 +3688,20 @@ namespace CrunchUtilities
             MyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(PlayerName) as MyPlayer;
             if (player == null)
             {
-                Context.Respond("Cant find that player");
-                return;
+                try
+                {
+                    player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerBySteamId(ulong.Parse(PlayerName)) as MyPlayer;
+                }
+                catch (Exception ex)
+                {
+                    Context.Respond("Not a steam id or player name!");
+                    return;
+                }
+                if (player == null)
+                {
+                    Context.Respond("Cant find that player");
+                    return;
+                }
             }
 
             MyInventory invent = player.Character.GetInventory() as MyInventory;

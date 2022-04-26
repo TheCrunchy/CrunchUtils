@@ -202,14 +202,11 @@ namespace CrunchUtilities
                             MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
                             if (newObject.SubtypeName.ToLower().Contains("stone"))
                             {
-                                //if (file.UsingDraconisEliteDrills)
+                                //if (!ids.Contains(drill.OwnerId))
                                 //{
-                                //    if (!drill.BlockDefinition.BlockPairName.Equals("Drill8x"))
-                                //    {
-                                //        return true;
-                                //    }
-
+                                //    ids.Add(drill.OwnerId);
                                 //}
+      
                                 return false;
                             }
                         }
@@ -218,13 +215,6 @@ namespace CrunchUtilities
                             MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
                             if (newObject.SubtypeName.ToLower().Contains("stone"))
                             {
-                                //if (file.UsingDraconisEliteDrills)
-                                //{
-                                //    if (!drill.BlockDefinition.BlockPairName.Equals("Drill8x"))
-                                //    {
-                                //        return true;
-                                //    }
-                                //}
                                 return false;
                             }
                         }
@@ -709,6 +699,7 @@ namespace CrunchUtilities
                 derp = TorchSessionState.Loaded;
                 MySession.Static.Factions.FactionStateChanged += FactionLogging.StateChange;
                 MyBankingSystem.Static.OnAccountBalanceChanged += BankPatch.BalanceChangedMethod2;
+                FactionLogging.ApplyLogging();
                 if (Torch.Managers.GetManager<PluginManager>().Plugins.TryGetValue(Guid.Parse("74796707-646f-4ebd-8700-d077a5f47af3"), out ITorchPlugin Alliances))
                 {
                     AlliancesInstalled = true;
