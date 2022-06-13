@@ -299,7 +299,6 @@ namespace CrunchUtilities
             }
             if (CrunchUtilitiesPlugin.file.DeleteStoneAuto)
             {
-                CrunchUtilitiesPlugin.Log.Info(Context.Player.Identity.IdentityId);
                 if (CrunchUtilitiesPlugin.ids.Contains(Context.Player.Identity.IdentityId))
                 {
                     CrunchUtilitiesPlugin.ids.Remove(Context.Player.Identity.IdentityId);
@@ -2883,7 +2882,7 @@ namespace CrunchUtilities
             return stationsListDef.StationNames[index].ToString();
         }
 
-        [Command("place station", "place an npc economy station")]
+        [Command("place station", "place an npc economy station, types are SpaceStations, OrbitalStations, Outposts or MiningStation")]
         [Permission(MyPromoteLevel.Admin)]
         public void PlaceStation(string npctag, string type, int x, int y, int z)
         {
@@ -3271,113 +3270,6 @@ namespace CrunchUtilities
             Context.Respond("Withdrew : " + String.Format("{0:n0}", withdrew));
         }
 
-
-        [Command("drives", "organise jump drive gps list")]
-        [Permission(MyPromoteLevel.None)]
-        public void fixDrives()
-        {
-            List<IMyGps> playergpsList = MyAPIGateway.Session?.GPS.GetGpsList(Context.Player.Identity.IdentityId);
-
-            if (playergpsList == null)
-            {
-
-
-                Context.Respond("You have no gps!");
-                return;
-            }
-
-            Dictionary<int, IMyGps> someOrganisation = new Dictionary<int, IMyGps>();
-            List<IMyGps> unsorted = new List<IMyGps>();
-            int highest = 0;
-            foreach (IMyGps gps in playergpsList)
-            {
-                if (gps != null && gps.Name != null && gps.Name.StartsWith("#"))
-                {
-
-                    String part1 = gps.Name.Split(' ')[0].Replace("#", "");
-                    if (int.TryParse(part1, out int result))
-                    {
-                        if (!someOrganisation.ContainsKey(result))
-                        {
-                            if (result > highest)
-                            {
-                                highest = result;
-                            }
-                            if (result <= 100)
-                            {
-                                someOrganisation.Add(result, gps);
-                            }
-                            else
-                            {
-                                unsorted.Add(gps);
-                            }
-                        }
-                        else
-                        {
-                            unsorted.Add(gps);
-                        }
-                    }
-                    else
-                    {
-                        unsorted.Add(gps);
-                    }
-
-                }
-                else
-                {
-                    unsorted.Add(gps);
-                }
-
-
-            }
-            Context.Respond("Sorting list!");
-            if (highest > 100)
-            {
-                highest = 100;
-            }
-            foreach (IMyGps g in playergpsList)
-            {
-                MyAPIGateway.Session?.GPS.RemoveGps(Context.Player.Identity.IdentityId, g);
-            }
-            MyGpsCollection gpsCollection = (MyGpsCollection)MyAPIGateway.Session?.GPS;
-
-            if (unsorted.Count > 0)
-            {
-                foreach (IMyGps gps in unsorted)
-                {
-                    MyGps gpsRef = gps as MyGps;
-                    long entityId = 0L;
-                    entityId = gpsRef.EntityId;
-                    gpsCollection.SendAddGps(Context.Player.Identity.IdentityId, ref gpsRef, entityId, false);
-                }
-            }
-
-            if (someOrganisation.Count > 0)
-            {
-                for (int i = highest; i > 0; i--)
-
-                {
-                    if (someOrganisation.ContainsKey(i))
-                    {
-                        someOrganisation.TryGetValue(i, out IMyGps gps);
-                        MyGps gpsRef = gps as MyGps;
-                        long entityId = 0L;
-                        entityId = gpsRef.EntityId;
-                        gpsCollection.SendAddGps(Context.Player.Identity.IdentityId, ref gpsRef, entityId, false);
-
-                    }
-                }
-            }
-
-
-        }
-
-        [Command("econ top", "block econ top")]
-        [Permission(MyPromoteLevel.Admin)]
-        public void EconTop()
-        {
-            Context.Respond("Use !eco top");
-        }
         [Command("eco deposit", "Deposit moneys")]
         [Permission(MyPromoteLevel.None)]
         public void PlayerDeposit(bool playerOwned = false)
@@ -3559,6 +3451,8 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.None)]
         public void PlayerWithdraw(Int64 amount)
         {
+            Context.Respond("Command no longer functions.");
+            return;
             if (CrunchUtilitiesPlugin.file.Withdraw)
             {
                 Int64 balance;

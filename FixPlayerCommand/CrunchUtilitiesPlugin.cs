@@ -696,6 +696,7 @@ namespace CrunchUtilities
             Log.Info("Session-State is now " + newState);
             if (newState == TorchSessionState.Loaded)
             {
+               
                 derp = TorchSessionState.Loaded;
                 MySession.Static.Factions.FactionStateChanged += FactionLogging.StateChange;
                 MyBankingSystem.Static.OnAccountBalanceChanged += BankPatch.BalanceChangedMethod2;
