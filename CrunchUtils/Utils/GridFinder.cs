@@ -189,8 +189,7 @@ namespace CrunchUtilities
 
         public static ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> FindLookAtGridGroup(IMyCharacter controlledEntity)
         {
-
-            const float range = 5000;
+            const float range = 500;
             Matrix worldMatrix;
             Vector3D startPosition;
             Vector3D endPosition;
@@ -204,43 +203,34 @@ namespace CrunchUtilities
 
             foreach (var group in MyCubeGridGroups.Static.Physical.Groups)
             {
-
                 foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in group.Nodes)
                 {
-
                     IMyCubeGrid cubeGrid = groupNodes.NodeData;
 
                     if (cubeGrid != null)
                     {
-
                         if (cubeGrid.Physics == null)
                             continue;
 
                         // check if the ray comes anywhere near the Grid before continuing.    
                         if (ray.Intersects(cubeGrid.WorldAABB).HasValue)
                         {
-
                             Vector3I? hit = cubeGrid.RayCastBlocks(startPosition, endPosition);
 
                             if (hit.HasValue)
                             {
-
                                 double distance = (startPosition - cubeGrid.GridIntegerToWorld(hit.Value)).Length();
-
 
                                 if (list.TryGetValue(group, out double oldDistance))
                                 {
-
                                     if (distance < oldDistance)
                                     {
                                         list.Remove(group);
                                         list.Add(group, distance);
                                     }
-
                                 }
                                 else
                                 {
-
                                     list.Add(group, distance);
                                 }
                             }

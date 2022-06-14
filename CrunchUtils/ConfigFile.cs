@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Torch;
+using VRage;
 
 namespace CrunchUtilities
 {
@@ -29,7 +30,7 @@ namespace CrunchUtilities
        /// public double Drill2xAmount = 0.8;
        // public double Drill4xAmount = 0.6;
       ///  public double Drill8xAmount = 0.2;
-        public Int32 EcoWithdrawMax = Int32.MaxValue;
+        public long EcoWithdrawMax = int.MaxValue;
         public bool DeleteStoneAuto = false;
         public bool Withdraw = false;
         public bool facInfo = true;
