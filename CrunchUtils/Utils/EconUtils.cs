@@ -15,19 +15,15 @@ namespace CrunchUtilities
     public static class EconUtils
     {
         //getBalance of Wallet
-        public static long getBalance(long walletID)
+        public static long GetBalance(long walletID)
         {
-            MyAccountInfo info;
-
-            
-            if (MyBankingSystem.Static.TryGetAccountInfo(walletID, out info))
-            {
-                
+            if (MyBankingSystem.Static.TryGetAccountInfo(walletID, out MyAccountInfo info))              
                 return info.Balance;
-            }
+
             return 0L;
         }
-        public static void addMoney(long walletID, Int64 amount)
+
+        public static void AddMoney(long walletID, long amount)
         {
             MyBankingSystem.ChangeBalance(walletID, amount);
 
@@ -35,10 +31,9 @@ namespace CrunchUtilities
         }
 
         //This thing is broke, dont use it
-        public static void TransferToFactionAccount(long id, long factionID, Int64 amount)
+        public static void TransferToFactionAccount(long id, long factionID, long amount)
         {
-                MyAccountInfo account;
-        
+       
            // MyBankingSystem.Static.TryGetAccountInfo(factionID, out account);
           //      List<MyAccountLogEntry> Log = account.Log.ToList();
           //  MyAccountLogEntry entry = new MyAccountLogEntry()
@@ -55,8 +50,8 @@ namespace CrunchUtilities
             //    {
                //     CrunchUtilitiesPlugin.Log.Info(e.Amount);
               //  }
-            EconUtils.addMoney(factionID, amount);
-            EconUtils.takeMoney(id, amount);
+            EconUtils.AddMoney(factionID, amount);
+            EconUtils.TakeMoney(id, amount);
             //MyBankingSystem.ChangeBalance(factionID, factionBalance);
             //MyBankingSystem.ChangeBalance(id, playerBalance);
     
@@ -65,11 +60,11 @@ namespace CrunchUtilities
             return;
         }
 
-        public static void takeMoney(long walletID, Int64 amount)
+        public static void TakeMoney(long walletID, long amount)
         {
-            if (getBalance(walletID) >= amount)
+            if (GetBalance(walletID) >= amount)
             {
-                amount = amount * -1;
+                amount *= -1;
                 MyBankingSystem.ChangeBalance(walletID, amount);
             }
             return;
