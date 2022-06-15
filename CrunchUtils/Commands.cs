@@ -3192,35 +3192,39 @@ namespace CrunchUtilities
 
                 //dpeosit from player inventory
                 MyInventory inventory = (MyInventory)player.Character.GetInventory();
+                List<MyPhysicalInventoryItem> CreditsinPlayerInvList = new List<MyPhysicalInventoryItem>();
 
-                foreach (var PlayerItem in inventory.GetItems())
+                foreach (var Item in inventory.GetItems())
                 {
-                    if (PlayerItem.Content.SubtypeId.ToString() == "SpaceCredit")
+                    if (Item.Content.SubtypeId.ToString() == "SpaceCredit")
+                        CreditsinPlayerInvList.Add(Item);
+                }
+
+                foreach (var PlayerItem in CreditsinPlayerInvList)
+                {
+                    var amount = PlayerItem.Amount;
+
+                    if (amount >= int.MaxValue)
                     {
-                        var amount = PlayerItem.Amount;
-
-                        if (amount >= int.MaxValue)
+                        bool hasCredits = true;
+                        while (hasCredits)
                         {
-                            bool hasCredits = true;
-                            while (hasCredits)
-                            {
-                                deposited += amount;
+                            deposited += amount;
 
-                                player.Character.GetInventory().RemoveItemAmount(PlayerItem, amount);
-
-                                MyInventory inventory2 = (MyInventory)player.Character.GetInventory();
-
-                                if (!inventory2.GetItems().Contains(PlayerItem))
-                                    hasCredits = false;
-                            }
-                            EconUtils.AddMoney(player.IdentityId, (long)amount);
-                        }
-                        else
-                        {
-                            deposited += PlayerItem.Amount;
-                            EconUtils.AddMoney(player.IdentityId, (long)PlayerItem.Amount);
                             player.Character.GetInventory().RemoveItemAmount(PlayerItem, amount);
+
+                            MyInventory inventory2 = (MyInventory)player.Character.GetInventory();
+
+                            if (!inventory2.GetItems().Contains(PlayerItem))
+                                hasCredits = false;
                         }
+                        EconUtils.AddMoney(player.IdentityId, (long)amount);
+                    }
+                    else
+                    {
+                        deposited += PlayerItem.Amount;
+                        EconUtils.AddMoney(player.IdentityId, (long)PlayerItem.Amount);
+                        player.Character.GetInventory().RemoveItemAmount(PlayerItem, amount);
                     }
                 }
 
