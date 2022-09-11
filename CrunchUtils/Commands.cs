@@ -499,7 +499,10 @@ namespace CrunchUtilities
                                     if (block.OwnerId > 0)
                                     {
                                         blockCount += 1;
-
+                                        if (!block.IsFunctional)
+                                        {
+                                            break;
+                                        }
                                         switch (block.GetUserRelationToOwner(Context.Player.IdentityId))
                                         {
                                             case MyRelationsBetweenPlayerAndBlock.Owner:
@@ -511,6 +514,9 @@ namespace CrunchUtilities
                                             case MyRelationsBetweenPlayerAndBlock.NoOwnership:
                                                 //sharedWithAll += 1;
                                                 break;
+                                            case MyRelationsBetweenPlayerAndBlock.Neutral:
+                                            case MyRelationsBetweenPlayerAndBlock.Enemies:
+                                            case MyRelationsBetweenPlayerAndBlock.Friends:
                                             default:
                                                 break;
                                         }
