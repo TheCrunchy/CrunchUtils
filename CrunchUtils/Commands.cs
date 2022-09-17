@@ -455,6 +455,7 @@ namespace CrunchUtilities
                 double blockCount = 0;
                 double factionShared = 0;
                 double sharedWithAll = 0;
+                double nonfunc = 0;
                 IMyFaction fac = FacUtils.GetPlayersFaction(Context.Player.IdentityId);
                 if (fac == null)
                 {
@@ -501,6 +502,7 @@ namespace CrunchUtilities
                                         blockCount += 1;
                                         if (!block.IsFunctional)
                                         {
+                                            nonfunc++;
                                             break;
                                         }
                                         switch (block.GetUserRelationToOwner(Context.Player.IdentityId))
@@ -542,6 +544,10 @@ namespace CrunchUtilities
                             else
                             {
                                 Context.Respond("Not enough shared percentage, Owned: " + sharedPercent.ToString());
+                                if (nonfunc > 0)
+                                {
+                                    Context.Respond($"Non functional blocks present: {nonfunc}, these do not count towards ownership.");
+                                }
                             }
                         }
                     }
