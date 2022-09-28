@@ -3808,7 +3808,7 @@ namespace CrunchUtilities
                             EconUtils.AddMoney(p.Identity.IdentityId, amount);
 
                         }
-                        SendMessage("CrunchEcon", "You got money : " + amount, Color.Cyan, 0);
+                        SendMessage("Accounting", "You got money : " + amount, Color.Cyan, 0);
                         return;
                     }
                     //Context.Respond("Error Player not online");
@@ -3951,12 +3951,12 @@ namespace CrunchUtilities
                 }
                 catch (Exception)
                 {
-                    SendMessage("CrunchEcon", "Error parsing amount", Color.Red, (long)Context.Player.SteamUserId);
+                    SendMessage("Accounting", "Error parsing amount", Color.Red, (long)Context.Player.SteamUserId);
                     return;
                 }
                 if (amount < 0 || amount == 0)
                 {
-                    SendMessage("CrunchEcon", "Must be a positive number", Color.Red, (long)Context.Player.SteamUserId);
+                    SendMessage("Accounting", "Must be a positive number", Color.Red, (long)Context.Player.SteamUserId);
                     return;
                 }
                 type = type.ToLower();
@@ -3968,7 +3968,7 @@ namespace CrunchUtilities
                             IMyIdentity targetid = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
                             if (targetid == null)
                             {
-                                SendMessage("CrunchEcon", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
+                                SendMessage("Accounting", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
                                 return;
                             }
                             if (EconUtils.GetBalance(Context.Player.IdentityId) >= amount)
@@ -3977,23 +3977,23 @@ namespace CrunchUtilities
                                 EconUtils.AddMoney(targetid.IdentityId, amount);
 
 
-                                //SendMessage("CrunchEcon", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
-                                SendMessage("CrunchEcon", "You sent " + targetid.DisplayName + " : " + string.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                                //SendMessage("Accounting", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                                SendMessage("Accounting", "You sent " + targetid.DisplayName + " : " + string.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                             }
                             else
                             {
-                                SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                                SendMessage("Accounting", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
                             }
                             return;
                         }
 
                         if (!(Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(recipient) is MyPlayer player))
                         {
-                            SendMessage("CrunchEcon", "They arent online, trying across instance", Color.Red, (long)Context.Player.SteamUserId);
+                            SendMessage("Accounting", "They arent online, trying across instance", Color.Red, (long)Context.Player.SteamUserId);
                             IMyIdentity targetid = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
                             if (targetid == null)
                             {
-                                SendMessage("CrunchEcon", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
+                                SendMessage("Accounting", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
                                 return;
                             }
                             if (EconUtils.GetBalance(Context.Player.IdentityId) >= amount)
@@ -4001,13 +4001,13 @@ namespace CrunchUtilities
                                 EconUtils.TakeMoney(Context.Player.IdentityId, amount);
                                 EconUtils.AddMoney(targetid.IdentityId, amount);
 
-                                //SendMessage("CrunchEcon", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
-                                SendMessage("CrunchEcon", "You sent " + targetid.DisplayName + " : " + string.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                                //SendMessage("Accounting", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                                SendMessage("Accounting", "You sent " + targetid.DisplayName + " : " + string.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                                 return;
                             }
                             else
                             {
-                                SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                                SendMessage("Accounting", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
                                 return;
                             }
                         }
@@ -4017,19 +4017,19 @@ namespace CrunchUtilities
                             EconUtils.TakeMoney(Context.Player.IdentityId, amount);
                             EconUtils.AddMoney(player.Identity.IdentityId, amount);
 
-                            SendMessage("CrunchEcon", MyMultiplayer.Static.GetMemberName(Context.Player.SteamUserId) + " Has sent you : " + string.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
-                            SendMessage("CrunchEcon", "You sent " + MyMultiplayer.Static.GetMemberName(player.Id.SteamId) + " : " + string.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                            SendMessage("Accounting", MyMultiplayer.Static.GetMemberName(Context.Player.SteamUserId) + " Has sent you : " + string.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                            SendMessage("Accounting", "You sent " + MyMultiplayer.Static.GetMemberName(player.Id.SteamId) + " : " + string.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                         }
                         else
                         {
-                            SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                            SendMessage("Accounting", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
                         }
                         break;
                     case "faction":
                         IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(recipient);
                         if (fac == null)
                         {
-                            SendMessage("CrunchEcon", "Cant find that faction", Color.Red, (long)Context.Player.SteamUserId);
+                            SendMessage("Accounting", "Cant find that faction", Color.Red, (long)Context.Player.SteamUserId);
                             return;
                         }
                         if (EconUtils.GetBalance(Context.Player.IdentityId) >= amount)
@@ -4052,15 +4052,15 @@ namespace CrunchUtilities
                                 {
                                     break;
                                 }
-                                SendMessage("CrunchEcon", Context.Player.DisplayName + " Has sent : " + string.Format("{0:n0}", amount) + " SC to the faction bank.", Color.DarkGreen, (long)steamid);
+                                SendMessage("Accounting", Context.Player.DisplayName + " Has sent : " + string.Format("{0:n0}", amount) + " SC to the faction bank.", Color.DarkGreen, (long)steamid);
                                 temp.Add(steamid);
                             }
 
-                            SendMessage("CrunchEcon", "You sent " + fac.Name + " : " + string.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                            SendMessage("Accounting", "You sent " + fac.Name + " : " + string.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                         }
                         else
                         {
-                            SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                            SendMessage("Accounting", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
                         }
                         break;
                     case "steam":
@@ -4068,7 +4068,7 @@ namespace CrunchUtilities
                         IMyIdentity id2 = CrunchUtilitiesPlugin.GetIdentityByNameOrId(recipient);
                         if (id2 == null)
                         {
-                            SendMessage("CrunchEcon", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
+                            SendMessage("Accounting", "Cant find that player", Color.Red, (long)Context.Player.SteamUserId);
                             return;
                         }
                         if (EconUtils.GetBalance(Context.Player.IdentityId) >= amount)
@@ -4076,22 +4076,22 @@ namespace CrunchUtilities
                             EconUtils.TakeMoney(Context.Player.IdentityId, amount);
                             EconUtils.AddMoney(id2.IdentityId, amount);
 
-                            //SendMessage("CrunchEcon", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
-                            SendMessage("CrunchEcon", "You sent " + id2.DisplayName + " : " + string.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
+                            //SendMessage("Accounting", Context.Player.DisplayName + " Has sent you : " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)player.Id.SteamId);
+                            SendMessage("Accounting", "You sent " + id2.DisplayName + " : " + string.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)Context.Player.SteamUserId);
                         }
                         else
                         {
-                            SendMessage("CrunchEcon", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
+                            SendMessage("Accounting", "You too poor", Color.Red, (long)Context.Player.SteamUserId);
                         }
                         break;
                     default:
-                        SendMessage("CrunchEcon", "Incorrect usage, example - !eco pay player PlayerName amount or !eco pay faction tag amount", Color.Red, (long)Context.Player.SteamUserId);
+                        SendMessage("Accounting", "Incorrect usage, example - !eco pay player PlayerName amount or !eco pay faction tag amount", Color.Red, (long)Context.Player.SteamUserId);
                         break;
                 }
             }
             else
             {
-                SendMessage("CrunchEcon", "Player pay not enabled", Color.Red, (long)Context.Player.SteamUserId);
+                SendMessage("Accounting", "Player pay not enabled", Color.Red, (long)Context.Player.SteamUserId);
             }
         }
 
