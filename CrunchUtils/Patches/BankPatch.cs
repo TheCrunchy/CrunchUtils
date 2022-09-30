@@ -128,13 +128,13 @@ namespace CrunchUtilities
                             change = oldAccountInfo.Balance - newAccountInfo.Balance;
                             if (!CrunchUtilitiesPlugin.AlliancesInstalled)
                             {
-                                Commands.SendMessage("CrunchEcon", "Balance decreased by: " + String.Format("{0:n0}", change) + " SC", Color.Red, (long)pp.Id.SteamId);
+                                Commands.SendMessage(CrunchUtilitiesPlugin.file.EconName, "Balance decreased by: " + String.Format("{0:n0}", change) + " SC", Color.Red, (long)pp.Id.SteamId);
                             }
                         }
                         else
                         {
                             change = newAccountInfo.Balance - oldAccountInfo.Balance;
-                            Commands.SendMessage("CrunchEcon", "Balance increased by: " + String.Format("{0:n0}", change) + " SC", Color.Cyan, (long)pp.Id.SteamId);
+                            Commands.SendMessage(CrunchUtilitiesPlugin.file.EconName, "Balance increased by: " + String.Format("{0:n0}", change) + " SC", Color.Cyan, (long)pp.Id.SteamId);
                         }
 
                     }
@@ -165,12 +165,12 @@ namespace CrunchUtilities
         //                //    {
         //                if (amount > 0)
         //                {
-        //                    Commands.SendMessage("CrunchEcon", "Balance increased by: " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)pp.Id.SteamId);
+        //                    Commands.SendMessage(CrunchUtilitiesPlugin.file.EconName, "Balance increased by: " + String.Format("{0:n0}", amount) + " SC", Color.Cyan, (long)pp.Id.SteamId);
 
         //                }
         //                else
         //                {
-        //                    Commands.SendMessage("CrunchEcon", "Balance decreased by: " + String.Format("{0:n0}", amount) + " SC", Color.Red, (long)pp.Id.SteamId);
+        //                    Commands.SendMessage(CrunchUtilitiesPlugin.file.EconName, "Balance decreased by: " + String.Format("{0:n0}", amount) + " SC", Color.Red, (long)pp.Id.SteamId);
         //                }
 
         //            }

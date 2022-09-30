@@ -15,15 +15,15 @@ using VRageMath;
 
 namespace CrunchUtilities
 {
-        [PatchShim]
-        public static class ScrapFloatingPatch
-        {
+    [PatchShim]
+    public static class ScrapFloatingPatch
+    {
 
 
 
-          //  internal static readonly MethodInfo update =
-          //      typeof(MyFloatingObjects).GetMethod("Spawn", BindingFlags.Static | BindingFlags.Public,null, new Type[] { typeof(MyPhysicalItemDefinition), typeof(Vector3D), typeof(Vector3D), typeof(Vector3D), typeof(int), typeof(float) }, null) ??
-          //      throw new Exception("Failed to find patch method");
+        //  internal static readonly MethodInfo update =
+        //      typeof(MyFloatingObjects).GetMethod("Spawn", BindingFlags.Static | BindingFlags.Public,null, new Type[] { typeof(MyPhysicalItemDefinition), typeof(Vector3D), typeof(Vector3D), typeof(Vector3D), typeof(int), typeof(float) }, null) ??
+        //      throw new Exception("Failed to find patch method");
 
         internal static readonly MethodInfo update =
             typeof(MyFloatingObjects).GetMethod("AddToPos", BindingFlags.Static | BindingFlags.NonPublic) ??
@@ -33,51 +33,25 @@ namespace CrunchUtilities
                 throw new Exception("Failed to find patch method");
 
 
-     
-            public static void Patch(PatchContext ctx)
-            {
 
-                ctx.GetPattern(update).Prefixes.Add(updatePatch);
-           
-            }
+        public static void Patch(PatchContext ctx)
+        {
+
+            ctx.GetPattern(update).Prefixes.Add(updatePatch);
+
+        }
 
         public static bool TestPatchMethod(MyEntity thrownEntity,
   Vector3D pos,
   MyPhysicsComponentBase motionInheritedFrom)
         {
-            if (CrunchUtilitiesPlugin.file != null && CrunchUtilitiesPlugin.file.ScrapMetalPatch)
+            if (CrunchUtilitiesPlugin.file == null || !CrunchUtilitiesPlugin.file.ScrapMetalPatch) return true;
+            if (thrownEntity != null && thrownEntity is MyFloatingObject obj)
             {
-                if (thrownEntity != null && thrownEntity is MyFloatingObject obj)
-                {
-
-                  
-                    if (obj.ItemDefinition.DisplayNameText.Equals("Scrap Metal"))
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        return true;
-                    }
-
-
-                }
-                else
-                {
-                    return true;
-                }
+                return !obj.ItemDefinition.DisplayNameText.Equals("Scrap Metal");
             }
-            else
-            {
-                return true;
-            }
+
+            return true;
         }
-      
-
-
-      
-
-            
-        }
-    
+    }
 }

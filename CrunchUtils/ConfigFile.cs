@@ -10,6 +10,7 @@ namespace CrunchUtilities
 {
     public class ConfigFile : ViewModel
     {
+        public string EconName = "CrunchEcon";
         public Boolean PlayerAlertEnabled = false;
         public int SecondsBetweenPlayerAlert = 10;
         public Boolean ShipSaleCommands = false;
