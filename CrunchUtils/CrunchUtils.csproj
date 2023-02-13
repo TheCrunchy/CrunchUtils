@@ -182,6 +182,7 @@
     <Compile Include="ConfigFile.cs" />
     <Compile Include="Patches\CubeGridPatch.cs" />
     <Compile Include="CurrentCooldown.cs" />
+    <Compile Include="TempBanList.cs" />
     <Compile Include="Utils\EconUtils.cs" />
     <Compile Include="FactionLogging.cs" />
     <Compile Include="Utils\FacUtils.cs" />

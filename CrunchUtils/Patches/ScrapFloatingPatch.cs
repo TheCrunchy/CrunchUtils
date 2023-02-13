@@ -6,11 +6,13 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using Sandbox.Game;
 using Torch.Managers.PatchManager;
 using VRage;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
+using VRage.ObjectBuilders;
 using VRageMath;
 
 namespace CrunchUtilities
@@ -28,16 +30,27 @@ namespace CrunchUtilities
         internal static readonly MethodInfo update =
             typeof(MyFloatingObjects).GetMethod("AddToPos", BindingFlags.Static | BindingFlags.NonPublic) ??
             throw new Exception("Failed to find patch method");
+
+        internal static readonly MethodInfo spawnScrap =
+            typeof(MyInventory).GetMethod("AddItems", BindingFlags.Instance | BindingFlags.Public) ??
+            throw new Exception("Failed to find patch method");
+
         internal static readonly MethodInfo updatePatch =
                 typeof(ScrapFloatingPatch).GetMethod(nameof(TestPatchMethod), BindingFlags.Static | BindingFlags.Public) ??
                 throw new Exception("Failed to find patch method");
 
 
+        internal static readonly MethodInfo updatePatchSpawn =
+            typeof(ScrapFloatingPatch).GetMethod(nameof(TestPatchMethod2), BindingFlags.Static | BindingFlags.Public) ??
+            throw new Exception("Failed to find patch method");
+        //MyInventoryBase
+        //    public abstract bool AddItems(MyFixedPoint amount, MyObjectBuilder_Base objectBuilder);
 
         public static void Patch(PatchContext ctx)
         {
 
             ctx.GetPattern(update).Prefixes.Add(updatePatch);
+            ctx.GetPattern(spawnScrap).Prefixes.Add(updatePatchSpawn);
 
         }
 
@@ -49,6 +62,17 @@ namespace CrunchUtilities
             if (thrownEntity != null && thrownEntity is MyFloatingObject obj)
             {
                 return !obj.ItemDefinition.DisplayNameText.Equals("Scrap Metal");
+            }
+
+            return true;
+        }
+
+        public static bool TestPatchMethod2(ref MyFixedPoint amount, MyObjectBuilder_Base objectBuilder)
+        {
+            if (CrunchUtilitiesPlugin.file == null || !CrunchUtilitiesPlugin.file.ScrapMetalPatchNeverSpawn) return true;
+            if (objectBuilder != null && objectBuilder.SubtypeId != null && objectBuilder.SubtypeId.ToString() == "Scrap")
+            {
+                return false;
             }
 
             return true;

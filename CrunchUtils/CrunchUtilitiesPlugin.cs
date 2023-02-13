@@ -206,7 +206,7 @@ namespace CrunchUtilities
                                 //{
                                 //    ids.Add(drill.OwnerId);
                                 //}
-      
+
                                 return false;
                             }
                         }
@@ -237,7 +237,26 @@ namespace CrunchUtilities
             return false;
         }
 
+        public static void BanPlayer(ulong steamId, DateTime time)
+        {
+            BanManager.BanPlayer(steamId, true);
+            BanList.TempBans.Add(new TempBanItem() { SteamId = steamId, UnbannedAfter = time});
+            SaveTempBans();
+            Log.Info($"Banning {steamId} untils {time}");
+        }
+        public static FileUtils utils = new FileUtils();
+        public static void LoadTempBans()
+        {
+            if (File.Exists($"{path}//TempBans.xml"))
+            {
+                BanList = utils.ReadFromXmlFile<TempBanList>($"{path}//TempBans.xml");
+            }
+        }
 
+        public static void SaveTempBans()
+        {
+            utils.WriteToXmlFile<TempBanList>($"{path}//TempBans.xml", BanList);
+        }
 
         public static List<long> ids = new List<long>();
         //    public static Logger EconLog = LogManager.GetLogger("Econ");
@@ -261,6 +280,9 @@ namespace CrunchUtilities
         private static DateTime UpdateTime = DateTime.Now;
         private static DateTime PlayerAlertNext = DateTime.Now;
         public static Boolean AlliancesInstalled = false;
+        public static TempBanList BanList = new TempBanList() { TempBans = new List<TempBanItem>()};
+
+       public static IMultiplayerManagerServer BanManager;
         public override void Update()
 
         {
@@ -298,71 +320,81 @@ namespace CrunchUtilities
             //}
             ticks++;
 
-                if (ticks % 524 == 0)
+            if (ticks % 524 == 0)
+            {
+                foreach (var item in BanList.TempBans)
                 {
-                    List<long> idsToRemove = new List<long>();
-                    foreach (KeyValuePair<long, DateTime> pair in blockCooldowns)
+                    if (DateTime.Now >= item.UnbannedAfter)
                     {
-                        if (DateTime.Now >= pair.Value)
-                        {
-                            idsToRemove.Add(pair.Key);
-                        }
-                    }
-                    foreach (long id in idsToRemove)
-                    {
-                        blockCooldowns.Remove(id);
-                    }
-                    List<long> expiredOffers = new List<long>();
-                    foreach (KeyValuePair<long, ShipOffer> offers in Commands.saleOffers)
-                    {
-                        if (DateTime.Now >= offers.Value.TimeOfOffer)
-                        {
-                            expiredOffers.Add(offers.Key);
-                        }
-                    }
-                    foreach (long id in expiredOffers)
-                    {
-                        Commands.saleOffers.Remove(id);
+                        BanManager.BanPlayer(item.SteamId, false);
+                        Log.Info($"Unbanning {item.SteamId} after its tempban");
                     }
                 }
-                if (ticks % 10000 == 0 && file != null && file.IdentityUpdate)
+
+
+                List<long> idsToRemove = new List<long>();
+                foreach (KeyValuePair<long, DateTime> pair in blockCooldowns)
                 {
-                    try
+                    if (DateTime.Now >= pair.Value)
                     {
-
-                        if (derp == TorchSessionState.Loaded && MySession.Static.Players.GetOnlinePlayers().Count > 0)
-                        {
-                            foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
-                            {
-                                if (player == null || player.Id == null)
-                                    continue;
-
-                                string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
-                                if (name == null || string.IsNullOrEmpty(name))
-                                    continue;
-
-                                MyIdentity identity = player.Identity;
-                                if (identity == null)
-                                    continue;
-
-                                if (player.Character != null && player.Character.DisplayName != null && !player.DisplayName.Equals(name))
-                                {
-                               
-                                        identity.SetDisplayName(name);
-                                    
-                                }
-                                // }
-                            }
-                        }
+                        idsToRemove.Add(pair.Key);
                     }
-                    catch (Exception ex)
+                }
+                foreach (long id in idsToRemove)
+                {
+                    blockCooldowns.Remove(id);
+                }
+                List<long> expiredOffers = new List<long>();
+                foreach (KeyValuePair<long, ShipOffer> offers in Commands.saleOffers)
+                {
+                    if (DateTime.Now >= offers.Value.TimeOfOffer)
                     {
-                        Log.Info("Error on updating names");
-                        Log.Error(ex.ToString());
-                        return;
+                        expiredOffers.Add(offers.Key);
                     }
+                }
+                foreach (long id in expiredOffers)
+                {
+                    Commands.saleOffers.Remove(id);
                 }
             }
+            if (ticks % 10000 == 0 && file != null && file.IdentityUpdate)
+            {
+                try
+                {
+
+                    if (derp == TorchSessionState.Loaded && MySession.Static.Players.GetOnlinePlayers().Count > 0)
+                    {
+                        foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
+                        {
+                            if (player == null || player.Id == null)
+                                continue;
+
+                            string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
+                            if (name == null || string.IsNullOrEmpty(name))
+                                continue;
+
+                            MyIdentity identity = player.Identity;
+                            if (identity == null)
+                                continue;
+
+                            if (player.Character != null && player.Character.DisplayName != null && !player.DisplayName.Equals(name))
+                            {
+
+                                identity.SetDisplayName(name);
+
+                            }
+                            // }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Info("Error on updating names");
+                    Log.Error(ex.ToString());
+                    return;
+                }
+            }
+        }
 
         public static Dictionary<long, NotificationMessage> attackMessages = new Dictionary<long, NotificationMessage>();
         public static void SendAttackNotification(IMyFaction attacker, IMyFaction defender, long attackerId, ulong playerSteamid, Vector3 position)
@@ -661,7 +693,7 @@ namespace CrunchUtilities
                         {
                             ids.Add(identity);
                         }
-                     
+
                     }
                     if (identity.IdentityId == (long)steamId)
                     {
@@ -689,14 +721,15 @@ namespace CrunchUtilities
 
             }
         }
-
+        //MyInventoryBase
+        //    public abstract bool AddItems(MyFixedPoint amount, MyObjectBuilder_Base objectBuilder);
         private void SessionChanged(ITorchSession session, TorchSessionState newState)
         {
             //Do something here in the future
             Log.Info("Session-State is now " + newState);
             if (newState == TorchSessionState.Loaded)
             {
-               
+
                 derp = TorchSessionState.Loaded;
                 MySession.Static.Factions.FactionStateChanged += FactionLogging.StateChange;
                 MyBankingSystem.Static.OnAccountBalanceChanged += BankPatch.BalanceChangedMethod2;
@@ -705,8 +738,9 @@ namespace CrunchUtilities
                 {
                     AlliancesInstalled = true;
                 }
-                    //  session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
-                    MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
+                //  session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
+                MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
+           
             }
 
         }

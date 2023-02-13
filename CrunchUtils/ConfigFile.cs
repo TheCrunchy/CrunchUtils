@@ -21,6 +21,7 @@ namespace CrunchUtilities
         public Boolean PcuCountShowProjPCU = true;
         public Boolean EcoChatMessages = true;
         public bool ScrapMetalPatch = false;
+        public bool ScrapMetalPatchNeverSpawn = false;
         public bool projectorOwnershipPatch = false;
         public bool FixTradeStation = false;
         public bool PlayerMakeShip = false;

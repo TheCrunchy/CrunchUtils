@@ -2920,6 +2920,15 @@ namespace CrunchUtilities
             DisplayFactionInfo(tag, members);
         }
 
+        //[Command("tempban", "temporarily ban a player")]
+        //[Permission(MyPromoteLevel.Admin)]
+        //public void TempBan(string playerNameOrSteamId, string minutesToBanFor)
+        //{
+        //    var player = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrSteamId);
+        //    CrunchUtilitiesPlugin.BanPlayer(Sync.Players.TryGetSteamId(player.IdentityId), DateTime.Now.AddMinutes(int.Parse(minutesToBanFor)));
+        //    Context.Respond("Temp banned");
+        //}
+
         [Command("facinfo", "display a factions description")]
         [Permission(MyPromoteLevel.None)]
         public void DisplayFactionInfo(string tag, bool members = false)
