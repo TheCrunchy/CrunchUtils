@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Torch.Managers;
 using Torch.Managers.PatchManager;
 using VRage.Game;
+using VRage.Game.Components;
 using VRage.Game.ModAPI.Ingame;
 using VRage.Network;
 using VRageMath;
@@ -48,15 +49,30 @@ namespace CrunchUtilities
         //    typeof(ProjectorPatch).GetMethod(nameof(removeM), BindingFlags.Static | BindingFlags.Public) ??
         //    throw new Exception("Failed to find patch method");
 
-         
+        internal static readonly MethodInfo addChild =
+            typeof(MyHierarchyComponentBase).GetMethod("AddChild", BindingFlags.Instance | BindingFlags.Public) ??
+            throw new Exception("Failed to find patch method");
+
+        internal static readonly MethodInfo addChildPatch =
+            typeof(ProjectorPatch).GetMethod(nameof(ChildPatch), BindingFlags.Static | BindingFlags.Public) ??
+            throw new Exception("Failed to find patch method");
+
         public static void Patch(PatchContext ctx)
         {
           
           //  ctx.GetPattern(update).Suffixes.Add(updatePatch);
+            ctx.GetPattern(addChild).Prefixes.Add(addChildPatch);
             ctx.GetPattern(build).Prefixes.Add(buildPatch);
         //    ctx.GetPattern(remove).Prefixes.Add(removePatch);
 
             CrunchUtilitiesPlugin.Log.Info("Patching Successful Crunch Projector!");
+        }
+
+        public static bool ChildPatch(IMyEntity child, bool preserveWorldPos = false, bool insertIntoSceneIfNeeded = true)
+        {
+
+            CrunchUtilitiesPlugin.Log.Info("Add Child " + child.GetType());
+            return true;
         }
 
 

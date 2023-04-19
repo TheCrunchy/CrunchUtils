@@ -44,6 +44,7 @@ namespace CrunchUtilities
         public bool IdentityUpdate = false;
         public bool Claim = false;
         public bool ClaimOnlyForLeaders = true;
+        public bool ClaimOnlyFactionGrids = false;
         public int ClaimPercent = 70;
         public int CooldownInSeconds { get => cooldownInSeconds; set => SetValue(ref cooldownInSeconds, value); }
         public int RespawnCooldownInSeconds { get => respawncooldownInSeconds; set => SetValue(ref respawncooldownInSeconds, value); }

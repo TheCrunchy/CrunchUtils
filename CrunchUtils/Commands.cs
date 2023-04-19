@@ -519,6 +519,14 @@ namespace CrunchUtilities
                                             case MyRelationsBetweenPlayerAndBlock.Neutral:
                                             case MyRelationsBetweenPlayerAndBlock.Enemies:
                                             case MyRelationsBetweenPlayerAndBlock.Friends:
+                                            {
+                                                if (CrunchUtilitiesPlugin.file.ClaimOnlyFactionGrids)
+                                                {
+                                                    Context.Respond("Grid is not owned by faction, no claim for you!");
+                                                    return;
+                                                }
+                                            }
+                                                break;
                                             default:
                                                 break;
                                         }
