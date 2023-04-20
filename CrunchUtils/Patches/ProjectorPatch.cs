@@ -61,7 +61,7 @@ namespace CrunchUtilities
         {
           
           //  ctx.GetPattern(update).Suffixes.Add(updatePatch);
-            ctx.GetPattern(addChild).Prefixes.Add(addChildPatch);
+        //    ctx.GetPattern(addChild).Prefixes.Add(addChildPatch);
             ctx.GetPattern(build).Prefixes.Add(buildPatch);
         //    ctx.GetPattern(remove).Prefixes.Add(removePatch);
 
