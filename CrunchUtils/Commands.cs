@@ -446,6 +446,32 @@ namespace CrunchUtilities
             }
         }
 
+        [Command("TestEconSync", "admin command no use")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void TestEconSync()
+        {
+            var balance = EconUtils.GetBalance(Context.Player.IdentityId);
+            MyBankingSystem.Static.RemoveAccount(Context.Player.IdentityId);
+            MyBankingSystem.Static.CreateAccount(Context.Player.IdentityId, balance);
+            Context.Respond("Syncing your balance");
+        }
+
+
+        [Command("FullEconSync", "admin command no use")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void FullEconSync()
+        {
+            foreach (var p in MySession.Static.Players.GetAllPlayers())
+            {
+                long IdentityID = MySession.Static.Players.TryGetIdentityId(p.SteamId);
+                if (MyBankingSystem.Static.TryGetAccountInfo(IdentityID, out var account))
+                {
+                    CrunchUtilitiesPlugin.IdsToYEET.Push(IdentityID);
+                }
+            }
+            Context.Respond($"{CrunchUtilitiesPlugin.IdsToYEET.Count} balances to sync");
+        }
+
         [Command("claim", "Player command, claim a shared grid")]
         [Permission(MyPromoteLevel.None)]
         public void ClaimCommand()
@@ -519,13 +545,13 @@ namespace CrunchUtilities
                                             case MyRelationsBetweenPlayerAndBlock.Neutral:
                                             case MyRelationsBetweenPlayerAndBlock.Enemies:
                                             case MyRelationsBetweenPlayerAndBlock.Friends:
-                                            {
-                                                if (CrunchUtilitiesPlugin.file.ClaimOnlyFactionGrids)
                                                 {
-                                                    Context.Respond("Grid is not owned by faction, no claim for you!");
-                                                    return;
+                                                    if (CrunchUtilitiesPlugin.file.ClaimOnlyFactionGrids)
+                                                    {
+                                                        Context.Respond("Grid is not owned by faction, no claim for you!");
+                                                        return;
+                                                    }
                                                 }
-                                            }
                                                 break;
                                             default:
                                                 break;

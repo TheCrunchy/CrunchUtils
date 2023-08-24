@@ -240,8 +240,8 @@ namespace CrunchUtilities
         public static void BanPlayer(ulong steamId, DateTime time)
         {
             BanManager.BanPlayer(steamId, true);
-            BanList.TempBans.Add(new TempBanItem() { SteamId = steamId, UnbannedAfter = time});
-            SaveTempBans();
+            BanList.TempBans.Add(new TempBanItem() { SteamId = steamId, UnbannedAfter = time });
+
             Log.Info($"Banning {steamId} untils {time}");
         }
         public static FileUtils utils = new FileUtils();
@@ -251,6 +251,49 @@ namespace CrunchUtilities
             {
                 BanList = utils.ReadFromXmlFile<TempBanList>($"{path}//TempBans.xml");
             }
+        }
+        private static readonly Guid NexusGUID = new Guid("28a12184-0422-43ba-a6e6-2e228611cca5");
+        public static bool NexusInstalled { get; private set; } = false;
+        public static NexusAPI API;
+        public void InitPluginDependencies(PluginManager Plugins, PatchManager Patches)
+        {
+            //if (Plugins.Plugins.TryGetValue(NexusGUID, out ITorchPlugin torchPlugin))
+            //{
+            //    Type type = torchPlugin.GetType();
+            //    Type type2 = ((type != null) ? type.Assembly.GetType("Nexus.API.PluginAPISync") : null);
+            //    if (type2 != null)
+            //    {
+            //        type2.GetMethod("ApplyPatching", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null,
+            //            new object[]
+            //            {
+            //                typeof(NexusAPI),
+            //                "CrunchUtils"
+            //            });
+            //        API = new NexusAPI(2498);
+            //        MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(2498,
+            //            new Action<ushort, byte[], ulong, bool>(HandleNexusMessage));
+            //        NexusInstalled = true;
+            //    }
+            //}
+
+        }
+
+        public static Stack<long> IdsToYEET = new Stack<long>();
+        private static void HandleNexusMessage(ushort handlerId, byte[] data, ulong steamID, bool fromServer)
+        {
+            //var message = MyAPIGateway.Utilities.SerializeFromBinary<EconSync>(data);
+            //foreach (var item in message.SyncThis)
+            //{
+            //    var player = item.Key;
+            //    var balance = item.Value;
+
+            //    if (MyBankingSystem.Static.TryGetAccountInfo(player, out var account))
+            //    {
+            //        MyBankingSystem.RemoveAccount_Clients(player);
+            //        MyBankingSystem.CreateAccount_Clients(player, balance);
+            //    }
+
+            //}
         }
 
         public static void SaveTempBans()
@@ -280,56 +323,33 @@ namespace CrunchUtilities
         private static DateTime UpdateTime = DateTime.Now;
         private static DateTime PlayerAlertNext = DateTime.Now;
         public static Boolean AlliancesInstalled = false;
-        public static TempBanList BanList = new TempBanList() { TempBans = new List<TempBanItem>()};
+        public static TempBanList BanList = new TempBanList() { TempBans = new List<TempBanItem>() };
 
-       public static IMultiplayerManagerServer BanManager;
+        public static IMultiplayerManagerServer BanManager;
+        private bool InitPlugins = false;
         public override void Update()
 
         {
-            //try
+            //if (!InitPlugins)
             //{
-            //    if (DateTime.Now >= PlayerAlertNext && file != null && file.PlayerAlertEnabled)
-            //    {
-            //        PlayerAlertNext = DateTime.Now.AddSeconds(file.SecondsBetweenPlayerAlert);
-            //        foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
-            //        {
-            //            int count = 0;
-            //            foreach (MyPlayer player2 in MySession.Static.Players.GetOnlinePlayers())
-            //            {
-            //                if (player2.GetPosition() == null || player.GetPosition() == null)
-            //                    continue;
-
-            //                if (Vector3.Distance(player.GetPosition(), player2.GetPosition()) <= MyMultiplayer.Static.SyncDistance)
-            //                {
-            //                    count++;
-            //                }
-            //                if (count > 1)
-            //                {
-            //                    NotificationMessage message = new NotificationMessage(count + " Life Signs within " + String.Format("{0:n0}", MyMultiplayer.Static.SyncDistance), 5000, "Red");
-            //                    //this is annoying, need to figure out how to check the exact world time so a duplicate message isnt possible
-            //                    ModCommunication.SendMessageTo(message, player.Id.SteamId);
-            //                }
-            //            }
-
-            //        }
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    Log.Error(ex);
+            //    InitPluginDependencies(Torch.Managers.GetManager<PluginManager>(), Torch.Managers.GetManager<PatchManager>());
+            //    InitPlugins = true;
             //}
             ticks++;
 
+            if (ticks % 128 == 0)
+            {
+                if (IdsToYEET.Any())
+                {
+                    var yeet = IdsToYEET.Pop();
+                    var balance = EconUtils.GetBalance(yeet);
+                    MyBankingSystem.Static.RemoveAccount(yeet);
+                    MyBankingSystem.Static.CreateAccount(yeet, balance);
+                }
+            }
+
             if (ticks % 524 == 0)
             {
-                foreach (var item in BanList.TempBans)
-                {
-                    if (DateTime.Now >= item.UnbannedAfter)
-                    {
-                        BanManager.BanPlayer(item.SteamId, false);
-                        Log.Info($"Unbanning {item.SteamId} after its tempban");
-                    }
-                }
 
 
                 List<long> idsToRemove = new List<long>();
@@ -669,6 +689,7 @@ namespace CrunchUtilities
                 }
 
             }
+
             return null;
         }
 
@@ -707,20 +728,7 @@ namespace CrunchUtilities
             }
             return ids;
         }
-        private static void OnTimedEventB(Object source, System.Timers.ElapsedEventArgs e)
-        {
-            Task.Run(() =>
-            {
-                DoJumpDriveShit();
-            });
-        }
-        public static void DoJumpDriveShit()
-        {
-            foreach (MyPlayer p in MySession.Static.Players.GetOnlinePlayers())
-            {
-
-            }
-        }
+      
         //MyInventoryBase
         //    public abstract bool AddItems(MyFixedPoint amount, MyObjectBuilder_Base objectBuilder);
         private void SessionChanged(ITorchSession session, TorchSessionState newState)
@@ -739,10 +747,53 @@ namespace CrunchUtilities
                     AlliancesInstalled = true;
                 }
                 //  session.Managers.GetManager<IMultiplayerManagerBase>().PlayerJoined += test;
+                if (file.FactionsNeutralOnCreation)
+                {
+                    var FactionCollection = MySession.Static.Factions.GetType().Assembly.GetType("Sandbox.Game.Multiplayer.MyFactionCollection");
+                    sendChange = FactionCollection?.GetMethod("SendFactionChange", BindingFlags.NonPublic | BindingFlags.Static);
+
+                    MySession.Static.Factions.FactionCreated += ProcessNewFaction;
+
+                }
                 MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
            
             }
 
+        }
+        public static MethodInfo sendChange;
+        public void ProcessNewFaction(long newid)
+        {
+            var faction = MySession.Static.Factions.TryGetFactionById(newid);
+            if (faction == null) return;
+            foreach (MyFaction fac in MySession.Static.Factions.GetAllFactions())
+            {
+
+                if (fac.FactionId != newid && !file.IsExcluded(fac.Tag))
+                {
+                    DoNeutralUpdate(faction.FactionId, fac.FactionId);
+                }
+            }
+        }
+
+        public void DoNeutralUpdate(long firstId, long SecondId)
+        {
+            MyAPIGateway.Utilities.InvokeOnGameThread(() =>
+            {
+                MyFactionCollection.MyFactionPeaceRequestState state = MySession.Static.Factions.GetRequestState(firstId, SecondId);
+                if (state != MyFactionCollection.MyFactionPeaceRequestState.Sent)
+                {
+                    Sandbox.Game.Multiplayer.MyFactionCollection.SendPeaceRequest(firstId, SecondId);
+                    Sandbox.Game.Multiplayer.MyFactionCollection.AcceptPeace(firstId, SecondId);
+                }
+                MyFactionStateChange change = MyFactionStateChange.SendPeaceRequest;
+                MyFactionStateChange change2 = MyFactionStateChange.AcceptPeace;
+                List<object[]> Input = new List<object[]>();
+                object[] MethodInput = new object[] { change, firstId, SecondId, 0L };
+                sendChange?.Invoke(null, MethodInput);
+                object[] MethodInput2 = new object[] { change2, SecondId, firstId, 0L };
+                sendChange?.Invoke(null, MethodInput2);
+                MySession.Static.Factions.SetReputationBetweenFactions(firstId, SecondId, 0);
+            });
         }
     }
 }

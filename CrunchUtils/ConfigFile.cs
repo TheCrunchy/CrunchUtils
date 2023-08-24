@@ -48,5 +48,17 @@ namespace CrunchUtilities
         public int ClaimPercent = 70;
         public int CooldownInSeconds { get => cooldownInSeconds; set => SetValue(ref cooldownInSeconds, value); }
         public int RespawnCooldownInSeconds { get => respawncooldownInSeconds; set => SetValue(ref respawncooldownInSeconds, value); }
+        public bool FactionsNeutralOnCreation = false;
+        public string ExcludedFactionTags = "SPRT,EXAMPLE1,EXAMPLE2";
+        private bool Split = false;
+        private List<string> excluded = new List<string>();
+        public bool IsExcluded(string tag)
+        {
+            if (Split) return excluded.Contains(tag);
+            excluded = ExcludedFactionTags.Trim().Replace(" ", "").Split(',').ToList();
+            Split = true;
+
+            return excluded.Contains(tag);
+        }
     }
 }

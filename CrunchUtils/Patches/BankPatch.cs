@@ -128,13 +128,13 @@ namespace CrunchUtilities
                             change = oldAccountInfo.Balance - newAccountInfo.Balance;
                             if (!CrunchUtilitiesPlugin.AlliancesInstalled)
                             {
-                                Commands.SendMessage(CrunchUtilitiesPlugin.file.EconName, "Balance decreased by: " + String.Format("{0:n0}", change) + " SC", Color.Red, (long)pp.Id.SteamId);
+                                Commands.SendMessage(CrunchUtilitiesPlugin.file.EconName, "Balance decreased by: " + String.Format("{0:n0}", change) + MyBankingSystem.BankingSystemDefinition.CurrencyShortName, Color.Red, (long)pp.Id.SteamId);
                             }
                         }
                         else
                         {
                             change = newAccountInfo.Balance - oldAccountInfo.Balance;
-                            Commands.SendMessage(CrunchUtilitiesPlugin.file.EconName, "Balance increased by: " + String.Format("{0:n0}", change) + " SC", Color.Cyan, (long)pp.Id.SteamId);
+                            Commands.SendMessage(CrunchUtilitiesPlugin.file.EconName, "Balance increased by: " + String.Format("{0:n0}", change) + MyBankingSystem.BankingSystemDefinition.CurrencyShortName, Color.Cyan, (long)pp.Id.SteamId);
                         }
 
                     }
