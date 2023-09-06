@@ -472,6 +472,33 @@ namespace CrunchUtilities
             Context.Respond($"{CrunchUtilitiesPlugin.IdsToYEET.Count} balances to sync");
         }
 
+
+
+        [Command("eco reset", "admin command to wipe every identity balance")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void ResetAll()
+        {
+            int count = 0;
+            foreach (var p in MySession.Static.Players.GetAllPlayers())
+            {
+                long IdentityID = MySession.Static.Players.TryGetIdentityId(p.SteamId);
+                if (MyBankingSystem.Static.TryGetAccountInfo(IdentityID, out var account))
+                {
+                    count++;
+                    MyBankingSystem.Static.RemoveAccount(IdentityID);
+                    MyBankingSystem.Static.CreateAccount(IdentityID, MyBankingSystem.BankingSystemDefinition.StartingBalance);
+                }
+            }
+            foreach (KeyValuePair<long, MyFaction> f in MySession.Static.Factions)
+            {
+                MyBankingSystem.Static.RemoveAccount(f.Value.FactionId);
+                MyBankingSystem.Static.CreateAccount(f.Value.FactionId, 0);
+                count++;
+            }
+            Context.Respond($"{CrunchUtilitiesPlugin.IdsToYEET.Count} balances deleted");
+        }
+
+
         [Command("claim", "Player command, claim a shared grid")]
         [Permission(MyPromoteLevel.None)]
         public void ClaimCommand()
