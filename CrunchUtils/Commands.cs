@@ -474,7 +474,7 @@ namespace CrunchUtilities
 
 
 
-        [Command("eco reset", "admin command to wipe every identity balance")]
+        [Command("eco resetbalances", "admin command to wipe every identity balance")]
         [Permission(MyPromoteLevel.Admin)]
         public void ResetAll()
         {
@@ -495,7 +495,7 @@ namespace CrunchUtilities
                 MyBankingSystem.Static.CreateAccount(f.Value.FactionId, 0);
                 count++;
             }
-            Context.Respond($"{CrunchUtilitiesPlugin.IdsToYEET.Count} balances deleted");
+            Context.Respond($"{count} balances deleted");
         }
 
 
