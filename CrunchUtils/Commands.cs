@@ -489,15 +489,46 @@ namespace CrunchUtilities
                     MyBankingSystem.Static.CreateAccount(IdentityID, MyBankingSystem.BankingSystemDefinition.StartingBalance);
                 }
             }
-            foreach (KeyValuePair<long, MyFaction> f in MySession.Static.Factions)
+            foreach (MyFaction f in MySession.Static.Factions.GetAllFactions())
             {
-                MyBankingSystem.Static.RemoveAccount(f.Value.FactionId);
-                MyBankingSystem.Static.CreateAccount(f.Value.FactionId, 0);
+                MyBankingSystem.Static.RemoveAccount(f.FactionId);
+                MyBankingSystem.Static.CreateAccount(f.FactionId, 0);
                 count++;
             }
             Context.Respond($"{count} balances deleted");
         }
 
+
+        [Command("eco resetplayers", "admin command to wipe every identity balance")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void ResetPlayers()
+        {
+            int count = 0;
+            foreach (var p in MySession.Static.Players.GetAllPlayers())
+            {
+                long IdentityID = MySession.Static.Players.TryGetIdentityId(p.SteamId);
+                if (MyBankingSystem.Static.TryGetAccountInfo(IdentityID, out var account))
+                {
+                    count++;
+                    MyBankingSystem.Static.RemoveAccount(IdentityID);
+                    MyBankingSystem.Static.CreateAccount(IdentityID, MyBankingSystem.BankingSystemDefinition.StartingBalance);
+                }
+            }
+            Context.Respond($"{count} balances deleted");
+        }
+        [Command("eco resetfactions", "admin command to wipe every identity balance")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void ResetFactions()
+        {
+            int count = 0;
+            foreach (MyFaction f in MySession.Static.Factions.GetAllFactions())
+            {
+                MyBankingSystem.Static.RemoveAccount(f.FactionId);
+                MyBankingSystem.Static.CreateAccount(f.FactionId, 0);
+                count++;
+            }
+            Context.Respond($"{count} balances deleted");
+        }
 
         [Command("claim", "Player command, claim a shared grid")]
         [Permission(MyPromoteLevel.None)]
