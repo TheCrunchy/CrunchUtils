@@ -4681,28 +4681,45 @@ namespace CrunchUtilities
             */
         }
 
+
         [Command("faction rep change", "Change repuation between factions")]
         [Permission(MyPromoteLevel.Admin)]
         public void ChangeFactionRep(string tag, string tag2, long amount)
         {
             IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
-            IMyFaction fac2 = MySession.Static.Factions.TryGetFactionByTag(tag2);
-            if (fac != null && fac2 != null)
+            if (fac == null)
             {
-                Context.Respond(fac.Name + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
-                MySession.Static.Factions.SetReputationBetweenFactions(fac.FactionId, fac2.FactionId, int.Parse(amount.ToString()));
-                Context.Respond(fac.Name + " FACTION Reputation After Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
+                Context.Respond($"{tag} faction not found");
+                return;
+            }
+            if (tag2 == "all")
+            {
 
-
-
-
+                foreach (var faction in MySession.Static.Factions.Factions.Values)
+                {
+                    MySession.Static.Factions.SetReputationBetweenFactions(fac.FactionId, faction.FactionId, int.Parse(amount.ToString()));
+                    foreach (var player in MySession.Static.Players.GetAllIdentities())
+                    {
+                        MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(player.IdentityId, faction.FactionId, int.Parse(amount.ToString()));
+                    }
+                }
             }
             else
             {
-                Context.Respond("Error faction not found");
+                IMyFaction fac2 = MySession.Static.Factions.TryGetFactionByTag(tag2);
+                if (fac != null && fac2 != null)
+                {
+                    Context.Respond(fac.Name + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
+                    MySession.Static.Factions.SetReputationBetweenFactions(fac.FactionId, fac2.FactionId, int.Parse(amount.ToString()));
+                    Context.Respond(fac.Name + " FACTION Reputation After Change : " + MySession.Static.Factions.GetRelationBetweenFactions(fac.FactionId, fac2.FactionId));
+                }
+                else
+                {
+                    Context.Respond("Error faction not found");
+                }
             }
+            Context.Respond("Done");
             return;
-
         }
 
         [Command("player rep change", "Change repuation between faction and player")]
@@ -4710,12 +4727,14 @@ namespace CrunchUtilities
         public void ChangePlayerRep(string playerNameOrId, string tag, long amount)
         {
             MyIdentity player = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrId);
+
             IMyFaction fac2 = MySession.Static.Factions.TryGetFactionByTag(tag);
 
             if (player != null && fac2 != null)
             {
                 //  Context.Respond(player.DisplayName + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(Context.Player.IdentityId, fac2.FactionId));
-                MySession.Static.Factions.AddFactionPlayerReputation(player.IdentityId, fac2.FactionId, 1500, true, true);
+                MySession.Static.Factions.AddFactionPlayerReputation(player.IdentityId, fac2.FactionId, 1500, true,
+                    true);
                 Context.Respond("Did it work?");
                 // Context.Respond(player.DisplayName + " FACTION Reputation After Change : " + MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(Context.Player.IdentityId, fac2.FactionId));
             }
@@ -4723,6 +4742,7 @@ namespace CrunchUtilities
             {
                 Context.Respond("Error faction not found");
             }
+
             return;
 
         }
