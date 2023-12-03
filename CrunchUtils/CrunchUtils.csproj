@@ -196,6 +196,7 @@
   <ItemGroup>
     <Compile Include="EconSync.cs" />
     <Compile Include="NexusAPI.cs" />
+    <Compile Include="Patches\AIPatch.cs" />
     <Compile Include="Patches\BankPatch.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="ConfigFile.cs" />

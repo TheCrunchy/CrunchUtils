@@ -314,27 +314,6 @@ namespace CrunchUtilities
 
         public bool IsBlockedFaction(IMyPlayer player)
         {
-            //IMyFaction fac = FacUtils.GetPlayersFaction(player.IdentityId);
-            //if (fac != null && fac.Name.ToLower().Contains("henchsel"))
-            //{
-            //    return true;
-            //}
-            // if (fac != null && fac.Name.ToLower().Contains("innovation jump"))
-            // {
-            //     return true;
-            // }
-            // if (fac != null && fac.Name.ToLower().Contains("allied humans"))
-            // {
-            //     return true;
-            // }
-            // if (fac != null && fac.Name.ToLower().Contains("red matter"))
-            // {
-            //     return true;
-            // }
-            // if (fac != null && fac.Name.ToLower().Contains("extraplanetary alliance"))
-            // {
-            //     return true;
-            // }
             return false;
         }
 

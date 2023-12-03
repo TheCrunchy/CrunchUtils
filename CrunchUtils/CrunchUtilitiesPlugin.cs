@@ -21,6 +21,7 @@ using VRage.Game;
 using System.Collections.Concurrent;
 using Sandbox.Game.Entities.Cube;
 using System.Collections.Generic;
+using System.Data;
 using Sandbox.Engine.Multiplayer;
 using Torch.Managers.PatchManager;
 using System.Reflection;
@@ -82,14 +83,6 @@ namespace CrunchUtilities
                 throw new Exception("Failed to find patch method");
 
 
-            //        internal static readonly MethodInfo testUpdate =
-            //typeof(MyDrillBase).GetMethod("DrillVoxel", BindingFlags.Instance | BindingFlags.NonPublic) ??
-            //throw new Exception("Failed to find patch method");
-
-            //        internal static readonly MethodInfo testUpdatePatch =
-            //            typeof(MyPatch).GetMethod(nameof(TestPatchMethod2), BindingFlags.Static | BindingFlags.Public) ??
-            //            throw new Exception("Failed to find patch method");
-
             public static void Patch(PatchContext ctx)
             {
 
@@ -99,79 +92,6 @@ namespace CrunchUtilities
 
             }
 
-            //      public static bool TestPatchMethod2(MyDrillBase __instance, MyDrillSensorBase.DetectionInfo entry,
-            //bool collectOre,
-            //bool performCutout,
-            //bool assignDamagedMaterial,
-            //ref MyStringHash targetMaterial)
-            //      {
-            //        //  return false;
-            //          if (__instance.OutputInventory.Owner.GetBaseEntity() is MyShipDrill drill)
-            //          {
-            //              MyVoxelBase entity = entry.Entity as MyVoxelBase;
-            //              Vector3D worldPosition = entry.DetectionPoint;
-            //              bool flag1 = false;
-            //              int count = 0;
-            //              CrunchUtilitiesPlugin.Log.Info(count + "");
-            //              count++;
-
-
-            //                  CrunchUtilitiesPlugin.Log.Info(count + "");
-            //                  count++;
-            //                  MyVoxelMaterialDefinition material = (MyVoxelMaterialDefinition)null;
-            //                  Vector3D center = __instance.CutOut.Sphere.Center;
-            //                  MatrixD worldMatrix = drill.WorldMatrix;
-            //                  Vector3D forward = worldMatrix.Forward;
-            //                  Vector3D from = center - forward;
-            //                  worldMatrix = drill.WorldMatrix;
-            //                  CrunchUtilitiesPlugin.Log.Info(count + "");
-            //                  count++;
-            //                  MyPhysics.CastRay(from, from + worldMatrix.Forward * (__instance.CutOut.Sphere.Center + 1.0), m_castList, 28);
-            //                  CrunchUtilitiesPlugin.Log.Info(count + "");
-            //                  count++;
-            //                  bool flag2 = false;
-            //                  CrunchUtilitiesPlugin.Log.Info(count + "");
-            //                  count++;
-            //                  foreach (MyPhysics.HitInfo cast in m_castList)
-            //                  {
-            //                      CrunchUtilitiesPlugin.Log.Info(count + "");
-            //                      count++;
-            //                      if (cast.HkHitInfo.GetHitEntity() is MyVoxelBase)
-            //                      {
-            //                          worldPosition = cast.Position;
-            //                      MyVoxelMaterialDefinition material2;
-
-            //                          material2 = entity.GetMaterialAt(ref worldPosition);
-            //                      if (material2 == null)
-            //                      {
-
-            //                      }
-            //                      MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material2.MinedOre);
-            //                      if (!newObject.SubtypeName.ToLower().Contains("stone"))
-            //                      {
-            //                          material = material2;
-            //                          flag2 = true;
-            //                          break;
-            //                      }
-            //                      }
-            //                  }
-            //                  if (material == null)
-            //              {
-            //                  return false;
-            //              }
-            //                  CrunchUtilitiesPlugin.Log.Info(count + "");
-            //                  count++;
-            //                  MyObjectBuilder_Ore newObject2 = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
-            //                  if (newObject2.SubtypeName.ToLower().Contains("stone"))
-            //                  {
-            //                      CrunchUtilitiesPlugin.Log.Info("It be stone");
-            //                      return false;
-            //                  }
-            //                  return true;
-
-            //          }
-            //          return true;
-            //      }
             public static bool TestPatchMethod(MyDrillBase __instance, MyVoxelMaterialDefinition material, Vector3 hitPosition)
             {
 
@@ -728,7 +648,8 @@ namespace CrunchUtilities
             }
             return ids;
         }
-      
+
+
         //MyInventoryBase
         //    public abstract bool AddItems(MyFixedPoint amount, MyObjectBuilder_Base objectBuilder);
         private void SessionChanged(ITorchSession session, TorchSessionState newState)
@@ -740,6 +661,7 @@ namespace CrunchUtilities
 
                 derp = TorchSessionState.Loaded;
                 MySession.Static.Factions.FactionStateChanged += FactionLogging.StateChange;
+                MySession.Static.Factions.FactionEdited += dave;
                 MyBankingSystem.Static.OnAccountBalanceChanged += BankPatch.BalanceChangedMethod2;
                 FactionLogging.ApplyLogging();
                 if (Torch.Managers.GetManager<PluginManager>().Plugins.TryGetValue(Guid.Parse("74796707-646f-4ebd-8700-d077a5f47af3"), out ITorchPlugin Alliances))
@@ -760,6 +682,12 @@ namespace CrunchUtilities
             }
 
         }
+
+        private void dave(long Obj)
+        {
+            throw new NotImplementedException();
+        }
+
         public static MethodInfo sendChange;
         public void ProcessNewFaction(long newid)
         {
