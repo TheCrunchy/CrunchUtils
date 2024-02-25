@@ -257,7 +257,7 @@ namespace CrunchUtilities
             //}
             ticks++;
 
-            if (ticks % 128 == 0)
+            if (ticks % 20 == 0)
             {
                 if (IdsToYEET.Any())
                 {
@@ -661,7 +661,6 @@ namespace CrunchUtilities
 
                 derp = TorchSessionState.Loaded;
                 MySession.Static.Factions.FactionStateChanged += FactionLogging.StateChange;
-                MySession.Static.Factions.FactionEdited += dave;
                 MyBankingSystem.Static.OnAccountBalanceChanged += BankPatch.BalanceChangedMethod2;
                 FactionLogging.ApplyLogging();
                 if (Torch.Managers.GetManager<PluginManager>().Plugins.TryGetValue(Guid.Parse("74796707-646f-4ebd-8700-d077a5f47af3"), out ITorchPlugin Alliances))
@@ -681,11 +680,6 @@ namespace CrunchUtilities
            
             }
 
-        }
-
-        private void dave(long Obj)
-        {
-            throw new NotImplementedException();
         }
 
         public static MethodInfo sendChange;

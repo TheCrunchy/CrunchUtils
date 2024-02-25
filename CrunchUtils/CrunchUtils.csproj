@@ -209,7 +209,6 @@
     <Compile Include="CrunchUtilitiesPlugin.cs" />
     <Compile Include="Utils\FileUtils.cs" />
     <Compile Include="Utils\GridFinder.cs" />
-    <Compile Include="Patches\ProjectorPatch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Patches\ScrapFloatingPatch.cs" />
     <Compile Include="ShipOffer.cs" />

@@ -11,8 +11,6 @@ namespace CrunchUtilities
     public class ConfigFile : ViewModel
     {
         public string EconName = "CrunchEcon";
-        public Boolean PlayerAlertEnabled = false;
-        public int SecondsBetweenPlayerAlert = 10;
         public Boolean ShipSaleCommands = false;
         public Boolean ShowFactionTagsOnDamageGrid = false;
         public Boolean LogFactionStuff = true;
@@ -22,7 +20,6 @@ namespace CrunchUtilities
         public Boolean EcoChatMessages = true;
         public bool ScrapMetalPatch = false;
         public bool ScrapMetalPatchNeverSpawn = false;
-        public bool projectorOwnershipPatch = false;
         public bool FixTradeStation = false;
         public bool PlayerMakeShip = false;
         public bool PlayerFixMe = false;
