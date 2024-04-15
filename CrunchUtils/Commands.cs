@@ -451,7 +451,22 @@ namespace CrunchUtilities
             Context.Respond($"{CrunchUtilitiesPlugin.IdsToYEET.Count} balances to sync");
         }
 
-
+        [Command("SingleEconSync", "admin command no use")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void EconSync(string playerNameOrSteamId)
+        {
+            var identityId = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrSteamId);
+            if (identityId != null)
+            {
+                if (MyBankingSystem.Static.TryGetAccountInfo(identityId.IdentityId, out var account))
+                {
+                    CrunchUtilitiesPlugin.IdsToYEET.Push(identityId.IdentityId);
+                }
+                Context.Respond($"{CrunchUtilitiesPlugin.IdsToYEET.Count} balances to sync");
+                return;
+            }
+            Context.Respond($"Couldnt find that player");
+        }
 
         [Command("eco resetbalances", "admin command to wipe every identity balance")]
         [Permission(MyPromoteLevel.Admin)]
