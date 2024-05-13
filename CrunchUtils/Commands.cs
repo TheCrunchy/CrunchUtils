@@ -2555,9 +2555,9 @@ namespace CrunchUtilities
                         foreach (KeyValuePair<long, MyFactionMember> m in playerFac.Members)
                         {
 
-                            MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(m.Value.PlayerId, fac.FactionId, -3000);
+                            MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(m.Value.PlayerId, fac.FactionId, -3000, ReputationChangeReason.Admin);
 
-                            MySession.Static.Factions.AddFactionPlayerReputation(m.Value.PlayerId, fac.FactionId, 0);
+                            MySession.Static.Factions.AddFactionPlayerReputation(m.Value.PlayerId, fac.FactionId, 0, ReputationChangeReason.Admin);
 
                         }
                     }
@@ -2762,9 +2762,9 @@ namespace CrunchUtilities
                             foreach (KeyValuePair<long, MyFactionMember> m in playerFac.Members)
                             {
 
-                                MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(m.Value.PlayerId, fac.FactionId, 0);
+                                MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(m.Value.PlayerId, fac.FactionId, 0, ReputationChangeReason.Admin);
 
-                                MySession.Static.Factions.AddFactionPlayerReputation(m.Value.PlayerId, fac.FactionId, 0);
+                                MySession.Static.Factions.AddFactionPlayerReputation(m.Value.PlayerId, fac.FactionId, 0, ReputationChangeReason.Admin);
 
                             }
                         }
@@ -2957,9 +2957,9 @@ namespace CrunchUtilities
                 MySession.Static.Factions.SetReputationBetweenFactions(fac.FactionId, npcfac.FactionId, 0);
                 if (rep.Item2 < 0)
                 {
-                    MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(m.Value.PlayerId, npcfac.FactionId, 0);
+                    MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(m.Value.PlayerId, npcfac.FactionId, 0, ReputationChangeReason.Admin);
 
-                    MySession.Static.Factions.AddFactionPlayerReputation(m.Value.PlayerId, npcfac.FactionId, 0);
+                    MySession.Static.Factions.AddFactionPlayerReputation(m.Value.PlayerId, npcfac.FactionId, 0, ReputationChangeReason.Admin);
                 }
             }
             Context.Respond("Done!");
@@ -2988,8 +2988,8 @@ namespace CrunchUtilities
                 Tuple<MyRelationsBetweenFactions, int> rep = MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(id2.IdentityId, npcfac.FactionId);
                 if (rep.Item2 < 0)
                 {
-                    MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(id2.IdentityId, npcfac.FactionId, 0);
-                    MySession.Static.Factions.AddFactionPlayerReputation(id2.IdentityId, npcfac.FactionId, 0);
+                    MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(id2.IdentityId, npcfac.FactionId, 0, ReputationChangeReason.Admin);
+                    MySession.Static.Factions.AddFactionPlayerReputation(id2.IdentityId, npcfac.FactionId, 0, ReputationChangeReason.Admin);
                 }
             }
 
@@ -4694,7 +4694,7 @@ namespace CrunchUtilities
                     MySession.Static.Factions.SetReputationBetweenFactions(fac.FactionId, faction.FactionId, int.Parse(amount.ToString()));
                     foreach (var player in MySession.Static.Players.GetAllIdentities())
                     {
-                        MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(player.IdentityId, faction.FactionId, int.Parse(amount.ToString()));
+                        MySession.Static.Factions.SetReputationBetweenPlayerAndFaction(player.IdentityId, faction.FactionId, int.Parse(amount.ToString()), ReputationChangeReason.Admin);
                     }
                 }
             }
@@ -4727,8 +4727,7 @@ namespace CrunchUtilities
             if (player != null && fac2 != null)
             {
                 //  Context.Respond(player.DisplayName + " FACTION Reputation Before Change : " + MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(Context.Player.IdentityId, fac2.FactionId));
-                MySession.Static.Factions.AddFactionPlayerReputation(player.IdentityId, fac2.FactionId, 1500, true,
-                    true);
+                MySession.Static.Factions.AddFactionPlayerReputation(player.IdentityId, fac2.FactionId, 1500, ReputationChangeReason.Admin, true, true);
                 Context.Respond("Did it work?");
                 // Context.Respond(player.DisplayName + " FACTION Reputation After Change : " + MySession.Static.Factions.GetRelationBetweenPlayerAndFaction(Context.Player.IdentityId, fac2.FactionId));
             }
