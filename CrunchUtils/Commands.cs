@@ -3667,9 +3667,9 @@ namespace CrunchUtilities
                         return;
                 }
 
-                MethodInfo method = typeof(MyInventory).GetMethod("AddItemsInternal", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[4]
+                MethodInfo method = typeof(MyInventory).GetMethod("AddItemsInternal", BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[7]
                 {
-                    typeof (MyFixedPoint), typeof (MyObjectBuilder_PhysicalObject), typeof (uint?), typeof (int)
+                    typeof (MyFixedPoint), typeof (MyObjectBuilder_PhysicalObject), typeof (uint?), typeof (int), typeof(bool), typeof(int), typeof(int)
                 },
                 null);
 
@@ -3678,7 +3678,7 @@ namespace CrunchUtilities
 
                 MyFixedPoint AmountFixed = (MyFixedPoint)(double)amount;
 
-                method.Invoke(invent, new object[4] { AmountFixed, item, new uint?(), -1 });
+                method.Invoke(invent, new object[7] { AmountFixed, item, new uint?(), -1, false, -1, 0 });
                 //refresh this or buggy stuff happens
                 invent.Refresh();
                 SendMessage("[C]", "You were given " + amount + " " + subtypeName, Color.Green, (long)player.Id.SteamId);
