@@ -49,6 +49,8 @@ namespace CrunchUtilities
         public string ExcludedFactionTags = "SPRT,EXAMPLE1,EXAMPLE2";
         private bool Split = false;
         private List<string> excluded = new List<string>();
+
+        public bool DisableChatEveryoneBlock = false;
         public bool IsExcluded(string tag)
         {
             if (Split) return excluded.Contains(tag);

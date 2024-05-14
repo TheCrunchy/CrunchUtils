@@ -81,8 +81,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="SpaceEngineers.Game">
-      <HintPath>..\GameBinaries\SpaceEngineers.Game.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\SpaceEngineers.Game.dll</HintPath>
     </Reference>
     <Reference Include="SpaceEngineers.ObjectBuilders">
       <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.dll</HintPath>
@@ -113,16 +112,13 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="Torch">
-      <HintPath>..\TorchBinaries\Torch.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\4 Torch Server\Torch.dll</HintPath>
     </Reference>
     <Reference Include="Torch.API">
-      <HintPath>..\TorchBinaries\Torch.API.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\4 Torch Server\Torch.API.dll</HintPath>
     </Reference>
     <Reference Include="Torch.Server">
-      <HintPath>..\TorchBinaries\Torch.Server.exe</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\4 Torch Server\Torch.Server.exe</HintPath>
     </Reference>
     <Reference Include="VRage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -198,6 +194,7 @@
     <Compile Include="Patches\BankPatch.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="ConfigFile.cs" />
+    <Compile Include="Patches\ChatBroadcasterPatch.cs" />
     <Compile Include="Patches\CubeGridPatch.cs" />
     <Compile Include="CurrentCooldown.cs" />
     <Compile Include="TempBanList.cs" />
