@@ -51,41 +51,26 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="NLog">
-      <HintPath>..\TorchBinaries\NLog.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\NLog.dll</HintPath>
     </Reference>
-    <Reference Include="protobuf-net, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
-      <HintPath>..\packages\protobuf-net.3.2.16\lib\net462\protobuf-net.dll</HintPath>
+    <Reference Include="ProtoBuf.Net">
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\ProtoBuf.Net.dll</HintPath>
     </Reference>
-    <Reference Include="protobuf-net.Core, Version=3.0.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
-      <HintPath>..\packages\protobuf-net.Core.3.2.16\lib\net462\protobuf-net.Core.dll</HintPath>
+    <Reference Include="ProtoBuf.Net.Core, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\ProtoBuf.Net.Core.dll</HintPath>
     </Reference>
     <Reference Include="Sandbox.Common">
-      <HintPath>..\GameBinaries\Sandbox.Common.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\Sandbox.Common.dll</HintPath>
     </Reference>
     <Reference Include="Sandbox.Game">
       <HintPath>..\..\..\4 Torch Server\DedicatedServer64\Sandbox.Game.dll</HintPath>
-    </Reference>
-    <Reference Include="Sandbox.Game.XmlSerializers">
-      <HintPath>..\GameBinaries\Sandbox.Game.XmlSerializers.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Sandbox.Graphics, Version=0.1.1.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\GameBinaries\Sandbox.Graphics.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Sandbox.RenderDirect">
-      <HintPath>..\GameBinaries\Sandbox.RenderDirect.dll</HintPath>
-      <Private>False</Private>
     </Reference>
     <Reference Include="SpaceEngineers.Game">
       <HintPath>..\..\..\4 Torch Server\DedicatedServer64\SpaceEngineers.Game.dll</HintPath>
     </Reference>
     <Reference Include="SpaceEngineers.ObjectBuilders">
-      <HintPath>..\GameBinaries\SpaceEngineers.ObjectBuilders.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\SpaceEngineers.ObjectBuilders.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -98,18 +83,12 @@
     <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
     </Reference>
-    <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
     </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="Torch">
       <HintPath>..\..\..\4 Torch Server\Torch.dll</HintPath>
@@ -117,74 +96,23 @@
     <Reference Include="Torch.API">
       <HintPath>..\..\..\4 Torch Server\Torch.API.dll</HintPath>
     </Reference>
-    <Reference Include="Torch.Server">
-      <HintPath>..\..\..\4 Torch Server\Torch.Server.exe</HintPath>
+    <Reference Include="VRage">
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\VRage.dll</HintPath>
     </Reference>
-    <Reference Include="VRage, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\GameBinaries\VRage.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Ansel">
-      <HintPath>..\GameBinaries\VRage.Ansel.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Dedicated">
-      <HintPath>..\GameBinaries\VRage.Dedicated.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Game, Version=1.0.0.0, Culture=neutral, processorArchitecture=AMD64">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\GameBinaries\VRage.Game.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Game.XmlSerializers">
-      <HintPath>..\GameBinaries\VRage.Game.XmlSerializers.dll</HintPath>
-      <Private>False</Private>
+    <Reference Include="VRage.Game">
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\VRage.Game.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Input">
-      <HintPath>..\GameBinaries\VRage.Input.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\VRage.Input.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Library">
-      <HintPath>..\GameBinaries\VRage.Library.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\VRage.Library.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Math">
-      <HintPath>..\GameBinaries\VRage.Math.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Math.XmlSerializers">
-      <HintPath>..\GameBinaries\VRage.Math.XmlSerializers.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.NativeAftermath">
-      <HintPath>..\GameBinaries\VRage.NativeAftermath.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\VRage.Math.dll</HintPath>
     </Reference>
     <Reference Include="VRage.Network">
-      <HintPath>..\GameBinaries\VRage.Network.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Platform.Windows">
-      <HintPath>..\GameBinaries\VRage.Platform.Windows.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Render">
-      <HintPath>..\GameBinaries\VRage.Render.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Scripting">
-      <HintPath>..\GameBinaries\VRage.Scripting.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.Steam">
-      <HintPath>..\GameBinaries\VRage.Steam.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="VRage.XmlSerializers">
-      <HintPath>..\GameBinaries\VRage.XmlSerializers.dll</HintPath>
-      <Private>False</Private>
+      <HintPath>..\..\..\4 Torch Server\DedicatedServer64\VRage.Network.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -220,8 +148,4 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <Target Name="Zip" BeforeTargets="AfterBuild">
-    <MakeDir Directories="$(SolutionDir)\Build\" />
-    <ZipDirectory SourceDirectory="$(OutputPath)" DestinationFile="$(SolutionDir)\Build\$(MSBuildProjectName).zip" Overwrite="true" />
-  </Target>
 </Project>

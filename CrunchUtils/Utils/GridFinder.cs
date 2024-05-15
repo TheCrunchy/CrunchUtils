@@ -217,6 +217,7 @@ namespace CrunchUtilities
                         {
                             Vector3I? hit = cubeGrid.RayCastBlocks(startPosition, endPosition);
 
+
                             if (hit.HasValue)
                             {
                                 double distance = (startPosition - cubeGrid.GridIntegerToWorld(hit.Value)).Length();
