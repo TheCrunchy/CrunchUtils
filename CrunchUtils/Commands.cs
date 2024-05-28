@@ -3420,7 +3420,7 @@ namespace CrunchUtilities
                                                     if (!inventory4.GetItems().Contains(Item))
                                                         hasCredits = false;
                                                 }
-
+                                                gridname += grid.DisplayName + ", ";
                                                 EconUtils.AddMoney(player.IdentityId, (long)amount);
                                             }
                                             else
@@ -3428,9 +3428,10 @@ namespace CrunchUtilities
                                                 deposited += Item.Amount;
                                                 EconUtils.AddMoney(player.IdentityId, (long)amount);
                                                 block.FatBlock.GetInventory().RemoveItemAmount(Item, amount);
+                                                gridname += grid.DisplayName + ", ";
                                             }
                                         }
-                                        gridname += grid.DisplayName + ", ";
+                                     
                                     }
                                 }
                             }
