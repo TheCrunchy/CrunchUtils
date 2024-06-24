@@ -589,6 +589,11 @@ namespace CrunchUtilities
                                                 factionShared += 1;
                                                 break;
                                             case MyRelationsBetweenPlayerAndBlock.FactionShare:
+                                                if (CrunchUtilitiesPlugin.file.ClaimFactionGridsOnlyLeaders && !fac.IsLeader(Context.Player.IdentityId) && !fac.IsFounder(Context.Player.IdentityId))
+                                                {
+                                                    Context.Respond("Claiming faction grids is not allowed unless a founder or leader.");
+                                                    return;
+                                                }
                                                 factionShared += 1;
                                                 break;
                                             case MyRelationsBetweenPlayerAndBlock.NoOwnership:
