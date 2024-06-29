@@ -125,6 +125,7 @@
     <Compile Include="Patches\ChatBroadcasterPatch.cs" />
     <Compile Include="Patches\CubeGridPatch.cs" />
     <Compile Include="CurrentCooldown.cs" />
+    <Compile Include="Patches\DrillCrashFix.cs" />
     <Compile Include="TempBanList.cs" />
     <Compile Include="Utils\EconUtils.cs" />
     <Compile Include="FactionLogging.cs" />
