@@ -435,6 +435,12 @@ namespace CrunchUtilities
             Context.Respond("Syncing your balance");
         }
 
+        [Command("fulleconsync", "admin command no use")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void FullEconSyncLower()
+        {
+            FullEconSync();
+        }
 
         [Command("FullEconSync", "admin command no use")]
         [Permission(MyPromoteLevel.Admin)]
@@ -451,9 +457,17 @@ namespace CrunchUtilities
             Context.Respond($"{CrunchUtilitiesPlugin.IdsToYEET.Count} balances to sync");
         }
 
+
         [Command("SingleEconSync", "admin command no use")]
         [Permission(MyPromoteLevel.Admin)]
         public void EconSync(string playerNameOrSteamId)
+        {
+            EconSyncLower(playerNameOrSteamId);
+        }
+
+        [Command("singleeconsync", "admin command no use")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void EconSyncLower(string playerNameOrSteamId)
         {
             var identityId = CrunchUtilitiesPlugin.GetIdentityByNameOrId(playerNameOrSteamId);
             if (identityId != null)
@@ -1478,52 +1492,12 @@ namespace CrunchUtilities
             }
         }
 
-        /*
-        private static long PriceWorth(MyDefinitionId id)
-        {
-            MyBlueprintDefinitionBase bpDef = MyDefinitionManager.Static.TryGetBlueprintDefinitionByResultId(id);
-            float price = 0;
-            MyDefinitionManager.Static.TryGetComponentDefinition(id, out MyComponentDefinition component);
-            //calculate by the minimal price per unit for modded components, vanilla is aids
-
-            if (component != null && component.MinimalPricePerUnit > 1)
-            {
-                long amn = Math.Abs(component.MinimalPricePerUnit);
-                price += amn;
-            }
-            //if keen didnt give the fucker a minimal price calculate by the ores that make up the ingots, because fuck having an integer for an economy right?
-            else
-            {
-                for (var p = 0; p < bpDef.Prerequisites.Length; p++)
-                {
-                    if (bpDef.Prerequisites[p].Id != null)
-                    {
-                        MyDefinitionBase oreDef = MyDefinitionManager.Static.GetDefinition(bpDef.Prerequisites[p].Id);
-                        if (oreDef != null)
-                        {
-                            MyPhysicalItemDefinition ore = oreDef as MyPhysicalItemDefinition;
-                            float amn = Math.Abs(ore.MinimalPricePerUnit);
-                            float count = (float)bpDef.Prerequisites[p].Amount;
-                            amn = (float)Math.Round(amn * count * 3);
-                            price += amn;
-                        }
-                    }
-                }
-            }
-            return Convert.ToInt64(price);
-        }
-        */
 
         [Command("zone", "edit safezone whitelist or blacklist")]
         [Permission(MyPromoteLevel.Admin)]
         public void EditZone(string addOrRemove, string playerOrFac, string nameOrTag)
         {
 
-            //   if (!whiteOrBlack.ToLower().Contains("white") && !whiteOrBlack.ToLower().Contains("black"))
-            //  {
-            //    Context.Respond("Couldnt read input! Use whitelist or blacklist");
-            //     return;
-            //  }
             if (!addOrRemove.ToLower().Contains("add") && !addOrRemove.ToLower().Contains("remove"))
             {
                 Context.Respond("Couldnt read input! Use add or remove");
@@ -1867,7 +1841,7 @@ namespace CrunchUtilities
             Dictionary<string, string> friends = new Dictionary<string, string>();
             Dictionary<string, string> neutrals = new Dictionary<string, string>();
 
-
+            //SPAGHETTI AF 
             foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
             {
                 if (FacUtils.GetPlayersFaction(player.Identity.IdentityId) != null)
@@ -2432,47 +2406,16 @@ namespace CrunchUtilities
 
         }
 
-
-
-        //[Command("clustercheck", "check for grid clusters in input range")]
-        //[Permission(MyPromoteLevel.Admin)]
-        //public void basicClusterCheck(int distance)
-        //{
-        //    StringBuilder clusters = new StringBuilder();
-        //    clusters.AppendLine("Clustered grids");
-        //    try
-        //    {
-        //        foreach (var group in MyCubeGridGroups.Static.Mechanical.Groups)
-        //        {
-        //            foreach (var item in group.Nodes)
-        //            {
-
-        //                int count = 0;
-        //                MyCubeGrid grid = item.NodeData;
-        //                BoundingSphereD sphere = new BoundingSphereD(grid.PositionComp.GetPosition(), distance);
-        //                foreach (MyCubeGrid grid2 in MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere).OfType<MyCubeGrid>())
-        //                {
-        //                    count++;
-        //                }
-        //                if (count > 0)
-        //                {
-        //                    clusters.AppendLine(grid.DisplayName + " grids within distance = " + count);
-        //                }
-
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        CrunchUtilitiesPlugin.Log.Error(ex);
-        //        return;
-        //    }
-        //    Context.Respond(clusters.ToString());
-        //}
+        [Command("faction rep", "check rep between factions")]
+        [Permission(MyPromoteLevel.None)]
+        public void RepCheck(string tag1, string tag2)
+        {
+            WarStatus(tag1, tag2);
+        }
 
         [Command("warstatus", "check war status")]
         [Permission(MyPromoteLevel.None)]
-        public void DeclareWar(string tag1, string tag2)
+        public void WarStatus(string tag1, string tag2)
         {
             IMyFaction fac1 = MySession.Static.Factions.TryGetFactionByTag(tag1);
             IMyFaction fac2 = MySession.Static.Factions.TryGetFactionByTag(tag2);
@@ -2487,6 +2430,8 @@ namespace CrunchUtilities
                 return;
             }
 
+            var repValue = MySession.Static.Factions.GetRelationBetweenFactions(fac1.FactionId, fac2.FactionId);
+            Context.Respond($"Reputation: {repValue.Item2}");
             if (MySession.Static.Factions.AreFactionsNeutrals(fac1.FactionId, fac2.FactionId))
             {
                 Context.Respond(fac1.Name + " " + fac1.Tag + " are Neutral with " + fac2.Name + " " + fac2.Tag);
@@ -2506,7 +2451,7 @@ namespace CrunchUtilities
 
         [Command("declarewar", "declare war")]
         [Permission(MyPromoteLevel.None)]
-        public void DeclareWar(string tag)
+        public void WarStatus(string tag)
         {
             if (CrunchUtilitiesPlugin.file.facInfo)
             {
@@ -2634,76 +2579,6 @@ namespace CrunchUtilities
                 Context.Respond("Fac info not enabled");
             }
         }
-
-        //[Command("joinfac", "send a request to join a faction")]
-        //[Permission(MyPromoteLevel.None)]
-        //public void sendJoinRequest(string tag)
-        //{
-
-        //    if (CrunchUtilitiesPlugin.file.facInfo)
-        //    {
-        //        bool console = false;
-
-        //        if (Context.Player == null)
-        //        {
-        //            console = true;
-        //        }
-        //        IMyFaction fac = MySession.Static.Factions.TryGetFactionByTag(tag);
-        //        if (fac == null)
-        //        {
-        //            MyPlayer player = Context.Torch.CurrentSession?.Managers?.GetManager<IMultiplayerManagerBase>()?.GetPlayerByName(tag) as MyPlayer;
-        //            if (player == null)
-        //            {
-        //                IMyIdentity id = CrunchUtilitiesPlugin.GetIdentityByNameOrId(tag);
-        //                if (id == null)
-        //                {
-        //                    Context.Respond("Cant find that faction or player.");
-        //                    return;
-        //                }
-        //                else
-        //                {
-        //                    fac = FacUtils.GetPlayersFaction(id.IdentityId);
-        //                    if (fac == null)
-        //                    {
-        //                        Context.Respond("The player that was found does not have a faction.");
-        //                        return;
-        //                    }
-        //                }
-        //            }
-        //            else
-        //            {
-        //                fac = FacUtils.GetPlayersFaction(player.Identity.IdentityId);
-        //                if (fac == null)
-        //                {
-        //                    Context.Respond("The player that was found does not have a faction.");
-        //                    return;
-        //                }
-        //            }
-
-
-
-        //        }
-        //        //now do the send peace request
-        //        IMyFaction playerFac = FacUtils.GetPlayersFaction(Context.Player.Identity.IdentityId);
-        //        if (playerFac != null)
-        //        {
-        //            Context.Respond("You are already in a faction!");
-        //            return;
-        //        }
-
-        //        MySession.Static.Factions.SendJoinRequest(fac.FactionId, (long) Context.Player.SteamUserId);
-        //        Context.Respond("Sent a join request!");
-
-
-
-        //    }
-        //    else
-        //    {
-        //        Context.Respond("Fac info not enabled");
-        //    }
-
-        //}
-
 
         [Command("sendpeace", "send a peace request")]
         [Permission(MyPromoteLevel.None)]
