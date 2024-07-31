@@ -19,6 +19,7 @@ namespace CrunchUtilities.Patches
         public static void Patch(PatchContext ctx)
         {
             ctx.GetPattern(methodToPatch).Prefixes.Add(patchMethod);
+            ctx.GetPattern(handDrill).Prefixes.Add(handMethod);
         }
 
         internal static readonly MethodInfo methodToPatch =
@@ -26,9 +27,28 @@ namespace CrunchUtilities.Patches
                 BindingFlags.Instance | BindingFlags.NonPublic) ??
             throw new Exception("Failed to find patch method contract");
 
+        internal static readonly MethodInfo handDrill =
+            typeof(MyHandDrill).GetMethod("IsDrillingAnObjectChanged",
+                BindingFlags.Instance | BindingFlags.NonPublic) ??
+            throw new Exception("Failed to find patch method contract");
+
         internal static readonly MethodInfo patchMethod =
             typeof(DrillCrashFix).GetMethod(nameof(DrillEnvironment), BindingFlags.Static | BindingFlags.Public) ??
             throw new Exception("Failed to find patch method");
+
+        internal static readonly MethodInfo handMethod =
+            typeof(DrillCrashFix).GetMethod(nameof(DrillHand), BindingFlags.Static | BindingFlags.Public) ??
+            throw new Exception("Failed to find patch method");
+
+        public static bool DrillHand(MyHandDrill __instance, bool value)
+        {
+            if (__instance.Owner == null)
+            {
+                CrunchUtilitiesPlugin.Log.Info($"Preventing a crash from null character hand drill");
+                return false;
+            }
+            return true;
+        }
 
         public static bool DrillEnvironment(MyDrillSensorBase.DetectionInfo entry,
             float speedMultiplier,
