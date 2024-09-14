@@ -122,6 +122,7 @@
     <Compile Include="Patches\BankPatch.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="ConfigFile.cs" />
+    <Compile Include="Patches\BuilderPlannerPatch.cs" />
     <Compile Include="Patches\ChatBroadcasterPatch.cs" />
     <Compile Include="Patches\CubeGridPatch.cs" />
     <Compile Include="CurrentCooldown.cs" />
