@@ -11,6 +11,7 @@ using Sandbox.Game.Gui;
 using Sandbox.ModAPI.Ingame;
 using SpaceEngineers.Game.EntityComponents.Blocks;
 using Torch.Managers.PatchManager;
+using VRage.GameServices;
 using VRage.Network;
 
 namespace CrunchUtilities.Patches
@@ -60,7 +61,7 @@ namespace CrunchUtilities.Patches
                     return false;
                 }
                 CrunchUtilitiesPlugin.Log.Info($"{MyEventContext.Current.Sender.Value}");
-                MyMultiplayer.Static.SendChatMessage(message, ChatChannel.Faction, ownerFaction.FactionId, __instance.CustomName, new ulong?((ulong)block.EntityId));
+                MyMultiplayer.Static.SendChatMessage(message, ChatChannel.Faction, ownerFaction.FactionId, new ChatMessageCustomData(){AuthorName = __instance.CustomName, SenderId = new ulong?((ulong)block.EntityId) } );
                 // Prevent message transmission
                 return false;
             }
