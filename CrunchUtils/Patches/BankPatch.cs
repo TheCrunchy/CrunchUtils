@@ -71,7 +71,7 @@ namespace CrunchUtilities
       MyAccountInfo oldAccountInfo,
       MyAccountInfo newAccountInfo)
         {
-           
+         
             if (CrunchUtilitiesPlugin.file != null && CrunchUtilitiesPlugin.file.EconomyChangesInLog)
             {
                 if (MySession.Static.Factions.TryGetFactionById(newAccountInfo.OwnerIdentifier) != null && newAccountInfo.Log.Count() > 0)
@@ -126,6 +126,10 @@ namespace CrunchUtilities
                         if (oldAccountInfo.Balance > newAccountInfo.Balance)
                         {
                             change = oldAccountInfo.Balance - newAccountInfo.Balance;
+                            if (change == 0)
+                            {
+                                return;
+                            }
                             if (!CrunchUtilitiesPlugin.AlliancesInstalled)
                             {
                                 Commands.SendMessage(CrunchUtilitiesPlugin.file.EconName, "Balance decreased by: " + String.Format("{0:n0}", change) + MyBankingSystem.BankingSystemDefinition.CurrencyShortName, Color.Red, (long)pp.Id.SteamId);
@@ -134,6 +138,10 @@ namespace CrunchUtilities
                         else
                         {
                             change = newAccountInfo.Balance - oldAccountInfo.Balance;
+                            if (change == 0)
+                            {
+                                return;
+                            }
                             Commands.SendMessage(CrunchUtilitiesPlugin.file.EconName, "Balance increased by: " + String.Format("{0:n0}", change) + MyBankingSystem.BankingSystemDefinition.CurrencyShortName, Color.Cyan, (long)pp.Id.SteamId);
                         }
 
