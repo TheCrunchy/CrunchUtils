@@ -2759,7 +2759,7 @@ namespace CrunchUtilities
 
         [Command("place station", "place an npc economy station, types are SpaceStations, OrbitalStations, Outposts or MiningStation")]
         [Permission(MyPromoteLevel.Admin)]
-        public void PlaceStation(string npctag, string type, int x, int y, int z)
+        public void PlaceStation(string npctag, string type)
         {
             if (!(MySession.Static.Factions.TryGetFactionByTag(npctag) is MyFaction npcfac))
             {
@@ -2767,20 +2767,12 @@ namespace CrunchUtilities
                 return;
             }
 
-            if (MyGravityProviderSystem.IsPositionInNaturalGravity(new Vector3D(x, y, z)))
+            if (Context.Player == null)
             {
-
-                Context.Respond("This doesnt work properly in gravity yet, avoid planets");
+                Context.Respond("Command has to be ran from ingame.");
                 return;
             }
 
-            //MyStationsListDefinition stationTypeDefinition = MyStationGenerator.GetStationTypeDefinition(MyStationTypeEnum.SpaceStation);
-            //Type generator = MySession.Static.GetType().Assembly.GetType("Sandbox.Game.World.Generator.MyStationGenerator");
-            //MethodInfo getStationTypeDefinition = generator?.GetMethod("SendFactionChange", BindingFlags.NonPublic | BindingFlags.Static);
-            //List<object[]> ReturnPlayers = new List<object[]>();
-            //object[] MethodInput = new object[] { change, target.FactionId, playerfac.FactionId, 0L };
-
-            //  sendChange?.Invoke(null, MethodInput);
             MyDefinitionId subtypeId;
             MyStationTypeEnum stationType;
 
@@ -2808,7 +2800,7 @@ namespace CrunchUtilities
             }
 
             MyStationsListDefinition stationDefinition = MyDefinitionManager.Static.GetDefinition<MyStationsListDefinition>(subtypeId);
-            Vector3 position = new Vector3D(x, y, z);
+            Vector3 position = Context.Player.Character.PositionComp.GetPosition();
             MyStation station = new MyStation(MyEntityIdentifier.AllocateId(MyEntityIdentifier.ID_OBJECT_TYPE.STATION, MyEntityIdentifier.ID_ALLOCATION_METHOD.RANDOM), position, stationType, npcfac, GetRandomStationName(stationDefinition), stationDefinition.GeneratedItemsContainerType);
 
             npcfac.AddStation(station);
