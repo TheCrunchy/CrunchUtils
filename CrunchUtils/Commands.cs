@@ -540,7 +540,7 @@ namespace CrunchUtilities
 
         [Command("claim", "Player command, claim a shared grid")]
         [Permission(MyPromoteLevel.None)]
-        public void ClaimCommand()
+        public void ClaimCommand(bool shareWithFaction = false)
         {
             if (CrunchUtilitiesPlugin.file.Claim)
             {
@@ -642,7 +642,15 @@ namespace CrunchUtilities
                             Context.Respond("Percent required : " + CrunchUtilitiesPlugin.file.ClaimPercent.ToString());
                             if (sharedPercent >= CrunchUtilitiesPlugin.file.ClaimPercent)
                             {
-                                grid.ChangeGridOwner(Context.Player.IdentityId, MyOwnershipShareModeEnum.None);
+                                if (shareWithFaction)
+                                {
+                                    grid.ChangeGridOwner(Context.Player.IdentityId, MyOwnershipShareModeEnum.Faction);
+                                }
+                                else
+                                {
+                                    grid.ChangeGridOwner(Context.Player.IdentityId, MyOwnershipShareModeEnum.None);
+
+                                }
 
                                 Context.Respond("Giving ownership to you, Owned: " + sharedPercent.ToString());
                             }
