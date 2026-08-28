@@ -593,7 +593,7 @@ namespace CrunchUtilities
                                     if (block.OwnerId > 0)
                                     {
                                         blockCount += 1;
-                                        if (!block.IsFunctional)
+                                        if (!block.IsFunctional && !CrunchUtilitiesPlugin.file.ClaimOnlyFactionGrids)
                                         {
                                             nonfunc++;
                                             break;
