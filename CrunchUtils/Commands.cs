@@ -2313,7 +2313,7 @@ namespace CrunchUtilities
 
                 foreach (var value in sortedmoneys)
                 {
-                    if (iteration <= limit)
+                    if (iteration < limit)
                     {
                         iteration++;
                         data.AppendLine(MySession.Static.Players.TryGetIdentityNameFromSteamId(value.Key).ToString() + " - Balance: " + string.Format("{0:n0}", value.Value));
@@ -2358,7 +2358,7 @@ namespace CrunchUtilities
                 var sortedmoneys = moneys.OrderByDescending(x => x.Value).ThenBy(x => x.Key);
                 foreach (var value in sortedmoneys)
                 {
-                    if (iteration <= limit)
+                    if (iteration < limit)
                     {
 
                         iteration++;
