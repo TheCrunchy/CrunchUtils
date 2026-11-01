@@ -4,210 +4,42 @@ using System;
 using Sandbox.Game.GameSystems.BankingAndCurrency;
 using Torch;
 using Torch.API;
-using Torch.Commands;
-using Torch.Commands.Permissions;
 using VRage.Game.ModAPI;
 using Torch.Session;
 using System.Timers;
-using System.Threading.Tasks;
-using System.Runtime.Remoting.Contexts;
-using System.Collections;
 using Torch.API.Managers;
 using Torch.API.Session;
 using System.IO;
 using Sandbox.Game.Entities;
-using VRage.Groups;
-using VRage.Game;
-using System.Collections.Concurrent;
 using Sandbox.Game.Entities.Cube;
 using System.Collections.Generic;
-using Sandbox.Engine.Multiplayer;
 using Torch.Managers.PatchManager;
 using System.Reflection;
 using Sandbox.Game.Weapons;
-using VRage.ObjectBuilders;
 using Sandbox.ModAPI;
 using VRageMath;
-using VRage.ModAPI;
 using Sandbox.Game.Entities.Character;
-using Sandbox.Game.Entities.Blocks;
-using VRage.Game.Entity;
 using Torch.Mod.Messages;
 using Torch.Mod;
-using SpaceEngineers.Game.EntityComponents.GameLogic;
-using Sandbox.Game.SessionComponents;
-using SpaceEngineers.Game.Entities.Blocks;
 using Sandbox.Game.Multiplayer;
-using Sandbox.Game.Screens.Helpers;
-using Sandbox.Graphics.GUI;
-using VRage.Network;
 using Sandbox.ModAPI.Weapons;
-using Sandbox.Game.GameSystems;
-using Sandbox.Engine.Voxels;
-using Sandbox.Game.Weapons.Guns;
-using VRage.Utils;
-using Sandbox.Engine.Physics;
-using Sandbox.Definitions;
 using System.Linq;
-using Sandbox.Game;
+using CrunchUtilities.Patches;
 using Torch.Managers;
 using Torch.API.Plugins;
 
 namespace CrunchUtilities
 {
-
-
     public class CrunchUtilitiesPlugin : TorchPluginBase
     {
-
-        public static Dictionary<long, long> moneyToPay = new Dictionary<long, long>();
-
-
-
-
-        [PatchShim]
-        public static class MyPatch
-        {
-
-            public static readonly Logger Log = LogManager.GetCurrentClassLogger();
-
-
-            private static List<MyPhysics.HitInfo> m_castList = new List<MyPhysics.HitInfo>();
-            internal static readonly MethodInfo update =
-                typeof(MyDrillBase).GetMethod("TryHarvestOreMaterial", BindingFlags.Instance | BindingFlags.NonPublic) ??
-                throw new Exception("Failed to find patch method");
-
-            internal static readonly MethodInfo updatePatch =
-                typeof(MyPatch).GetMethod(nameof(TestPatchMethod), BindingFlags.Static | BindingFlags.Public) ??
-                throw new Exception("Failed to find patch method");
-
-
-            public static void Patch(PatchContext ctx)
-            {
-
-                ctx.GetPattern(update).Prefixes.Add(updatePatch);
-                //  ctx.GetPattern(testUpdate).Prefixes.Add(testUpdatePatch);
-                Log.Info("Patching Successful CrunchDrill!");
-
-            }
-
-            public static bool TestPatchMethod(MyDrillBase __instance, MyVoxelMaterialDefinition material, Vector3 hitPosition)
-            {
-
-                if (file != null && !file.DeleteStoneAuto)
-                {
-                    return true;
-                }
-                if (string.IsNullOrEmpty(material.MinedOre))
-                    return false;
-                List<IMyEntity> l = new List<IMyEntity>();
-                if (__instance.OutputInventory == null || __instance.OutputInventory.Owner == null || __instance.OutputInventory.Owner.GetBaseEntity() == null)
-                {
-                    return true;
-                }
-                if (__instance.OutputInventory != null && __instance.OutputInventory.Owner != null)
-                {
-                    if (__instance.OutputInventory.Owner.GetBaseEntity() is MyShipDrill drill)
-                    {
-
-                        if (drill == null)
-                        {
-                            return true;
-                        }
-
-
-                        if (drill.DisplayNameText != null && containsName(drill.DisplayNameText))
-                        {
-                            MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
-                            if (newObject.SubtypeName.ToLower().Contains("stone"))
-                            {
-                                //if (!ids.Contains(drill.OwnerId))
-                                //{
-                                //    ids.Add(drill.OwnerId);
-                                //}
-
-                                return false;
-                            }
-                        }
-                        if (ids.Contains(drill.OwnerId))
-                        {
-                            MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
-                            if (newObject.SubtypeName.ToLower().Contains("stone"))
-                            {
-                                return false;
-                            }
-                        }
-                        else
-                        {
-                            return true;
-                        }
-                    }
-                }
-                return true;
-
-            }
-        }
-        public static bool containsName(String name)
-        {
-            if (name.ToLower().Contains("no stone") || name.ToLower().Contains("!stone"))
-            {
-                return true;
-            }
-            return false;
-        }
-
-  
         public static FileUtils utils = new FileUtils();
 
-        private static readonly Guid NexusGUID = new Guid("28a12184-0422-43ba-a6e6-2e228611cca5");
-        public static bool NexusInstalled { get; private set; } = false;
-        public static NexusAPI API;
-        public void InitPluginDependencies(PluginManager Plugins, PatchManager Patches)
-        {
-            //if (Plugins.Plugins.TryGetValue(NexusGUID, out ITorchPlugin torchPlugin))
-            //{
-            //    Type type = torchPlugin.GetType();
-            //    Type type2 = ((type != null) ? type.Assembly.GetType("Nexus.API.PluginAPISync") : null);
-            //    if (type2 != null)
-            //    {
-            //        type2.GetMethod("ApplyPatching", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null,
-            //            new object[]
-            //            {
-            //                typeof(NexusAPI),
-            //                "CrunchUtils"
-            //            });
-            //        API = new NexusAPI(2498);
-            //        MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(2498,
-            //            new Action<ushort, byte[], ulong, bool>(HandleNexusMessage));
-            //        NexusInstalled = true;
-            //    }
-            //}
-
-        }
 
         public static Stack<long> IdsToYEET = new Stack<long>();
-        private static void HandleNexusMessage(ushort handlerId, byte[] data, ulong steamID, bool fromServer)
-        {
-            //var message = MyAPIGateway.Utilities.SerializeFromBinary<EconSync>(data);
-            //foreach (var item in message.SyncThis)
-            //{
-            //    var player = item.Key;
-            //    var balance = item.Value;
 
-            //    if (MyBankingSystem.Static.TryGetAccountInfo(player, out var account))
-            //    {
-            //        MyBankingSystem.RemoveAccount_Clients(player);
-            //        MyBankingSystem.CreateAccount_Clients(player, balance);
-            //    }
-
-            //}
-        }
-
-
-        public static List<long> ids = new List<long>();
+        public static List<long> filteredDrillIdentityIds = new List<long>();
         //    public static Logger EconLog = LogManager.GetLogger("Econ");
         public static Logger Log = LogManager.GetCurrentClassLogger();
-
 
         public static ConfigFile file;
         public static string path;
@@ -215,28 +47,20 @@ namespace CrunchUtilities
         public Dictionary<long, CurrentCooldown> CurrentCooldownMap2 { get; } = new Dictionary<long, CurrentCooldown>();
         public long Cooldown { get { return file.CooldownInSeconds * 1000; } }
         public long CooldownRespawn { get { return file.RespawnCooldownInSeconds * 1000; } }
-        private static TorchSessionState derp;
-        public Dictionary<long, CurrentCooldown> CurrentCooldownMapFix { get; } = new Dictionary<long, CurrentCooldown>();
+
+        private static TorchSessionState TorchSession;
+
+        public static ITorchSession Session;
 
         private static Timer aTimer = new Timer();
         private static Dictionary<long, DateTime> blockCooldowns = new Dictionary<long, DateTime>();
         private static int ticks = 0;
-        public static List<MyFunctionalBlock> blocksToTurnOff = new List<MyFunctionalBlock>();
 
-        private static DateTime UpdateTime = DateTime.Now;
-        private static DateTime PlayerAlertNext = DateTime.Now;
         public static Boolean AlliancesInstalled = false;
- 
-        public static IMultiplayerManagerServer BanManager;
-        private bool InitPlugins = false;
+        
         public override void Update()
 
         {
-            //if (!InitPlugins)
-            //{
-            //    InitPluginDependencies(Torch.Managers.GetManager<PluginManager>(), Torch.Managers.GetManager<PatchManager>());
-            //    InitPlugins = true;
-            //}
             ticks++;
 
             if (ticks % 20 == 0)
@@ -279,46 +103,8 @@ namespace CrunchUtilities
                     Commands.saleOffers.Remove(id);
                 }
             }
-            if (ticks % 10000 == 0 && file != null && file.IdentityUpdate)
-            {
-                try
-                {
-
-                    if (derp == TorchSessionState.Loaded && MySession.Static.Players.GetOnlinePlayers().Count > 0)
-                    {
-                        foreach (MyPlayer player in MySession.Static.Players.GetOnlinePlayers())
-                        {
-                            if (player == null || player.Id == null)
-                                continue;
-
-                            string name = MyMultiplayer.Static.GetMemberName(player.Id.SteamId);
-                            if (name == null || string.IsNullOrEmpty(name))
-                                continue;
-
-                            MyIdentity identity = player.Identity;
-                            if (identity == null)
-                                continue;
-
-                            if (player.Character != null && player.Character.DisplayName != null && !player.DisplayName.Equals(name))
-                            {
-
-                                identity.SetDisplayName(name);
-
-                            }
-                            // }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Log.Info("Error on updating names");
-                    Log.Error(ex.ToString());
-                    return;
-                }
-            }
         }
 
-        public static Dictionary<long, NotificationMessage> attackMessages = new Dictionary<long, NotificationMessage>();
         public static void SendAttackNotification(IMyFaction attacker, IMyFaction defender, long attackerId, ulong playerSteamid, Vector3 position)
         {
             if (defender != null)
@@ -636,12 +422,13 @@ namespace CrunchUtilities
         //    public abstract bool AddItems(MyFixedPoint amount, MyObjectBuilder_Base objectBuilder);
         private void SessionChanged(ITorchSession session, TorchSessionState newState)
         {
+            Session = session;
             //Do something here in the future
             Log.Info("Session-State is now " + newState);
             if (newState == TorchSessionState.Loaded)
             {
 
-                derp = TorchSessionState.Loaded;
+                TorchSession = TorchSessionState.Loaded;
                 MySession.Static.Factions.FactionStateChanged += FactionLogging.StateChange;
                 MyBankingSystem.Static.OnAccountBalanceChanged += BankPatch.BalanceChangedMethod2;
                 FactionLogging.ApplyLogging();
@@ -659,7 +446,14 @@ namespace CrunchUtilities
 
                 }
                 MyAPIGateway.Session.DamageSystem.RegisterBeforeDamageHandler(0, DamageCheck);
-           
+
+                if (file.DeleteStoneAuto)
+                {
+                    var patchManager = Session.Managers.GetManager<PatchManager>();
+                    var patchContext = patchManager.AcquireContext();
+                    DrillFilterPatch.Patch(patchContext);
+                    patchManager.Commit();
+                }
             }
 
         }

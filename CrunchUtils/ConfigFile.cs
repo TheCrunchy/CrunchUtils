@@ -38,7 +38,6 @@ namespace CrunchUtilities
         public bool FactionShareDeposit = true;
         private int cooldownInSeconds = 10 * 60;
         private int respawncooldownInSeconds = 20 * 60;
-        public bool IdentityUpdate = false;
         public bool Claim = false;
         public bool ClaimOnlyForLeaders = true;
         public bool ClaimOnlyFactionGrids = false;

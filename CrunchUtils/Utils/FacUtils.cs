@@ -19,6 +19,12 @@ namespace CrunchUtilities
         {
             IMyFaction faction1 = GetPlayersFaction(player1);
             IMyFaction faction2 = GetPlayersFaction(player2);
+
+            if (faction2 == null || faction1 == null)
+            {
+                return false;
+            }
+
             return faction1 == faction2;
         }
 
