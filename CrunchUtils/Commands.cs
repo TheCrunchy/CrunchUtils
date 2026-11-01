@@ -82,33 +82,45 @@ namespace CrunchUtilities
         [Permission(MyPromoteLevel.Admin)]
         public void ReloadConfig(string option, string value)
         {
+            // CHANGE: bool options now go through ParseBool (below), see the comment there for the bug this fixes
             switch (option)
             {
                 case "playermakeship":
-                    CrunchUtilitiesPlugin.file.PlayerMakeShip = bool.TryParse(value, out bool _);
+                    CrunchUtilitiesPlugin.file.PlayerMakeShip = ParseBool(value, CrunchUtilitiesPlugin.file.PlayerMakeShip);
                     break;
                 case "playerfixme":
-                    CrunchUtilitiesPlugin.file.PlayerFixMe = bool.TryParse(value, out bool _);
+                    CrunchUtilitiesPlugin.file.PlayerFixMe = ParseBool(value, CrunchUtilitiesPlugin.file.PlayerFixMe);
                     break;
                 case "deletestone":
-                    CrunchUtilitiesPlugin.file.DeleteStone = bool.TryParse(value, out bool _);
+                    CrunchUtilitiesPlugin.file.DeleteStone = ParseBool(value, CrunchUtilitiesPlugin.file.DeleteStone);
                     break;
                 case "withdraw":
-                    CrunchUtilitiesPlugin.file.Withdraw = bool.TryParse(value, out bool _);
+                    CrunchUtilitiesPlugin.file.Withdraw = ParseBool(value, CrunchUtilitiesPlugin.file.Withdraw);
                     break;
                 case "deposit":
-                    CrunchUtilitiesPlugin.file.Deposit = bool.TryParse(value, out bool _);
+                    CrunchUtilitiesPlugin.file.Deposit = ParseBool(value, CrunchUtilitiesPlugin.file.Deposit);
                     break;
                 case "factionsharedeposit":
-                    CrunchUtilitiesPlugin.file.FactionShareDeposit = bool.TryParse(value, out bool _);
+                    CrunchUtilitiesPlugin.file.FactionShareDeposit = ParseBool(value, CrunchUtilitiesPlugin.file.FactionShareDeposit);
                     break;
                 case "identityupdate":
-                    CrunchUtilitiesPlugin.file.IdentityUpdate = bool.TryParse(value, out bool _);
+                    CrunchUtilitiesPlugin.file.IdentityUpdate = ParseBool(value, CrunchUtilitiesPlugin.file.IdentityUpdate);
                     break;
                 case "cooldowninseconds":
                     CrunchUtilitiesPlugin.file.CooldownInSeconds = int.Parse(value);
                     break;
             }
+        }
+
+        // CHANGE: the cases above used "bool.TryParse(value, out bool _)", which returns whether parsing SUCCEEDED,
+        // not the parsed value. So "!crunch config deletestone false" turned the option ON. This returns the parsed
+        // value, or keeps the current value (and tells the admin) if the input isnt true/false.
+        private bool ParseBool(string value, bool current)
+        {
+            if (bool.TryParse(value, out bool result))
+                return result;
+            Context.Respond($"'{value}' is not true or false, value unchanged");
+            return current;
         }
 
         [Command("admin makeship", "Admin command, Turn a station and connected grids into a ship")]
@@ -313,6 +325,157 @@ namespace CrunchUtilities
             }
         }
 
+        // CHANGE: admin commands to manage the MASTER stone removal ore list (StoneRemovalOreSubtypes) in game.
+        // The master list applies to every player on top of their personal list (see the player !stoneore commands below).
+        // Changes are live immediately (the !stone command, drills named !stone and !togglestone all read the same list)
+        // and are saved to CrunchUtils.xml straight away, so they survive a restart and !crunch reload.
+        [Command("crunch stoneore list", "List the master ores removed for every player by !stone, !stone drills and !togglestone")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void ListStoneRemovalOres()
+        {
+            Context.Respond("Master stone removal ores: " + OreListText(CrunchUtilitiesPlugin.file.GetStoneRemovalOres()));
+        }
+
+        [Command("crunch stoneore add", "Add an ore to the master stone removal list, e.g. !crunch stoneore add Ice")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void AddStoneRemovalOre(string ore)
+        {
+            // only accept ores that exist in the loaded definitions (vanilla + mods) so a typo cant be saved,
+            // and store the definition's exact subtype name
+            string subtype = FindOreSubtype(ConfigFile.ToOreSubtype(ore));
+            if (subtype == null)
+            {
+                Context.Respond($"'{ore}' is not a known ore. Available: " + string.Join(", ", GetOreSubtypes()));
+                return;
+            }
+
+            var current = CrunchUtilitiesPlugin.file.GetStoneRemovalOres();
+            if (current.Contains(subtype))
+            {
+                Context.Respond($"{subtype} is already in the master list");
+                return;
+            }
+
+            CrunchUtilitiesPlugin.file.SetStoneRemovalOres(current.Concat(new[] { subtype }));
+            CrunchUtilitiesPlugin.SaveConfig();
+            Context.Respond($"Added {subtype}. Master stone removal ores: " + OreListText(CrunchUtilitiesPlugin.file.GetStoneRemovalOres()));
+        }
+
+        [Command("crunch stoneore remove", "Remove an ore from the master stone removal list, e.g. !crunch stoneore remove Ice")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void RemoveStoneRemovalOre(string ore)
+        {
+            // not validated against definitions on purpose, so entries for ores from a removed mod can still be cleaned up
+            string subtype = ConfigFile.ToOreSubtype(ore);
+            var current = CrunchUtilitiesPlugin.file.GetStoneRemovalOres();
+            if (!current.Contains(subtype))
+            {
+                Context.Respond($"'{subtype}' is not in the master list. Master stone removal ores: " + OreListText(current));
+                return;
+            }
+
+            // the master list can be emptied, an empty master list means only players' personal lists apply
+            CrunchUtilitiesPlugin.file.SetStoneRemovalOres(current.Where(x => !string.Equals(x, subtype, StringComparison.OrdinalIgnoreCase)));
+            CrunchUtilitiesPlugin.SaveConfig();
+            Context.Respond($"Removed {subtype}. Master stone removal ores: " + OreListText(CrunchUtilitiesPlugin.file.GetStoneRemovalOres()));
+        }
+
+        // CHANGE: player commands for their personal stone removal ore list, saved to CrunchOres\<steamid>.json.
+        // Their drills (named !stone or via !togglestone) and their !stone command remove master + personal ores.
+        // A player's list starts with Stone the first time they add an ore. Master ores cant be removed by players.
+        [Command("stoneore list", "List the ores removed by your !stone, !stone drills and !togglestone")]
+        [Permission(MyPromoteLevel.None)]
+        public void ListPlayerStoneOres()
+        {
+            if (Context.Player == null)
+            {
+                Context.Respond("Player only command");
+                return;
+            }
+            Context.Respond(PlayerOreText(Context.Player.SteamUserId));
+        }
+
+        [Command("stoneore add", "Add an ore to your stone removal list, e.g. !stoneore add Ice")]
+        [Permission(MyPromoteLevel.None)]
+        public void AddPlayerStoneOre(string ore)
+        {
+            if (Context.Player == null)
+            {
+                Context.Respond("Player only command");
+                return;
+            }
+
+            // same validation as the admin command, only ores that exist in the loaded definitions
+            string subtype = FindOreSubtype(ConfigFile.ToOreSubtype(ore));
+            if (subtype == null)
+            {
+                Context.Respond($"'{ore}' is not a known ore. Available: " + string.Join(", ", GetOreSubtypes()));
+                return;
+            }
+
+            ulong steamId = Context.Player.SteamUserId;
+            if (PlayerOreLists.Exists(steamId) && PlayerOreLists.Get(steamId).Contains(subtype))
+            {
+                Context.Respond($"{subtype} is already in your list. " + PlayerOreText(steamId));
+                return;
+            }
+
+            // first add creates the list starting with Stone (see PlayerOreLists.Update)
+            PlayerOreLists.Update(steamId, current => current.Concat(new[] { subtype }));
+            Context.Respond($"Added {subtype}. " + PlayerOreText(steamId));
+        }
+
+        [Command("stoneore remove", "Remove an ore from your stone removal list, e.g. !stoneore remove Ice")]
+        [Permission(MyPromoteLevel.None)]
+        public void RemovePlayerStoneOre(string ore)
+        {
+            if (Context.Player == null)
+            {
+                Context.Respond("Player only command");
+                return;
+            }
+
+            // not validated against definitions, same as the admin command
+            string subtype = ConfigFile.ToOreSubtype(ore);
+            ulong steamId = Context.Player.SteamUserId;
+            if (!PlayerOreLists.Exists(steamId) || !PlayerOreLists.Get(steamId).Contains(subtype))
+            {
+                Context.Respond($"'{subtype}' is not in your list. " + PlayerOreText(steamId));
+                return;
+            }
+
+            PlayerOreLists.Update(steamId, current => current.Where(x => !string.Equals(x, subtype, StringComparison.OrdinalIgnoreCase)));
+            string message = $"Removed {subtype}. " + PlayerOreText(steamId);
+            if (CrunchUtilitiesPlugin.file.GetStoneRemovalOres().Contains(subtype))
+                message += $" {subtype} is on the server list, so it is still removed.";
+            Context.Respond(message);
+        }
+
+        // CHANGE: shared text for the stoneore commands
+        private static string OreListText(IEnumerable<string> ores)
+        {
+            return ores.Any() ? string.Join(", ", ores) : "none";
+        }
+
+        private static string PlayerOreText(ulong steamId)
+        {
+            string personal = PlayerOreLists.Exists(steamId) ? OreListText(PlayerOreLists.Get(steamId)) : "none yet";
+            return $"Server list: {OreListText(CrunchUtilitiesPlugin.file.GetStoneRemovalOres())} | Your list: {personal}";
+        }
+
+        // CHANGE: helpers for the stoneore commands, all MyObjectBuilder_Ore subtypes currently defined (vanilla + mods)
+        private static IEnumerable<string> GetOreSubtypes()
+        {
+            return MyDefinitionManager.Static.GetPhysicalItemDefinitions()
+                .Where(d => d.Id.TypeId == typeof(MyObjectBuilder_Ore))
+                .Select(d => d.Id.SubtypeName);
+        }
+
+        private static string FindOreSubtype(string subtype)
+        {
+            return GetOreSubtypes().FirstOrDefault(x => string.Equals(x, subtype, StringComparison.OrdinalIgnoreCase));
+        }
+
         public bool IsBlockedFaction(IMyPlayer player)
         {
             return false;
@@ -321,39 +484,71 @@ namespace CrunchUtilities
         public int DeleteStone(List<MyCubeGrid> gridsToSearch)
         {
             int count = 0;
+            long playerId = Context.Player.IdentityId;
+            // CHANGE: only tell the player about skipped (not owned) containers once per command instead of once per block/grid
+            bool notOwnedReported = false;
             foreach (MyCubeGrid grid in gridsToSearch)
             {
-                var gts = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
-                var blockList = new List<Sandbox.ModAPI.IMyTerminalBlock>();
-                gts.GetBlocksOfType<Sandbox.ModAPI.IMyTerminalBlock>(blockList);
+                // CHANGE: iterate only this grid's own blocks instead of GetTerminalSystemForGrid(grid).
+                // The terminal system is the grid's LOGICAL group, and a locked connector adds a logical link
+                // (MyShipConnector OnConstraintAdded(GridLinkTypeEnum.Logical)), so stone was also being deleted
+                // from other players' grids docked by connector.
+                // Rotor/piston subgrids are still covered because the caller now passes the whole mechanical group.
+                foreach (MyCubeBlock block in grid.GetFatBlocks())
+                {
+                    // HasInventory checks the inventory component, so this covers modded blocks with inventories too
+                    if (block == null || !block.HasInventory)
+                        continue;
 
-                if (!FacUtils.IsOwnerOrFactionOwned(grid, Context.Player.IdentityId, true))
-                {
-                    Context.Respond("You dont own this");
-                    continue;
-                }
-                else
-                {
-                    foreach (var block in blockList)
+                    // CHANGE: ownership is now checked per inventory block instead of per grid (was
+                    // FacUtils.IsOwnerOrFactionOwned(grid, ...) on grid.BigOwners). This means:
+                    //  - another player's container on your grid (or on a mechanically attached grid) is left alone
+                    //  - bare rotor/piston heads and armor-only subgrids no longer fail the check and spam the message,
+                    //    they have no inventory blocks so they are never checked at all
+                    //  - blocks owned by "Nobody" are skipped (safe default)
+                    if (!CanRemoveStoneFrom(block, playerId))
                     {
-                        if (block != null && block.HasInventory)
+                        if (!notOwnedReported)
                         {
-                            MyInventory inventory = (MyInventory)block.GetInventory();
-                            var items = inventory.GetItems();
+                            // CHANGE: was "You dont own this", reworded since stone in the player's own blocks is still removed
+                            Context.Respond("Skipped containers you dont own");
+                            notOwnedReported = true;
+                        }
+                        continue;
+                    }
 
-                            for (int i = 0; i < items.Count; i++)
-                            {
-                                if (items[i].Content.SubtypeId.ToString().Contains("Stone") && items[i].Content.TypeId.ToString().Contains("Ore"))
-                                {
-                                    count += items[i].Amount.ToIntSafe();
-                                    block.GetInventory().RemoveItems(items[i].ItemId);
-                                }
-                            }
+                    MyInventory inventory = block.GetInventory();
+                    if (inventory == null)
+                        continue;
+
+                    // CHANGE: loop backwards. MyInventory.GetItems() returns the live internal list, so removing while
+                    // looping forwards shifted the list and skipped the item after every removed stack.
+                    var items = inventory.GetItems();
+                    for (int i = items.Count - 1; i >= 0; i--)
+                    {
+                        // CHANGE: exact type check + the shared configurable matcher (same one the drill patch uses),
+                        // replacing SubtypeId.Contains("Stone") && TypeId.Contains("Ore") substring checks.
+                        // Master list + the personal list of the player RUNNING the command, the container owner's
+                        // personal list doesnt matter (they didnt run it)
+                        if (items[i].Content.TypeId == typeof(MyObjectBuilder_Ore) && CrunchUtilitiesPlugin.file.IsStoneRemovalOre(items[i].Content.SubtypeName, playerId))
+                        {
+                            count += items[i].Amount.ToIntSafe();
+                            inventory.RemoveItems(items[i].ItemId);
                         }
                     }
                 }
             }
             return count;
+        }
+
+        // CHANGE: per block ownership check for !stone. Owner, or a member of the owner's faction.
+        // Blocks owned by "Nobody" (0) are skipped. InSameFaction requires a real shared faction (see FacUtils).
+        private static bool CanRemoveStoneFrom(MyCubeBlock block, long playerId)
+        {
+            long ownerId = block.OwnerId;
+            if (ownerId == 0)
+                return false;
+            return ownerId == playerId || FacUtils.InSameFaction(playerId, ownerId);
         }
 
         public static int totalcount = 0;
@@ -392,21 +587,24 @@ namespace CrunchUtilities
                     currentCooldown.StartCooldown(null);
                 }
 
+                // CHANGE: use MECHANICAL groups (rotors, pistons, hinges) instead of PHYSICAL groups.
+                // Physical groups include grids locked together by connectors, so !stone could reach docked ships.
+                // Cockpit: previously only the cockpit's grid, but the terminal system then pulled in subgrids (and
+                // connector-docked grids), now it is explicitly the mechanical group so subgrids still work.
+                // Look-at: switched to the existing GridFinder.FindLookAtGridGroupMechanical.
                 List<MyCubeGrid> tempList = new List<MyCubeGrid>();
                 if (Context.Player.Character != null && Context.Player?.Controller.ControlledEntity is MyCockpit controller)
                 {
-                    tempList.Add(controller.CubeGrid);
+                    tempList.AddRange(MyCubeGridGroups.Static.Mechanical.GetGroupNodes(controller.CubeGrid));
                 }
                 else
                 {
-                    ConcurrentBag<MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroup(Context.Player.Character);
+                    ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroupMechanical(Context.Player.Character);
                     foreach (var item in gridWithSubGrids)
                     {
-                        foreach (MyGroups<MyCubeGrid, MyGridPhysicalGroupData>.Node groupNodes in item.Nodes)
+                        foreach (MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Node groupNodes in item.Nodes)
                         {
-                            //     MyObjectBuilder_PhysicalObject stone = new MyObjectBuilder_PhysicalObject("MyObjectBuilder_Ore/Stone");
-                            MyCubeGrid grid = groupNodes.NodeData;
-                            tempList.Add(grid);
+                            tempList.Add(groupNodes.NodeData);
                         }
                     }
                 }

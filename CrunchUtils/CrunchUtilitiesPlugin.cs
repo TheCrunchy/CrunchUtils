@@ -91,60 +91,38 @@ namespace CrunchUtilities
 
             }
 
-            public static bool TestPatchMethod(MyDrillBase __instance, MyVoxelMaterialDefinition material, Vector3 hitPosition)
+            // CHANGE: removed the "Vector3 hitPosition" parameter. The original TryHarvestOreMaterial takes a Vector3D and
+            // Torch's patch manager binds prefix params by name only (no type check), so a 24 byte Vector3D was being
+            // passed into a 12 byte Vector3. It was never used, so it is simply dropped.
+            public static bool TestPatchMethod(MyDrillBase __instance, MyVoxelMaterialDefinition material)
             {
-
-                if (file != null && !file.DeleteStoneAuto)
+                // CHANGE: was "file != null && !DeleteStoneAuto", which let the feature run if the config failed to load
+                if (file == null || !file.DeleteStoneAuto)
                 {
                     return true;
                 }
                 if (string.IsNullOrEmpty(material.MinedOre))
                     return false;
-                List<IMyEntity> l = new List<IMyEntity>();
-                if (__instance.OutputInventory == null || __instance.OutputInventory.Owner == null || __instance.OutputInventory.Owner.GetBaseEntity() == null)
+
+                // CHANGE: collapsed the nested null checks, same behaviour. Hand drills (owner is a character) are not affected.
+                if (!(__instance.OutputInventory?.Owner?.GetBaseEntity() is MyShipDrill drill))
                 {
                     return true;
                 }
-                if (__instance.OutputInventory != null && __instance.OutputInventory.Owner != null)
+
+                // drill not named "!stone" and owner hasnt used !togglestone -> normal harvesting
+                if (!((drill.DisplayNameText != null && containsName(drill.DisplayNameText)) || ids.Contains(drill.OwnerId)))
                 {
-                    if (__instance.OutputInventory.Owner.GetBaseEntity() is MyShipDrill drill)
-                    {
-
-                        if (drill == null)
-                        {
-                            return true;
-                        }
-
-
-                        if (drill.DisplayNameText != null && containsName(drill.DisplayNameText))
-                        {
-                            MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
-                            if (newObject.SubtypeName.ToLower().Contains("stone"))
-                            {
-                                //if (!ids.Contains(drill.OwnerId))
-                                //{
-                                //    ids.Add(drill.OwnerId);
-                                //}
-
-                                return false;
-                            }
-                        }
-                        if (ids.Contains(drill.OwnerId))
-                        {
-                            MyObjectBuilder_Ore newObject = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_Ore>(material.MinedOre);
-                            if (newObject.SubtypeName.ToLower().Contains("stone"))
-                            {
-                                return false;
-                            }
-                        }
-                        else
-                        {
-                            return true;
-                        }
-                    }
+                    return true;
                 }
-                return true;
 
+                // CHANGE: the ore is checked against the master list (StoneRemovalOreSubtypes) + the drill OWNER's
+                // personal list (PlayerOreLists). This now comes after the drill checks because it needs the owner.
+                // MinedOre is already the ore subtype ("Stone", "Iron"...), so no object builder needs creating.
+                // The ship mining system calls this for every voxel material (even amount 0) on every drill tick,
+                // so the old CreateNewObject<MyObjectBuilder_Ore> per call was a lot of allocations for nothing.
+                // false -> skip harvesting, the ore is never created
+                return !file.IsStoneRemovalOre(material.MinedOre, drill.OwnerId);
             }
         }
         public static bool containsName(String name)
