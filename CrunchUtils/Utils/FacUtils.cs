@@ -18,6 +18,13 @@ namespace CrunchUtilities
         public static bool InSameFaction(long player1, long player2)
         {
             IMyFaction faction1 = GetPlayersFaction(player1);
+            // CHANGE: a player with no faction is never "in the same faction" as anyone. Previously this returned
+            // faction1 == faction2, so two factionless players (null == null), or a factionless player and an unowned
+            // grid (owner 0), counted as the same faction. Via IsOwnerOrFactionOwned that let factionless players pass
+            // the ownership check on other factionless players' / unowned grids in !convert, !rename, !eco deposit,
+            // !eco withdraw and !eco withdrawall.
+            if (faction1 == null)
+                return false;
             IMyFaction faction2 = GetPlayersFaction(player2);
             return faction1 == faction2;
         }

@@ -89,6 +89,8 @@
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
+    <!-- CHANGE: .NET Framework's built in JSON serializer (DataContractJsonSerializer), used for CrunchOres\<steamid>.json -->
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml" />
     <Reference Include="Torch">
       <HintPath>..\..\..\4 Torch Server\Torch.dll</HintPath>
@@ -131,6 +133,7 @@
     <Compile Include="CrunchUtilitiesPlugin.cs" />
     <Compile Include="Utils\FileUtils.cs" />
     <Compile Include="Utils\GridFinder.cs" />
+    <Compile Include="Utils\PlayerOreLists.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Patches\ScrapFloatingPatch.cs" />
     <Compile Include="ShipOffer.cs" />
@@ -146,4 +149,19 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <!-- CHANGE: after every build, package the plugin into the existing Build folder as Build\CrunchUtils.zip
+       (CrunchUtils.dll + Build\manifest.xml, the same two files the committed zip contains). Uses Build\manifest.xml
+       because that is the one kept up to date, the manifest in the project folder is older. Files are staged in obj\
+       so only those two files end up in the zip. -->
+  <Target Name="PackagePluginZip" AfterTargets="Build">
+    <PropertyGroup>
+      <PluginBuildDir>$(ProjectDir)..\Build\</PluginBuildDir>
+      <PluginZipStage>$(ProjectDir)$(IntermediateOutputPath)PluginZip\</PluginZipStage>
+      <PluginZipFile>$(PluginBuildDir)$(TargetName).zip</PluginZipFile>
+    </PropertyGroup>
+    <RemoveDir Directories="$(PluginZipStage)" />
+    <Copy SourceFiles="$(TargetPath);$(PluginBuildDir)manifest.xml" DestinationFolder="$(PluginZipStage)" />
+    <ZipDirectory SourceDirectory="$(PluginZipStage)" DestinationFile="$(PluginZipFile)" Overwrite="true" />
+    <Message Importance="high" Text="Plugin zip: $(PluginZipFile)" />
+  </Target>
 </Project>
