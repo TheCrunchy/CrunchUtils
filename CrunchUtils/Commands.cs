@@ -673,8 +673,6 @@ namespace CrunchUtilities
 
         private static bool IsGridInSafeZone(MyCubeGrid grid)
         {
-            BoundingBoxD gridBox = grid.PositionComp.WorldAABB;
-
             foreach (var zone in MySessionComponentSafeZones.SafeZones)
             {
                 if (MySessionComponentSafeZones.IsInSafezone(grid.EntityId, zone))
