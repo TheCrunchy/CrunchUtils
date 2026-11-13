@@ -24,14 +24,29 @@ using Torch.Mod;
 using Sandbox.Game.Multiplayer;
 using Sandbox.ModAPI.Weapons;
 using System.Linq;
+using System.Windows.Controls;
 using CrunchUtilities.Patches;
 using Torch.Managers;
 using Torch.API.Plugins;
 
 namespace CrunchUtilities
 {
-    public class CrunchUtilitiesPlugin : TorchPluginBase
+    public class CrunchUtilitiesPlugin : TorchPluginBase, IWpfPlugin
     {
+        private ConfigControl _control;
+
+        public UserControl GetControl()
+        {
+            return _control ?? (_control = new ConfigControl(CrunchUtilitiesPlugin.file, SaveConfig));
+        }
+
+
+        public static void SaveConfig()
+        {
+            FileUtils utils = new FileUtils();
+            utils.WriteToXmlFile<ConfigFile>(path + "\\CrunchUtils.xml", file);
+        }
+
         public static FileUtils utils = new FileUtils();
 
 
@@ -320,13 +335,7 @@ namespace CrunchUtilities
 
             return file;
         }
-        public static ConfigFile SaveConfig()
-        {
-            FileUtils utils = new FileUtils();
-            utils.WriteToXmlFile<ConfigFile>(path + "\\CrunchUtils.xml", file);
-
-            return file;
-        }
+    
         public override void Init(ITorchBase torch)
         {
             base.Init(torch);

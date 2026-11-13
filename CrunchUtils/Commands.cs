@@ -546,6 +546,7 @@ namespace CrunchUtilities
                     }
                 }
 
+           
                 ConcurrentBag<MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Group> gridWithSubGrids = GridFinder.FindLookAtGridGroupMechanical(Context.Player.Character);
 
                 if (gridWithSubGrids.Count > 0)
@@ -555,12 +556,22 @@ namespace CrunchUtilities
                         foreach (MyGroups<MyCubeGrid, MyGridMechanicalGroupData>.Node groupNodes in item.Nodes)
                         {
                             MyCubeGrid grid = groupNodes.NodeData;
+
+                            if (CrunchUtilitiesPlugin.file.DisableClaimCommandInSafezone)
+                            {
+                                if (IsGridInSafeZone(grid))
+                                {
+                                    Context.Respond("Grids cannot be claimed in a safezone.");
+                                    return;
+                                }
+                            }
+
                             if (!grid.Editable)
                             {
                                 SendMessage("Server", Context.Player.DisplayName + " is trying to claim an admin protected grid.", Color.Red, 0L);
                                 return;
                             }
-
+                      
                             if (!grid.DestructibleBlocks)
                             {
                                 SendMessage("Server", Context.Player.DisplayName + " is trying to claim an admin protected grid.", Color.Red, 0L);
@@ -658,6 +669,21 @@ namespace CrunchUtilities
             {
                 Context.Respond("Claim not enabled");
             }
+        }
+
+        private static bool IsGridInSafeZone(MyCubeGrid grid)
+        {
+            BoundingBoxD gridBox = grid.PositionComp.WorldAABB;
+
+            foreach (var zone in MySessionComponentSafeZones.SafeZones)
+            {
+                if (MySessionComponentSafeZones.IsInSafezone(grid.EntityId, zone))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public static Dictionary<long, ShipOffer> saleOffers = new Dictionary<long, ShipOffer>();

@@ -53,6 +53,8 @@
     <Reference Include="NLog">
       <HintPath>..\..\..\4 Torch Server\DedicatedServer64\NLog.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="ProtoBuf.Net">
       <HintPath>..\..\..\4 Torch Server\DedicatedServer64\ProtoBuf.Net.dll</HintPath>
     </Reference>
@@ -89,6 +91,7 @@
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
+    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="Torch">
       <HintPath>..\..\..\4 Torch Server\Torch.dll</HintPath>
@@ -114,8 +117,12 @@
     <Reference Include="VRage.Network">
       <HintPath>..\..\..\4 Torch Server\DedicatedServer64\VRage.Network.dll</HintPath>
     </Reference>
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConfigControl.xaml.cs">
+      <DependentUpon>ConfigControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="EconSync.cs" />
     <Compile Include="NexusAPI.cs" />
     <Compile Include="Patches\AntiSpamPatch.cs" />
@@ -146,5 +153,11 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="ConfigControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 </Project>
